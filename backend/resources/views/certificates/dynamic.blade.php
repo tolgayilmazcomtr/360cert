@@ -88,7 +88,6 @@
         ">
             {!! $content !!}
         </div>
-        </div>
     @endforeach
     </div>
 </body>

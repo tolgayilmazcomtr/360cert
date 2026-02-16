@@ -146,13 +146,18 @@ class CertificateController extends Controller
             'height' => $height
         ];
 
-        $pdf = Pdf::loadView('certificates.dynamic', $data);
-        
-        $pdf->setPaper($customPaper);
-        
-        $pdf->setOptions(['isRemoteEnabled' => true, 'dpi' => 96, 'defaultFont' => 'sans-serif']);
+        try {
+            $pdf = Pdf::loadView('certificates.dynamic', $data);
+            
+            $pdf->setPaper($customPaper);
+            
+            $pdf->setOptions(['isRemoteEnabled' => true, 'dpi' => 96, 'defaultFont' => 'sans-serif']);
 
-        return $pdf->download($certificate->certificate_no . '.pdf');
+            return $pdf->download($certificate->certificate_no . '.pdf');
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('PDF Generation Error: ' . $e->getMessage());
+            return response()->json(['message' => 'PDF oluşturulurken hata oluştu: ' . $e->getMessage()], 500);
+        }
     }
     
     public function templates()
