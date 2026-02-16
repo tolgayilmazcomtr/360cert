@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CheckCircle, ArrowRight, FileText } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { getStorageUrl } from "@/lib/utils";
 
 export default function CertificateCreatePage() {
     const navigate = useNavigate();
@@ -94,7 +94,7 @@ export default function CertificateCreatePage() {
                             <div className="aspect-[1.414/1] bg-slate-100 relative">
                                 {template.background_path ? (
                                     <img
-                                        src={`http://127.0.0.1:8000/storage/${template.background_path}`}
+                                        src={getStorageUrl(template.background_path)}
                                         alt={template.name}
                                         className="w-full h-full object-cover"
                                     />

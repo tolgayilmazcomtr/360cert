@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ArrowLeft, Save, Type, GripVertical, Settings } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import { getStorageUrl } from "@/lib/utils";
 
 export default function TemplateDesignPage() {
     const { id } = useParams();
@@ -234,7 +235,7 @@ export default function TemplateDesignPage() {
                         {/* Background Image Layer */}
                         <div className="absolute inset-0 overflow-hidden pointer-events-none">
                             <img
-                                src={`http://127.0.0.1:8000/storage/${template.background_path}`}
+                                src={getStorageUrl(template.background_path)}
                                 alt="Background"
                                 className="w-full h-full pointer-events-auto"
                                 style={{

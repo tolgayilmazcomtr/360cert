@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plus, Trash2, Settings, Image as ImageIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { getStorageUrl } from "@/lib/utils";
 
 export default function CertificateTemplatesPage() {
     const [templates, setTemplates] = useState([]);
@@ -80,7 +81,7 @@ export default function CertificateTemplatesPage() {
                         <div className="aspect-video w-full bg-slate-100 relative overflow-hidden">
                             {template.background_path ? (
                                 <img
-                                    src={`http://127.0.0.1:8000/storage/${template.background_path}`}
+                                    src={getStorageUrl(template.background_path)}
                                     alt={template.name}
                                     className="object-cover w-full h-full"
                                 />
