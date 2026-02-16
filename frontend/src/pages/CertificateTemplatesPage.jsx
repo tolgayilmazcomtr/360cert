@@ -1,0 +1,147 @@
+import { useState, useEffect } from "react";
+import api from "../api/axios";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Plus, Trash2, Settings, Image as ImageIcon } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+
+export default function CertificateTemplatesPage() {
+    const [templates, setTemplates] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const navigate = useNavigate();
+
+    const [formData, setFormData] = useState({
+        name: "",
+        type: "standard",
+        file: null
+    });
+
+    useEffect(() => {
+        fetchTemplates();
+    }, []);
+
+    const fetchTemplates = async () => {
+        try {
+            const response = await api.get("/certificate-templates");
+            setTemplates(response.data);
+        } catch (error) {
+            console.error("Şablonlar yüklenemedi", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        const data = new FormData();
+        data.append("name", formData.name);
+        data.append("type", formData.type);
+        data.append("background_image", formData.file);
+
+        try {
+            await api.post("/certificate-templates", data, {
+                headers: { "Content-Type": "multipart/form-data" }
+            });
+            setIsModalOpen(false);
+            fetchTemplates();
+        } catch (error) {
+            console.error("Yükleme hatası", error);
+            alert("Şablon yüklenemedi.");
+        }
+    };
+
+    const handleDelete = async (id) => {
+        if (!window.confirm("Şablonu silmek istediğinize emin misiniz?")) return;
+        try {
+            await api.delete(`/certificate-templates/${id}`);
+            fetchTemplates();
+        } catch (error) {
+            console.error("Silme hatası", error);
+        }
+    };
+
+    return (
+        <div className="space-y-6">
+            <div className="flex items-center justify-between">
+                <h2 className="text-3xl font-bold tracking-tight">Sertifika Şablonları</h2>
+                <Button onClick={() => setIsModalOpen(true)} className="gap-2">
+                    <Plus size={16} />
+                    Yeni Şablon Yükle
+                </Button>
+            </div>
+
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                {templates.map((template) => (
+                    <Card key={template.id} className="overflow-hidden group relative">
+                        <div className="aspect-video w-full bg-slate-100 relative overflow-hidden">
+                            {template.background_path ? (
+                                <img
+                                    src={`http://127.0.0.1:8000/storage/${template.background_path}`}
+                                    alt={template.name}
+                                    className="object-cover w-full h-full"
+                                />
+                            ) : (
+                                <div className="flex items-center justify-center h-full text-slate-400">
+                                    <ImageIcon size={48} />
+                                </div>
+                            )}
+
+                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                <Button variant="secondary" onClick={() => navigate(`/templates/${template.id}/design`)}>
+                                    <Settings size={16} className="mr-2" />
+                                    Tasarla
+                                </Button>
+                                <Button variant="destructive" size="icon" onClick={() => handleDelete(template.id)}>
+                                    <Trash2 size={16} />
+                                </Button>
+                            </div>
+                        </div>
+                        <CardFooter className="p-4 border-t">
+                            <div className="flex flex-col">
+                                <span className="font-semibold">{template.name}</span>
+                                <span className="text-xs text-muted-foreground capitalize">{template.type} Boyut</span>
+                            </div>
+                        </CardFooter>
+                    </Card>
+                ))}
+            </div>
+
+            <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Yeni Şablon Yükle</DialogTitle>
+                        <DialogDescription>
+                            Tasarımı yapılacak boş sertifika görselini (JPG/PNG) yükleyiniz.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                        <div className="space-y-2">
+                            <Label>Şablon Adı</Label>
+                            <Input
+                                value={formData.name}
+                                onChange={e => setFormData({ ...formData, name: e.target.value })}
+                                required
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Görsel Dosyası</Label>
+                            <Input
+                                type="file"
+                                accept="image/*"
+                                onChange={e => setFormData({ ...formData, file: e.target.files[0] })}
+                                required
+                            />
+                        </div>
+                        <DialogFooter>
+                            <Button type="submit">Yükle</Button>
+                        </DialogFooter>
+                    </form>
+                </DialogContent>
+            </Dialog>
+        </div>
+    );
+}
