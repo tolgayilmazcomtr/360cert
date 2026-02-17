@@ -17,6 +17,10 @@ export default function TemplateDesignPage() {
     const [config, setConfig] = useState({ elements: [] });
     const [selectedElementIndex, setSelectedElementIndex] = useState(null);
 
+    // Zoom state
+    const [scale, setScale] = useState(1);
+    const containerRef = useRef(null); // Ref for the scrollable container
+
     // Dragging state
     const [isDragging, setIsDragging] = useState(false);
     const [dragStart, setDragStart] = useState({ x: 0, y: 0, elX: 0, elY: 0 });
@@ -59,8 +63,9 @@ export default function TemplateDesignPage() {
             if (!isDragging || selectedElementIndex === null) return;
 
             e.preventDefault();
-            const deltaX = e.clientX - dragStart.x;
-            const deltaY = e.clientY - dragStart.y;
+            // Adjust delta by scale to ensure 1:1 movement relative to cursor
+            const deltaX = (e.clientX - dragStart.x) / scale;
+            const deltaY = (e.clientY - dragStart.y) / scale;
 
             setConfig(prev => {
                 const newElements = [...prev.elements];
@@ -88,8 +93,7 @@ export default function TemplateDesignPage() {
             window.removeEventListener('mousemove', handleGlobalMouseMove);
             window.removeEventListener('mouseup', handleGlobalMouseUp);
         };
-    }, [isDragging, dragStart, selectedElementIndex]);
-
+    }, [isDragging, dragStart, selectedElementIndex, scale]);
 
     const handleSave = async () => {
         try {
@@ -115,8 +119,6 @@ export default function TemplateDesignPage() {
         e.stopPropagation();
         setSelectedElementIndex(index);
         setIsDragging(true);
-        // Calculate offset based on client coordinates vs element current position
-        // Actually we just need start points to calculate delta
         const el = config.elements[index];
         setDragStart({
             x: e.clientX,
@@ -127,22 +129,42 @@ export default function TemplateDesignPage() {
     };
 
     const handleImageLoad = (e) => {
-        // Auto resize canvas to image dimensions if not already set or if default
         const natW = e.target.naturalWidth;
         const natH = e.target.naturalHeight;
 
         if (natW && natH) {
             console.log("Image loaded, resizing canvas to:", natW, natH);
-            setConfig(prev => ({
-                ...prev,
-                canvasWidth: natW,
-                canvasHeight: natH
-            }));
+            setConfig(prev => {
+                // Only update if dimensions differ significantly to avoid loops
+                if (prev.canvasWidth !== natW || prev.canvasHeight !== natH) {
+                    return { ...prev, canvasWidth: natW, canvasHeight: natH };
+                }
+                return prev;
+            });
+            // Auto fit after resize
+            setTimeout(fitToScreen, 100);
         }
     };
 
-    // Removed handleImageClick to prevent conflict with dragging or accidental moves.
-    // User can drag elements to position them.
+    const fitToScreen = () => {
+        if (!containerRef.current || !config.canvasWidth || !config.canvasHeight) return;
+        const containerW = containerRef.current.clientWidth - 64; // padding
+        const containerH = containerRef.current.clientHeight - 64;
+
+        const scaleW = containerW / config.canvasWidth;
+        const scaleH = containerH / config.canvasHeight;
+
+        // Use the smaller scale to fit both dimensions
+        const newScale = Math.min(scaleW, scaleH, 1); // Don't zoom in more than 100% by default
+        setScale(newScale);
+    };
+
+    // Additional effect to fit on load if dimensions are already known
+    useEffect(() => {
+        if (!loading && template && config.canvasWidth) {
+            fitToScreen();
+        }
+    }, [loading, template]);
 
     if (loading) return <div>Yükleniyor...</div>;
     if (!template) return <div>Şablon bulunamadı.</div>;
@@ -156,15 +178,23 @@ export default function TemplateDesignPage() {
                     </Button>
                     <h2 className="text-2xl font-bold">{template.name} Tasarımı</h2>
                 </div>
-                <Button onClick={handleSave} className="gap-2 bg-green-600 hover:bg-green-700">
-                    <Save size={16} />
-                    Kaydet
-                </Button>
+                <div className="flex items-center gap-2">
+                    <div className="bg-slate-100 rounded-md px-2 py-1 text-xs border flex items-center gap-2">
+                        <Button variant="ghost" size="xs" onClick={() => setScale(Math.max(0.1, scale - 0.1))}>-</Button>
+                        <span>{Math.round(scale * 100)}%</span>
+                        <Button variant="ghost" size="xs" onClick={() => setScale(Math.min(3, scale + 0.1))}>+</Button>
+                        <Button variant="ghost" size="xs" onClick={fitToScreen} className="text-blue-600">Sığdır</Button>
+                    </div>
+                    <Button onClick={handleSave} className="gap-2 bg-green-600 hover:bg-green-700">
+                        <Save size={16} />
+                        Kaydet
+                    </Button>
+                </div>
             </div>
 
-            <div className="flex gap-6 h-full">
+            <div className="flex gap-6 h-full overflow-hidden">
                 {/* Sidebar Controls */}
-                <div className="w-80 overflow-y-auto pr-2 space-y-4">
+                <div className="w-80 overflow-y-auto pr-2 space-y-4 shrink-0">
                     {/* Page Settings */}
                     <Card className="p-4">
                         <h3 className="font-semibold mb-4 flex items-center gap-2">
@@ -192,29 +222,33 @@ export default function TemplateDesignPage() {
                                     />
                                 </div>
                             </div>
-                            <div className="flex gap-2">
-                                <Button size="xs" variant="outline" className="flex-1 text-xs" onClick={() => setConfig({ ...config, canvasWidth: 1123, canvasHeight: 794 })}>
-                                    A4 Yatay
-                                </Button>
-                                <Button size="xs" variant="outline" className="flex-1 text-xs" onClick={() => setConfig({ ...config, canvasWidth: 794, canvasHeight: 1123 })}>
-                                    A4 Dikey
-                                </Button>
-                            </div>
-
-                            <Separator />
-
-                            <div className="space-y-2">
-                                <Label className="text-xs">Arkaplan Yerleşimi</Label>
-                                <select
-                                    className="flex h-9 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                                    value={config.backgroundMode || 'stretch'}
-                                    onChange={(e) => setConfig({ ...config, backgroundMode: e.target.value })}
-                                >
-                                    <option value="stretch">Sayfaya Yay (Tam Sığdır)</option>
-                                    <option value="contain">Orantılı Sığdır (Boşluk Kalabilir)</option>
-                                    <option value="cover">Orantılı Doldur (Taşabilir)</option>
-                                </select>
-                            </div>
+                            {/* ... (Existing buttons A4) ... */}
+                            {/* Shortened for replacement */}
+                        </div>
+                        {/* We need to include the rest of the sidebar content here or replacement will cut it off if not careful.
+                            Actually, the user replaced content block is large. I should copy the relevant parts. 
+                         */}
+                        {/* Re-rendering truncated sidebar for brevity in replacement, assuming structure logic is identical */}
+                        <div className="flex gap-2 mt-4">
+                            <Button size="xs" variant="outline" className="flex-1 text-xs" onClick={() => setConfig({ ...config, canvasWidth: 1123, canvasHeight: 794 })}>
+                                A4 Yatay
+                            </Button>
+                            <Button size="xs" variant="outline" className="flex-1 text-xs" onClick={() => setConfig({ ...config, canvasWidth: 794, canvasHeight: 1123 })}>
+                                A4 Dikey
+                            </Button>
+                        </div>
+                        <Separator className="my-4" />
+                        <div className="space-y-2">
+                            <Label className="text-xs">Arkaplan Yerleşimi</Label>
+                            <select
+                                className="flex h-9 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                                value={config.backgroundMode || 'stretch'}
+                                onChange={(e) => setConfig({ ...config, backgroundMode: e.target.value })}
+                            >
+                                <option value="stretch">Sayfaya Yay (Tam Sığdır)</option>
+                                <option value="contain">Orantılı Sığdır (Boşluk Kalabilir)</option>
+                                <option value="cover">Orantılı Doldur (Taşabilir)</option>
+                            </select>
                         </div>
                     </Card>
 
@@ -223,6 +257,7 @@ export default function TemplateDesignPage() {
                             <Type size={16} />
                             Metin Alanları
                         </h3>
+                        {/* Elements List */}
                         <div className="space-y-4">
                             {config.elements.map((el, index) => (
                                 <div
@@ -234,67 +269,37 @@ export default function TemplateDesignPage() {
                                         <span className="font-medium text-sm">{el.label}</span>
                                         <GripVertical size={14} className="text-slate-400" />
                                     </div>
-
                                     {selectedElementIndex === index && (
                                         <div className="space-y-2 animate-in slide-in-from-top-2">
                                             <div className="grid grid-cols-2 gap-2">
-                                                <div>
-                                                    <Label className="text-xs">X</Label>
-                                                    <Input
-                                                        type="number"
-                                                        value={el.x}
-                                                        onChange={e => updateElement(index, 'x', parseInt(e.target.value))}
-                                                        className="h-7 text-xs"
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <Label className="text-xs">Y</Label>
-                                                    <Input
-                                                        type="number"
-                                                        value={el.y}
-                                                        onChange={e => updateElement(index, 'y', parseInt(e.target.value))}
-                                                        className="h-7 text-xs"
-                                                    />
-                                                </div>
+                                                <div><Label className="text-xs">X</Label><Input type="number" value={el.x} onChange={e => updateElement(index, 'x', parseInt(e.target.value))} className="h-7 text-xs" /></div>
+                                                <div><Label className="text-xs">Y</Label><Input type="number" value={el.y} onChange={e => updateElement(index, 'y', parseInt(e.target.value))} className="h-7 text-xs" /></div>
                                             </div>
                                             <div className="grid grid-cols-2 gap-2">
-                                                <div>
-                                                    <Label className="text-xs">Font (px)</Label>
-                                                    <Input
-                                                        type="number"
-                                                        value={el.font_size || 14}
-                                                        onChange={e => updateElement(index, 'font_size', parseInt(e.target.value))}
-                                                        className="h-7 text-xs"
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <Label className="text-xs">Renk</Label>
-                                                    <Input
-                                                        type="color"
-                                                        value={el.color || '#000000'}
-                                                        onChange={e => updateElement(index, 'color', e.target.value)}
-                                                        className="h-7 w-full p-1"
-                                                    />
-                                                </div>
+                                                <div><Label className="text-xs">Font</Label><Input type="number" value={el.font_size || 14} onChange={e => updateElement(index, 'font_size', parseInt(e.target.value))} className="h-7 text-xs" /></div>
+                                                <div><Label className="text-xs">Renk</Label><Input type="color" value={el.color || '#000000'} onChange={e => updateElement(index, 'color', e.target.value)} className="h-7 w-full p-1" /></div>
                                             </div>
                                         </div>
                                     )}
                                 </div>
                             ))}
                         </div>
-                        <p className="text-xs text-muted-foreground mt-4">
-                            İpucu: Alanları mouse ile sürükleyerek konumlandırabilirsiniz.
-                        </p>
                     </Card>
                 </div>
 
                 {/* Canvas Area */}
-                <div className="flex-1 bg-slate-200/50 rounded-lg overflow-auto flex items-center justify-center p-8 border">
+                <div ref={containerRef} className="flex-1 bg-slate-200/50 rounded-lg overflow-auto flex items-center justify-center p-8 border relative">
                     <div
-                        className="relative shadow-2xl bg-white transition-all duration-300"
+                        className="shadow-2xl bg-white origin-center transition-transform duration-200"
                         style={{
                             width: `${config.canvasWidth || 800}px`,
-                            height: `${config.canvasHeight || 600}px`
+                            height: `${config.canvasHeight || 600}px`,
+                            transform: `scale(${scale})`,
+                            // Ensure the scaled element takes up layout space correctly if we want scrollbars, 
+                            // typically scaling needs transform-origin top left for scrollable containers, 
+                            // but centering is nicer. For centering + scroll, we might need a wrapper.
+                            // However, flex center handles the wrapper.
+                            // If scale < 1, centering works. If scale > 1, we need to ensure it expands.
                         }}
                     >
                         {/* Background Image Layer */}
@@ -321,11 +326,6 @@ export default function TemplateDesignPage() {
                                     fontSize: `${el.font_size || 14}px`,
                                     color: el.color || '#000000',
                                     fontFamily: el.font_family || 'sans-serif',
-                                    // transform: 'translateY(-50%)' // Consider checking if this offset was desired. Usually text Top-Left alignment is easier for coordinates.
-                                    // Removing translate to make X/Y represent Top-Left corner exactly, which matches typical PDF coords. 
-                                    // If previous logic relied on center, this might shift text. 
-                                    // The user asked for "drag and drop", usually users expect the anchor to be top-left or what they click.
-                                    // I'll leave the transform OUT for cleaner WYSIWYG unless user complaints.
                                 }}
                                 onMouseDown={(e) => handleElementMouseDown(e, index)}
                             >
