@@ -297,6 +297,12 @@ export default function TemplateDesignPage() {
                                                 <div><Label className="text-xs">Font B.</Label><Input type="number" value={el.font_size || 14} onChange={e => updateElement(index, 'font_size', parseInt(e.target.value))} className="h-7 text-xs" /></div>
                                                 <div><Label className="text-xs">Renk</Label><Input type="color" value={el.color || '#000000'} onChange={e => updateElement(index, 'color', e.target.value)} className="h-7 w-full p-1" /></div>
                                             </div>
+                                            {el.type === 'qr_code' && (
+                                                <div className="grid grid-cols-2 gap-2 pt-2">
+                                                    <div><Label className="text-xs">G</Label><Input type="number" value={el.width || 100} onChange={e => updateElement(index, 'width', parseInt(e.target.value))} className="h-7 text-xs" /></div>
+                                                    <div><Label className="text-xs">Y</Label><Input type="number" value={el.height || 100} onChange={e => updateElement(index, 'height', parseInt(e.target.value))} className="h-7 text-xs" /></div>
+                                                </div>
+                                            )}
                                             <div className="pt-2">
                                                 <Label className="text-xs">Yazı Tipi</Label>
                                                 <select

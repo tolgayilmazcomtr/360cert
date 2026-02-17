@@ -33,12 +33,11 @@
             position: absolute;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-            /* Force stretch to cover full PDF paper */
             width: {{ $width }}px;
             height: {{ $height }}px;
+            z-index: -1;
+            margin: 0;
+            padding: 0;
         }
         .element {
             position: absolute;
