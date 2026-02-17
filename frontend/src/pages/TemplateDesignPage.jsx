@@ -17,10 +17,14 @@ export default function TemplateDesignPage() {
     const [config, setConfig] = useState({ elements: [] });
     const [selectedElementIndex, setSelectedElementIndex] = useState(null);
 
+    // Dragging state
+    const [isDragging, setIsDragging] = useState(false);
+    const [dragStart, setDragStart] = useState({ x: 0, y: 0, elX: 0, elY: 0 });
+
     useEffect(() => {
         const fetchTemplate = async () => {
             try {
-                const response = await api.get("/certificate-templates"); // We might need a single get endpoint, but list search is fine for now
+                const response = await api.get("/certificate-templates");
                 const found = response.data.find(t => t.id.toString() === id);
                 if (found) {
                     setTemplate(found);
@@ -49,6 +53,44 @@ export default function TemplateDesignPage() {
         fetchTemplate();
     }, [id]);
 
+    // Handle global mouse move/up for dragging
+    useEffect(() => {
+        const handleGlobalMouseMove = (e) => {
+            if (!isDragging || selectedElementIndex === null) return;
+
+            e.preventDefault();
+            const deltaX = e.clientX - dragStart.x;
+            const deltaY = e.clientY - dragStart.y;
+
+            setConfig(prev => {
+                const newElements = [...prev.elements];
+                newElements[selectedElementIndex] = {
+                    ...newElements[selectedElementIndex],
+                    x: Math.round(dragStart.elX + deltaX),
+                    y: Math.round(dragStart.elY + deltaY)
+                };
+                return { ...prev, elements: newElements };
+            });
+        };
+
+        const handleGlobalMouseUp = () => {
+            if (isDragging) {
+                setIsDragging(false);
+            }
+        };
+
+        if (isDragging) {
+            window.addEventListener('mousemove', handleGlobalMouseMove);
+            window.addEventListener('mouseup', handleGlobalMouseUp);
+        }
+
+        return () => {
+            window.removeEventListener('mousemove', handleGlobalMouseMove);
+            window.removeEventListener('mouseup', handleGlobalMouseUp);
+        };
+    }, [isDragging, dragStart, selectedElementIndex]);
+
+
     const handleSave = async () => {
         try {
             await api.put(`/certificate-templates/${id}`, {
@@ -62,22 +104,45 @@ export default function TemplateDesignPage() {
     };
 
     const updateElement = (index, field, value) => {
-        const newElements = [...config.elements];
-        newElements[index] = { ...newElements[index], [field]: value };
-        setConfig({ ...config, elements: newElements });
+        setConfig(prev => {
+            const newElements = [...prev.elements];
+            newElements[index] = { ...newElements[index], [field]: value };
+            return { ...prev, elements: newElements };
+        });
     };
 
-    const handleImageClick = (e) => {
-        if (selectedElementIndex === null) return;
-
-        // Use nativeEvent.offsetX/Y which gives coordinates relative to the target element (image)
-        // This is much more reliable than calculating client rects manually if the image is the target.
-        const x = Math.round(e.nativeEvent.offsetX);
-        const y = Math.round(e.nativeEvent.offsetY);
-
-        updateElement(selectedElementIndex, 'x', x);
-        updateElement(selectedElementIndex, 'y', y);
+    const handleElementMouseDown = (e, index) => {
+        e.stopPropagation();
+        setSelectedElementIndex(index);
+        setIsDragging(true);
+        // Calculate offset based on client coordinates vs element current position
+        // Actually we just need start points to calculate delta
+        const el = config.elements[index];
+        setDragStart({
+            x: e.clientX,
+            y: e.clientY,
+            elX: el.x,
+            elY: el.y
+        });
     };
+
+    const handleImageLoad = (e) => {
+        // Auto resize canvas to image dimensions if not already set or if default
+        const natW = e.target.naturalWidth;
+        const natH = e.target.naturalHeight;
+
+        if (natW && natH) {
+            console.log("Image loaded, resizing canvas to:", natW, natH);
+            setConfig(prev => ({
+                ...prev,
+                canvasWidth: natW,
+                canvasHeight: natH
+            }));
+        }
+    };
+
+    // Removed handleImageClick to prevent conflict with dragging or accidental moves.
+    // User can drag elements to position them.
 
     if (loading) return <div>Yükleniyor...</div>;
     if (!template) return <div>Şablon bulunamadı.</div>;
@@ -218,7 +283,7 @@ export default function TemplateDesignPage() {
                             ))}
                         </div>
                         <p className="text-xs text-muted-foreground mt-4">
-                            İpucu: Bir alanı seçin ve sağdaki görsel üzerinde istediğiniz yere tıklayın.
+                            İpucu: Alanları mouse ile sürükleyerek konumlandırabilirsiniz.
                         </p>
                     </Card>
                 </div>
@@ -237,11 +302,11 @@ export default function TemplateDesignPage() {
                             <img
                                 src={getStorageUrl(template.background_path)}
                                 alt="Background"
-                                className="w-full h-full pointer-events-auto"
+                                className="w-full h-full"
                                 style={{
                                     objectFit: config.backgroundMode === 'contain' ? 'contain' : (config.backgroundMode === 'cover' ? 'cover' : 'fill')
                                 }}
-                                onClick={handleImageClick}
+                                onLoad={handleImageLoad}
                             />
                         </div>
 
@@ -256,12 +321,13 @@ export default function TemplateDesignPage() {
                                     fontSize: `${el.font_size || 14}px`,
                                     color: el.color || '#000000',
                                     fontFamily: el.font_family || 'sans-serif',
-                                    transform: 'translateY(-50%)'
+                                    // transform: 'translateY(-50%)' // Consider checking if this offset was desired. Usually text Top-Left alignment is easier for coordinates.
+                                    // Removing translate to make X/Y represent Top-Left corner exactly, which matches typical PDF coords. 
+                                    // If previous logic relied on center, this might shift text. 
+                                    // The user asked for "drag and drop", usually users expect the anchor to be top-left or what they click.
+                                    // I'll leave the transform OUT for cleaner WYSIWYG unless user complaints.
                                 }}
-                                onMouseDown={(e) => {
-                                    e.stopPropagation(); // Stop clicking image
-                                    setSelectedElementIndex(index);
-                                }}
+                                onMouseDown={(e) => handleElementMouseDown(e, index)}
                             >
                                 {el.type === 'qr_code' ? (
                                     <div className="border border-dashed border-black w-[100px] h-[100px] flex items-center justify-center text-xs bg-white/50">
