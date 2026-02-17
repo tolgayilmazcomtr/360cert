@@ -51,7 +51,7 @@ export default function VerificationPage() {
                             <p className="text-red-600 font-medium text-lg">Geçersiz Sertifika</p>
                             <p className="text-sm text-muted-foreground mt-2">{error}</p>
                         </div>
-                    ) : (
+                    ) : (certificate && certificate.student) ? (
                         <div className="space-y-4">
                             <div className="bg-green-50 text-green-700 p-3 rounded-md text-center font-medium border border-green-200">
                                 Bu sertifika geçerlidir.
@@ -60,15 +60,15 @@ export default function VerificationPage() {
                             <div className="grid grid-cols-2 gap-4 text-sm">
                                 <div>
                                     <p className="text-muted-foreground">Öğrenci</p>
-                                    <p className="font-medium text-lg">{certificate.student.first_name} {certificate.student.last_name}</p>
+                                    <p className="font-medium text-lg">{certificate.student?.first_name} {certificate.student?.last_name}</p>
                                 </div>
                                 <div>
                                     <p className="text-muted-foreground">TC No</p>
-                                    <p className="font-medium text-lg">*** ** {certificate.student.tc_number.slice(-3)}</p>
+                                    <p className="font-medium text-lg">*** ** {certificate.student?.tc_number ? certificate.student.tc_number.slice(-3) : '***'}</p>
                                 </div>
                                 <div className="col-span-2">
                                     <p className="text-muted-foreground">Eğitim Programı</p>
-                                    <p className="font-medium text-lg">{certificate.training_program.name}</p>
+                                    <p className="font-medium text-lg">{certificate.training_program?.name}</p>
                                 </div>
                                 <div>
                                     <p className="text-muted-foreground">Sertifika No</p>
@@ -76,15 +76,20 @@ export default function VerificationPage() {
                                 </div>
                                 <div>
                                     <p className="text-muted-foreground">Veriliş Tarihi</p>
-                                    <p className="font-medium">{new Date(certificate.issue_date).toLocaleDateString('tr-TR')}</p>
+                                    <p className="font-medium">{certificate.issue_date ? new Date(certificate.issue_date).toLocaleDateString('tr-TR') : '-'}</p>
                                 </div>
                             </div>
+
 
                             <div className="pt-4 border-t text-center">
                                 <Badge variant="outline" className="text-xs">
                                     Hash: {certificate.qr_code_hash}
                                 </Badge>
                             </div>
+                        </div>
+                    ) : (
+                        <div className="text-center">
+                            <p className="text-red-600">Veri hatası</p>
                         </div>
                     )}
                 </CardContent>
