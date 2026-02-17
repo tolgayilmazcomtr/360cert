@@ -146,16 +146,32 @@ class CertificateController extends Controller
             'height' => $height
         ];
 
+        // Increase memory limit for PDF generation
+        ini_set('memory_limit', '512M');
+        set_time_limit(300);
+
+        // Ensure fonts directory exists for DomPDF
+        if (!file_exists(storage_path('fonts'))) {
+            mkdir(storage_path('fonts'), 0775, true);
+        }
+
         try {
             $pdf = Pdf::loadView('certificates.dynamic', $data);
             
             $pdf->setPaper($customPaper);
             
-            $pdf->setOptions(['isRemoteEnabled' => true, 'dpi' => 96, 'defaultFont' => 'sans-serif']);
+            $pdf->setOptions([
+                'isRemoteEnabled' => true, 
+                'dpi' => 96, 
+                'defaultFont' => 'sans-serif',
+                'fontDir' => storage_path('fonts'),
+                'fontCache' => storage_path('fonts'),
+            ]);
 
             return $pdf->download($certificate->certificate_no . '.pdf');
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::error('PDF Generation Error: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error($e->getTraceAsString());
             return response()->json(['message' => 'PDF oluşturulurken hata oluştu: ' . $e->getMessage()], 500);
         }
     }
