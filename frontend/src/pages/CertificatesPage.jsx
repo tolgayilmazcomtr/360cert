@@ -79,7 +79,10 @@ export default function CertificatesPage() {
         }
     };
 
+    const [downloadingId, setDownloadingId] = useState(null);
+
     const handleDownload = async (id, no) => {
+        setDownloadingId(id);
         try {
             const response = await api.get(`/certificates/${id}/download`, {
                 responseType: 'blob'
@@ -90,12 +93,10 @@ export default function CertificatesPage() {
             link.setAttribute('download', `${no}.pdf`);
             document.body.appendChild(link);
             link.click();
+            link.remove();
         } catch (error) {
             console.error("İndirme hatası", error);
             const msg = error.response?.data?.message || "İndirme başarısız.";
-            // If it's a blob, we might need to read it differently, but for 404/500 usually it returns JSON if set correctly.
-            // However, with responseType: blob, reading JSON error is tricky.
-            // Let's retry parsing the blob if appropriate.
             if (error.response?.data instanceof Blob) {
                 const reader = new FileReader();
                 reader.onload = () => {
@@ -110,6 +111,8 @@ export default function CertificatesPage() {
             } else {
                 alert("Hata: " + msg);
             }
+        } finally {
+            setDownloadingId(null);
         }
     };
 
@@ -153,9 +156,21 @@ export default function CertificatesPage() {
                                     <TableCell>{cert.training_program?.name}</TableCell>
                                     <TableCell>{new Date(cert.issue_date).toLocaleDateString('tr-TR')}</TableCell>
                                     <TableCell className="text-right space-x-2">
-                                        <Button variant="outline" size="sm" className="gap-1" onClick={() => handleDownload(cert.id, cert.certificate_no)}>
-                                            <Download size={14} />
-                                            PDF
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="gap-1 min-w-[80px]"
+                                            onClick={() => handleDownload(cert.id, cert.certificate_no)}
+                                            disabled={downloadingId === cert.id}
+                                        >
+                                            {downloadingId === cert.id ? (
+                                                <span className="animate-pulse">İniyor...</span>
+                                            ) : (
+                                                <>
+                                                    <Download size={14} />
+                                                    PDF
+                                                </>
+                                            )}
                                         </Button>
                                     </TableCell>
                                 </TableRow>

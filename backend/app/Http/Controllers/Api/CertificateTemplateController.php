@@ -98,11 +98,20 @@ class CertificateTemplateController extends Controller
 
     public function destroy($id)
     {
-        $template = CertificateTemplate::findOrFail($id);
-        // Optional: Delete file from storage
-        // Storage::disk('public')->delete($template->background_path);
-        
-        $template->delete();
-        return response()->json(['message' => 'Şablon silindi.']);
+        try {
+            $template = CertificateTemplate::findOrFail($id);
+            // Optional: Delete file from storage
+            // Storage::disk('public')->delete($template->background_path);
+            
+            $template->delete();
+            return response()->json(['message' => 'Şablon başarıyla silindi.']);
+        } catch (\Illuminate\Database\QueryException $e) {
+            if ($e->getCode() == "23000") {
+                return response()->json(['message' => 'Bu şablon kullanıldığı için silinemez. Önce ilişkili sertifikaları silmelisiniz.'], 409);
+            }
+            return response()->json(['message' => 'Silme işlemi sırasında bir hata oluştu.'], 500);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Silme işlemi başarısız: ' . $e->getMessage()], 500);
+        }
     }
 }

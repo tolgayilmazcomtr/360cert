@@ -55,13 +55,16 @@ export default function CertificateTemplatesPage() {
         }
     };
 
-    const handleDelete = async (id) => {
+    const handleDelete = async (e, id) => {
+        e.stopPropagation(); // Stop clicking on the card
         if (!window.confirm("Şablonu silmek istediğinize emin misiniz?")) return;
         try {
             await api.delete(`/certificate-templates/${id}`);
             fetchTemplates();
+            alert("Şablon silindi.");
         } catch (error) {
             console.error("Silme hatası", error);
+            alert(error.response?.data?.message || "Silme işlemi başarısız oldu.");
         }
     };
 
@@ -96,7 +99,7 @@ export default function CertificateTemplatesPage() {
                                     <Settings size={16} className="mr-2" />
                                     Tasarla
                                 </Button>
-                                <Button variant="destructive" size="icon" onClick={() => handleDelete(template.id)}>
+                                <Button variant="destructive" size="icon" onClick={(e) => handleDelete(e, template.id)}>
                                     <Trash2 size={16} />
                                 </Button>
                             </div>
