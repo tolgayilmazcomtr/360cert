@@ -26,7 +26,7 @@ export default function DashboardLayout() {
                             <Sidebar />
                         </SheetContent>
                     </Sheet>
-                    <div className="ml-4 font-bold text-lg">360Cert</div>
+                    <span className="ml-4 font-bold text-xl">IAC</span>
                 </header>
 
                 {/* Content Outlet */}

@@ -51,7 +51,7 @@ export default function Sidebar() {
                     3
                 </div>
                 <div>
-                    <h1 className="text-xl font-bold tracking-tight text-foreground">360Cert</h1>
+                    <h1 className="text-xl font-bold tracking-tight text-foreground">IAC</h1>
                     <p className="text-[10px] text-muted-foreground tracking-wider uppercase">v1.0.0</p>
                 </div>
             </div>

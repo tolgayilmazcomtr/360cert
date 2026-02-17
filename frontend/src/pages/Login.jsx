@@ -27,14 +27,14 @@ export default function Login() {
     return (
         <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900">
             <div className="absolute top-4 left-4 text-sm text-slate-500">
-                360Cert
+                IAC
             </div>
 
             <Card className="w-full max-w-md shadow-lg border-0 bg-white/80 backdrop-blur-sm dark:bg-slate-800/80">
                 <CardHeader className="space-y-1">
-                    <CardTitle className="text-2xl font-bold text-center text-primary">Giriş Yap</CardTitle>
+                    <CardTitle className="text-2xl font-bold tracking-tight">IAC Yönetim Paneli</CardTitle>
                     <CardDescription className="text-center">
-                        360Cert Bayi ve Yönetim Paneli
+                        IAC Bayi ve Yönetim Paneli
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -71,8 +71,6 @@ export default function Login() {
                     </form>
                 </CardContent>
                 <CardFooter className="flex flex-col items-center gap-2 text-xs text-muted-foreground mt-4 border-t pt-4">
-                    <p>Tolga YILMAZ - <a href="https://www.tolgayilmaz.com.tr" className="hover:underline">www.tolgayilmaz.com.tr</a></p>
-                    <p>0532 353 50 32</p>
                 </CardFooter>
             </Card>
         </div>
