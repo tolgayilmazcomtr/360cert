@@ -65,7 +65,9 @@
                     $content = $certificate->training_program->name;
                     break;
                 case 'qr_code':
-                    $content = '<img src="data:image/svg+xml;base64,'.$qrCode.'" width="'.($element['width'] ?? 100).'" height="'.($element['height'] ?? 100).'">';
+                    $w = $element['width'] ?? 100;
+                    $h = $element['height'] ?? 100;
+                    $content = '<img src="data:image/svg+xml;base64,'.$qrCode.'" style="width: '.$w.'px; height: '.$h.'px; display: block;">';
                     break;
                 default:
                     $content = $element['label'] ?? '';
