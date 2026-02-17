@@ -67,7 +67,7 @@ class CertificateController extends Controller
 
             // Generate Certificate
             $hash = Str::random(16);
-            $certNo = 'CERT-' . date('Y') . '-' . strtoupper(Str::random(6));
+            $certNo = 'IAC-' . date('Y') . '-' . strtoupper(Str::random(6));
 
             $certificate = Certificate::create([
                 'certificate_no' => $certNo,
@@ -140,7 +140,7 @@ class CertificateController extends Controller
             }
         }
         
-        $customPaper = [0, 0, $width, $height];
+        $customPaper = [0, 0, $width * 72 / 96, $height * 72 / 96];
 
         $bgBase64 = 'data:image/' . pathinfo($bgPath, PATHINFO_EXTENSION) . ';base64,' . base64_encode(file_get_contents($bgPath));
 
