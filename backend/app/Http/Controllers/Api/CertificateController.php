@@ -125,12 +125,19 @@ class CertificateController extends Controller
         $config = $certificate->template->layout_config;
         
         // Determine PDF Dimensions
-        // If canvas dimensions are set in config, use them. Otherwise fallback to image dimensions.
-        if (!empty($config['canvasWidth']) && !empty($config['canvasHeight'])) {
-            $width = $config['canvasWidth'];
-            $height = $config['canvasHeight'];
-        } else {
-             list($width, $height) = getimagesize($bgPath);
+        // ALWAYS use the actual background image dimensions to prevent white space.
+        // Config canvas dimensions might be different from actual image if user uploaded a new one.
+        list($width, $height) = getimagesize($bgPath);
+        
+        // If getting dimensions failed, fallback to defaults or config (safety check)
+        if (!$width || !$height) {
+             if (!empty($config['canvasWidth']) && !empty($config['canvasHeight'])) {
+                $width = $config['canvasWidth'];
+                $height = $config['canvasHeight'];
+            } else {
+                $width = 842; // Fallback A4 Landscape
+                $height = 595;
+            }
         }
         
         $customPaper = [0, 0, $width, $height];
