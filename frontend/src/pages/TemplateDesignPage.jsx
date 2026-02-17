@@ -9,6 +9,18 @@ import { ArrowLeft, Save, Type, GripVertical, Settings } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { getStorageUrl } from "@/lib/utils";
 
+const FONTS = [
+    "Arial",
+    "Roboto",
+    "Open Sans",
+    "Montserrat",
+    "Lato",
+    "Playfair Display",
+    "Merriweather",
+    "Poppins",
+    "Oswald"
+];
+
 export default function TemplateDesignPage() {
     const { id } = useParams();
     const navigate = useNavigate();
@@ -24,6 +36,17 @@ export default function TemplateDesignPage() {
     // Dragging state
     const [isDragging, setIsDragging] = useState(false);
     const [dragStart, setDragStart] = useState({ x: 0, y: 0, elX: 0, elY: 0 });
+
+    // Load Google Fonts
+    useEffect(() => {
+        const link = document.createElement("link");
+        link.href = "https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,400;0,700;1,400&family=Merriweather:ital,wght@0,400;0,700;1,400&family=Montserrat:ital,wght@0,400;0,700;1,400&family=Open+Sans:ital,wght@0,400;0,700;1,400&family=Oswald:wght@400;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Poppins:ital,wght@0,400;0,700;1,400&family=Roboto:ital,wght@0,400;0,700;1,400&display=swap";
+        link.rel = "stylesheet";
+        document.head.appendChild(link);
+        return () => {
+            document.head.removeChild(link);
+        };
+    }, []);
 
     useEffect(() => {
         const fetchTemplate = async () => {
@@ -222,33 +245,28 @@ export default function TemplateDesignPage() {
                                     />
                                 </div>
                             </div>
-                            {/* ... (Existing buttons A4) ... */}
-                            {/* Shortened for replacement */}
-                        </div>
-                        {/* We need to include the rest of the sidebar content here or replacement will cut it off if not careful.
-                            Actually, the user replaced content block is large. I should copy the relevant parts. 
-                         */}
-                        {/* Re-rendering truncated sidebar for brevity in replacement, assuming structure logic is identical */}
-                        <div className="flex gap-2 mt-4">
-                            <Button size="xs" variant="outline" className="flex-1 text-xs" onClick={() => setConfig({ ...config, canvasWidth: 1123, canvasHeight: 794 })}>
-                                A4 Yatay
-                            </Button>
-                            <Button size="xs" variant="outline" className="flex-1 text-xs" onClick={() => setConfig({ ...config, canvasWidth: 794, canvasHeight: 1123 })}>
-                                A4 Dikey
-                            </Button>
-                        </div>
-                        <Separator className="my-4" />
-                        <div className="space-y-2">
-                            <Label className="text-xs">Arkaplan Yerleşimi</Label>
-                            <select
-                                className="flex h-9 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                                value={config.backgroundMode || 'stretch'}
-                                onChange={(e) => setConfig({ ...config, backgroundMode: e.target.value })}
-                            >
-                                <option value="stretch">Sayfaya Yay (Tam Sığdır)</option>
-                                <option value="contain">Orantılı Sığdır (Boşluk Kalabilir)</option>
-                                <option value="cover">Orantılı Doldur (Taşabilir)</option>
-                            </select>
+
+                            <div className="flex gap-2 mt-4">
+                                <Button size="xs" variant="outline" className="flex-1 text-xs" onClick={() => setConfig({ ...config, canvasWidth: 1123, canvasHeight: 794 })}>
+                                    A4 Yatay
+                                </Button>
+                                <Button size="xs" variant="outline" className="flex-1 text-xs" onClick={() => setConfig({ ...config, canvasWidth: 794, canvasHeight: 1123 })}>
+                                    A4 Dikey
+                                </Button>
+                            </div>
+                            <Separator className="my-4" />
+                            <div className="space-y-2">
+                                <Label className="text-xs">Arkaplan Yerleşimi</Label>
+                                <select
+                                    className="flex h-9 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                                    value={config.backgroundMode || 'stretch'}
+                                    onChange={(e) => setConfig({ ...config, backgroundMode: e.target.value })}
+                                >
+                                    <option value="stretch">Sayfaya Yay (Tam Sığdır)</option>
+                                    <option value="contain">Orantılı Sığdır (Boşluk Kalabilir)</option>
+                                    <option value="cover">Orantılı Doldur (Taşabilir)</option>
+                                </select>
+                            </div>
                         </div>
                     </Card>
 
@@ -276,8 +294,18 @@ export default function TemplateDesignPage() {
                                                 <div><Label className="text-xs">Y</Label><Input type="number" value={el.y} onChange={e => updateElement(index, 'y', parseInt(e.target.value))} className="h-7 text-xs" /></div>
                                             </div>
                                             <div className="grid grid-cols-2 gap-2">
-                                                <div><Label className="text-xs">Font</Label><Input type="number" value={el.font_size || 14} onChange={e => updateElement(index, 'font_size', parseInt(e.target.value))} className="h-7 text-xs" /></div>
+                                                <div><Label className="text-xs">Font B.</Label><Input type="number" value={el.font_size || 14} onChange={e => updateElement(index, 'font_size', parseInt(e.target.value))} className="h-7 text-xs" /></div>
                                                 <div><Label className="text-xs">Renk</Label><Input type="color" value={el.color || '#000000'} onChange={e => updateElement(index, 'color', e.target.value)} className="h-7 w-full p-1" /></div>
+                                            </div>
+                                            <div className="pt-2">
+                                                <Label className="text-xs">Yazı Tipi</Label>
+                                                <select
+                                                    className="flex h-8 w-full items-center justify-between rounded-md border border-input bg-background px-2 py-1 text-xs"
+                                                    value={el.font_family || 'Arial'}
+                                                    onChange={e => updateElement(index, 'font_family', e.target.value)}
+                                                >
+                                                    {FONTS.map(f => <option key={f} value={f}>{f}</option>)}
+                                                </select>
                                             </div>
                                         </div>
                                     )}
@@ -289,55 +317,59 @@ export default function TemplateDesignPage() {
 
                 {/* Canvas Area */}
                 <div ref={containerRef} className="flex-1 bg-slate-200/50 rounded-lg overflow-auto flex items-center justify-center p-8 border relative">
-                    <div
-                        className="shadow-2xl bg-white origin-center transition-transform duration-200"
-                        style={{
-                            width: `${config.canvasWidth || 800}px`,
-                            height: `${config.canvasHeight || 600}px`,
-                            transform: `scale(${scale})`,
-                            // Ensure the scaled element takes up layout space correctly if we want scrollbars, 
-                            // typically scaling needs transform-origin top left for scrollable containers, 
-                            // but centering is nicer. For centering + scroll, we might need a wrapper.
-                            // However, flex center handles the wrapper.
-                            // If scale < 1, centering works. If scale > 1, we need to ensure it expands.
-                        }}
-                    >
-                        {/* Background Image Layer */}
-                        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                            <img
-                                src={getStorageUrl(template.background_path)}
-                                alt="Background"
-                                className="w-full h-full"
-                                style={{
-                                    objectFit: config.backgroundMode === 'contain' ? 'contain' : (config.backgroundMode === 'cover' ? 'cover' : 'fill')
-                                }}
-                                onLoad={handleImageLoad}
-                            />
-                        </div>
-
-                        {/* Elements Layer */}
-                        {config.elements.map((el, index) => (
-                            <div
-                                key={index}
-                                className={`absolute whitespace-nowrap select-none cursor-grab active:cursor-grabbing hover:ring-1 hover:ring-blue-300 ${selectedElementIndex === index ? 'ring-2 ring-blue-500 bg-blue-500/10' : ''}`}
-                                style={{
-                                    left: `${el.x}px`,
-                                    top: `${el.y}px`,
-                                    fontSize: `${el.font_size || 14}px`,
-                                    color: el.color || '#000000',
-                                    fontFamily: el.font_family || 'sans-serif',
-                                }}
-                                onMouseDown={(e) => handleElementMouseDown(e, index)}
-                            >
-                                {el.type === 'qr_code' ? (
-                                    <div className="border border-dashed border-black w-[100px] h-[100px] flex items-center justify-center text-xs bg-white/50">
-                                        QR Alanı
-                                    </div>
-                                ) : (
-                                    `[${el.label}]`
-                                )}
+                    {/* Canvas Wrapper for Centering */}
+                    <div style={{
+                        width: `${(config.canvasWidth || 800) * scale}px`,
+                        height: `${(config.canvasHeight || 600) * scale}px`,
+                        transition: 'width 0.2s, height 0.2s',
+                        position: 'relative',
+                        flexShrink: 0
+                    }}>
+                        <div
+                            className="shadow-2xl bg-white origin-top-left transition-transform duration-200"
+                            style={{
+                                width: `${config.canvasWidth || 800}px`,
+                                height: `${config.canvasHeight || 600}px`,
+                                transform: `scale(${scale})`,
+                            }}
+                        >
+                            {/* Background Image Layer */}
+                            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                                <img
+                                    src={getStorageUrl(template.background_path)}
+                                    alt="Background"
+                                    className="w-full h-full"
+                                    style={{
+                                        objectFit: config.backgroundMode === 'contain' ? 'contain' : (config.backgroundMode === 'cover' ? 'cover' : 'fill')
+                                    }}
+                                    onLoad={handleImageLoad}
+                                />
                             </div>
-                        ))}
+
+                            {/* Elements Layer */}
+                            {config.elements.map((el, index) => (
+                                <div
+                                    key={index}
+                                    className={`absolute whitespace-nowrap select-none cursor-grab active:cursor-grabbing hover:ring-1 hover:ring-blue-300 ${selectedElementIndex === index ? 'ring-2 ring-blue-500 bg-blue-500/10' : ''}`}
+                                    style={{
+                                        left: `${el.x}px`,
+                                        top: `${el.y}px`,
+                                        fontSize: `${el.font_size || 14}px`,
+                                        color: el.color || '#000000',
+                                        fontFamily: el.font_family || 'Arial',
+                                    }}
+                                    onMouseDown={(e) => handleElementMouseDown(e, index)}
+                                >
+                                    {el.type === 'qr_code' ? (
+                                        <div className="border border-dashed border-black w-[100px] h-[100px] flex items-center justify-center text-xs bg-white/50">
+                                            QR Alanı
+                                        </div>
+                                    ) : (
+                                        `[${el.label}]`
+                                    )}
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 </div>
             </div>
