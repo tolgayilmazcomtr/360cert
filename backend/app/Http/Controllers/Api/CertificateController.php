@@ -110,7 +110,11 @@ class CertificateController extends Controller
         }
 
         // Generate QR Code
-        $verifyUrl = config('app.url') . "/verify/" . $certificate->qr_code_hash;
+        // Generate QR Code
+        $frontendUrl = env('FRONTEND_URL', config('app.url'));
+        // Ensure no trailing slash
+        $frontendUrl = rtrim($frontendUrl, '/');
+        $verifyUrl = $frontendUrl . "/verify/" . $certificate->qr_code_hash;
         $qrCode = base64_encode(QrCode::format('svg')->size(100)->generate($verifyUrl));
 
         // Get Background Image Base64

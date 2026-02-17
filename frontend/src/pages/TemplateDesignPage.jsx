@@ -383,8 +383,14 @@ export default function TemplateDesignPage() {
                                     onMouseDown={(e) => handleElementMouseDown(e, index)}
                                 >
                                     {el.type === 'qr_code' ? (
-                                        <div className="border border-dashed border-black w-[100px] h-[100px] flex items-center justify-center text-xs bg-white/50">
-                                            QR Alanı
+                                        <div
+                                            className="border border-dashed border-black inline-flex items-center justify-center text-xs bg-white/50"
+                                            style={{
+                                                width: `${el.width || 100}px`,
+                                                height: `${el.height || 100}px`
+                                            }}
+                                        >
+                                            QR
                                         </div>
                                     ) : (
                                         `[${el.label}]`
