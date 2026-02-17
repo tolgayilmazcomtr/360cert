@@ -92,7 +92,24 @@ export default function CertificatesPage() {
             link.click();
         } catch (error) {
             console.error("İndirme hatası", error);
-            alert("İndirme başarısız.");
+            const msg = error.response?.data?.message || "İndirme başarısız.";
+            // If it's a blob, we might need to read it differently, but for 404/500 usually it returns JSON if set correctly.
+            // However, with responseType: blob, reading JSON error is tricky.
+            // Let's retry parsing the blob if appropriate.
+            if (error.response?.data instanceof Blob) {
+                const reader = new FileReader();
+                reader.onload = () => {
+                    try {
+                        const result = JSON.parse(reader.result);
+                        alert("Hata: " + (result.message || msg));
+                    } catch (e) {
+                        alert("Hata: " + msg);
+                    }
+                };
+                reader.readAsText(error.response.data);
+            } else {
+                alert("Hata: " + msg);
+            }
         }
     };
 
