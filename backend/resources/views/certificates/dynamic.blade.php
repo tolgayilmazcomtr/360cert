@@ -4,13 +4,20 @@
     <meta charset="utf-8">
     <title>Sertifika</title>
     <style>
+        @foreach(collect($config['elements'])->pluck('font_family')->unique()->filter() as $font)
+            @if($font != 'Arial' && $font != 'DejaVu Sans')
+                @import url('https://fonts.googleapis.com/css2?family={{ urlencode($font) }}:ital,wght@0,400;0,700;1,400&display=swap');
+            @endif
+        @endforeach
+
         @page {
             margin: 0px;
+            padding: 0px;
         }
         body { 
             font-family: 'DejaVu Sans', sans-serif; 
-            margin: 0; 
-            padding: 0; 
+            margin: 0px; 
+            padding: 0px; 
             width: 100%; 
             height: 100%;
         }
@@ -19,6 +26,8 @@
             width: {{ $width }}px;
             height: {{ $height }}px;
             overflow: hidden;
+            margin: 0;
+            padding: 0;
         }
         .background-layer {
             position: absolute;
@@ -27,28 +36,13 @@
             width: 100%;
             height: 100%;
             z-index: -1;
-            /* 
-               DomPDF support for object-fit is non-existent.
-               We have to handle fit manually via CSS or accept stretch (100% 100%) as default.
-               For 'contain' or 'cover', standard HTML/CSS tricks are needed but might fail in DomPDF.
-               
-               However, if user selects 'stretch' or 'fill', width/height 100% works best.
-               If user selects 'contain', object-fit: contain might be ignored.
-               Lets try to support basic fit.
-            */
-            @if(isset($config['backgroundMode']) && $config['backgroundMode'] == 'contain')
-                object-fit: contain;
-            @elseif(isset($config['backgroundMode']) && $config['backgroundMode'] == 'cover')
-                object-fit: cover;
-            @else
-                /* Default to stretch/fill which is usually desired for certifications */
-                /* No object-fit ensures it stretches to container */
-            @endif
+            /* Force stretch to cover full PDF paper */
+            width: {{ $width }}px;
+            height: {{ $height }}px;
         }
         .element {
             position: absolute;
             white-space: nowrap;
-            /* DomPDF has poor transform support, removed vertical centering */
         }
     </style>
 </head>
@@ -84,7 +78,7 @@
             top: {{ $element['y'] }}px; 
             font-size: {{ $element['font_size'] ?? 14 }}px; 
             color: {{ $element['color'] ?? '#000000' }};
-            font-family: {{ $element['font_family'] ?? 'DejaVu Sans' }};
+            font-family: '{{ $element['font_family'] ?? 'DejaVu Sans' }}', sans-serif;
         ">
             {!! $content !!}
         </div>
