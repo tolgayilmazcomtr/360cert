@@ -24,7 +24,7 @@ return [
         explode(',', env('CORS_ALLOWED_ORIGINS', ''))
     ),
 
-    'allowed_origins_patterns' => [],
+    'allowed_origins_patterns' => ['https://*.traefik.me', 'https://*.dokploy.com'],
 
     'allowed_headers' => ['*'],
 
