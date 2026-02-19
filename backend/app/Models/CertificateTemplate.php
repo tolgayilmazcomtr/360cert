@@ -20,4 +20,11 @@ class CertificateTemplate extends Model
     protected $casts = [
         'layout_config' => 'array',
     ];
+
+    public function users()
+    {
+        return $this->belongsToMany(User::class, 'certificate_template_user')
+                    ->withPivot('assigned_at')
+                    ->withTimestamps();
+    }
 }

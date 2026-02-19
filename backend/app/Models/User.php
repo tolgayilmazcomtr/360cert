@@ -58,6 +58,8 @@ class User extends Authenticatable
     }
     public function templates()
     {
-        return $this->belongsToMany(CertificateTemplate::class, 'certificate_template_user');
+        return $this->belongsToMany(CertificateTemplate::class, 'certificate_template_user')
+                    ->withPivot('assigned_at')
+                    ->withTimestamps();
     }
 }
