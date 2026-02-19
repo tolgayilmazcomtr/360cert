@@ -1,24 +1,6 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import api from "../api/axios";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import {
-    CreditCard,
-    FileText,
-    Clock,
-    Calendar,
-    Plus,
-    Upload,
-    Package,
-    History,
-    Wallet
-} from "lucide-react";
-import { Link } from "react-router-dom";
-
-import { useEffect, useState } from "react";
-import { useAuth } from "../context/AuthContext";
-import api from "../api/axios";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -72,7 +54,13 @@ export default function DashboardPage() {
         return <div className="flex h-[50vh] items-center justify-center text-muted-foreground">Yükleniyor...</div>;
     }
 
-    const { metrics, chart_data, recent_activity } = stats;
+    const { metrics, chart_data, recent_activity } = stats || {
+        metrics: { total_certificates: 0, total_students: 0, total_volume: 0, balance: 0, quota: 0 },
+        chart_data: [],
+        recent_activity: []
+    };
+
+    if (!stats) return <div className="p-10 text-center">Veriler yüklenemedi. Lütfen backend servisini kontrol edin.</div>;
 
     const GradientCard = ({ title, value, subtext, icon: Icon, gradient, shadowClass }) => (
         <div className={`relative overflow-hidden rounded-2xl p-6 text-white shadow-soft transition-transform hover:-translate-y-1 ${gradient} ${shadowClass}`}>

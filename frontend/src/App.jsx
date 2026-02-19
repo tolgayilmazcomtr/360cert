@@ -48,12 +48,10 @@ function AppRoutes() {
         <Route index element={<DashboardPage />} />
         <Route path="balance" element={<BalancePage />} />
         <Route path="students" element={<StudentsPage />} />
-        <Route path="students" element={<StudentsPage />} />
         <Route path="programs" element={<TrainingProgramsPage />} />
         <Route path="certificates" element={<CertificatesPage />} />
         <Route path="certificates/new" element={<CertificateCreatePage />} />
         <Route path="certificates/bulk" element={<BulkUploadPage />} />
-        <Route path="templates" element={<CertificateTemplatesPage />} />
         <Route path="templates" element={<CertificateTemplatesPage />} />
         <Route path="templates/:id/design" element={<TemplateDesignPage />} />
         <Route path="dealers" element={<DealersPage />} />
