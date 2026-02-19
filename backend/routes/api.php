@@ -34,6 +34,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/certificates', [\App\Http\Controllers\Api\CertificateController::class, 'store']);
     Route::put('/certificates/{id}/status', [\App\Http\Controllers\Api\CertificateController::class, 'updateStatus']);
     Route::get('/certificates/{id}/download', [\App\Http\Controllers\Api\CertificateController::class, 'download']);
+    Route::get('/certificates/{id}', [\App\Http\Controllers\Api\CertificateController::class, 'show']);
     Route::get('/certificate-templates', [\App\Http\Controllers\Api\CertificateTemplateController::class, 'index']);
     Route::post('/certificate-templates', [\App\Http\Controllers\Api\CertificateTemplateController::class, 'store']);
     Route::put('/certificate-templates/{id}', [\App\Http\Controllers\Api\CertificateTemplateController::class, 'update']);
