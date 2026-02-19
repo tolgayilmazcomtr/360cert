@@ -56,4 +56,8 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+    public function templates()
+    {
+        return $this->belongsToMany(CertificateTemplate::class, 'certificate_template_user');
+    }
 }

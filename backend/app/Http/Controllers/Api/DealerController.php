@@ -73,4 +73,30 @@ class DealerController extends Controller
 
         return response()->json($dealer);
     }
+    public function assignTemplate(Request $request, $id)
+    {
+        $dealer = User::where('role', 'dealer')->findOrFail($id);
+        
+        $request->validate([
+            'template_id' => 'required|exists:certificate_templates,id',
+        ]);
+
+        $dealer->templates()->syncWithoutDetaching([$request->template_id]);
+
+        return response()->json(['message' => 'Şablon bayiye atandı.']);
+    }
+
+    public function revokeTemplate($id, $templateId)
+    {
+        $dealer = User::where('role', 'dealer')->findOrFail($id);
+        $dealer->templates()->detach($templateId);
+
+        return response()->json(['message' => 'Şablon ataması kaldırıldı.']);
+    }
+
+    public function getTemplates($id)
+    {
+        $dealer = User::where('role', 'dealer')->findOrFail($id);
+        return response()->json($dealer->templates);
+    }
 }

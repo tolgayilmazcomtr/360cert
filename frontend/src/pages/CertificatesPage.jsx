@@ -81,6 +81,22 @@ export default function CertificatesPage() {
 
     const [downloadingId, setDownloadingId] = useState(null);
 
+    const handleUpdateStatus = async (id, status) => {
+        if (!confirm(`Sertifikayı ${status === 'approved' ? 'onaylamak' : 'reddetmek'} istediğinize emin misiniz?`)) return;
+
+        try {
+            await api.put(`/certificates/${id}/status`, {
+                status,
+                rejection_reason: status === 'rejected' ? 'Yönetici tarafından reddedildi.' : null
+            });
+            alert("Sertifika durumu güncellendi.");
+            fetchCertificates();
+        } catch (error) {
+            console.error("Durum güncelleme hatası", error);
+            alert("İşlem başarısız.");
+        }
+    };
+
     const handleDownload = async (id, no) => {
         setDownloadingId(id);
         try {
@@ -134,17 +150,18 @@ export default function CertificatesPage() {
                             <TableHead>Öğrenci</TableHead>
                             <TableHead>Eğitim Programı</TableHead>
                             <TableHead>Tarih</TableHead>
+                            <TableHead>Durum</TableHead>
                             <TableHead className="text-right">İşlemler</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {loading ? (
                             <TableRow>
-                                <TableCell colSpan={5} className="text-center py-8">Yükleniyor...</TableCell>
+                                <TableCell colSpan={6} className="text-center py-8">Yükleniyor...</TableCell>
                             </TableRow>
                         ) : certificates.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                                     Henüz sertifika oluşturulmamış.
                                 </TableCell>
                             </TableRow>
@@ -155,13 +172,43 @@ export default function CertificatesPage() {
                                     <TableCell>{cert.student?.first_name} {cert.student?.last_name}</TableCell>
                                     <TableCell>{cert.training_program?.name}</TableCell>
                                     <TableCell>{new Date(cert.issue_date).toLocaleDateString('tr-TR')}</TableCell>
+                                    <TableCell>
+                                        <span className={`px-2 py-1 rounded-full text-xs font-semibold ${cert.status === 'approved' ? 'bg-green-100 text-green-700' :
+                                            cert.status === 'rejected' ? 'bg-red-100 text-red-700' :
+                                                'bg-yellow-100 text-yellow-700'
+                                            }`}>
+                                            {cert.status === 'approved' ? 'Onaylandı' :
+                                                cert.status === 'rejected' ? 'Reddedildi' : 'Onay Bekliyor'}
+                                        </span>
+                                    </TableCell>
                                     <TableCell className="text-right space-x-2">
+                                        {user?.role === 'admin' && cert.status === 'pending' && (
+                                            <>
+                                                <Button
+                                                    size="sm"
+                                                    className="bg-green-600 hover:bg-green-700 h-8"
+                                                    onClick={() => handleUpdateStatus(cert.id, 'approved')}
+                                                >
+                                                    Onayla
+                                                </Button>
+                                                <Button
+                                                    size="sm"
+                                                    variant="destructive"
+                                                    className="h-8"
+                                                    onClick={() => handleUpdateStatus(cert.id, 'rejected')}
+                                                >
+                                                    Reddet
+                                                </Button>
+                                            </>
+                                        )}
+
                                         <Button
                                             variant="outline"
                                             size="sm"
                                             className="gap-1 min-w-[80px]"
                                             onClick={() => handleDownload(cert.id, cert.certificate_no)}
-                                            disabled={downloadingId === cert.id}
+                                            disabled={downloadingId === cert.id || cert.status !== 'approved'}
+                                            title={cert.status !== 'approved' ? 'Onaylanmamış sertifika indirilemez' : ''}
                                         >
                                             {downloadingId === cert.id ? (
                                                 <span className="animate-pulse">İniyor...</span>

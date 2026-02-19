@@ -11,7 +11,13 @@ class CertificateTemplateController extends Controller
 {
     public function index(Request $request)
     {
-        return response()->json(CertificateTemplate::orderBy('created_at', 'desc')->get());
+        $user = $request->user();
+
+        if ($user->role === 'admin') {
+            return response()->json(CertificateTemplate::orderBy('created_at', 'desc')->get());
+        }
+
+        return response()->json($user->templates()->orderBy('created_at', 'desc')->get());
     }
 
     public function store(Request $request)

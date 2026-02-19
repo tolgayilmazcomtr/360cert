@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Check, X, Edit, RotateCcw, Plus } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
@@ -23,6 +24,62 @@ export default function DealersPage() {
     useEffect(() => {
         fetchDealers();
     }, []);
+
+    const [templates, setTemplates] = useState([]);
+    const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
+    const [selectedDealerId, setSelectedDealerId] = useState(null);
+    const [assignedTemplates, setAssignedTemplates] = useState([]);
+    const [selectedTemplateId, setSelectedTemplateId] = useState("");
+
+    const fetchTemplates = async () => {
+        try {
+            const res = await api.get("/certificate-templates");
+            setTemplates(res.data);
+        } catch (error) {
+            console.error("Şablonlar yüklenemedi", error);
+        }
+    };
+
+    const handleOpenTemplateModal = async (dealerId) => {
+        setSelectedDealerId(dealerId);
+        setIsTemplateModalOpen(true);
+        fetchTemplates();
+        fetchAssignedTemplates(dealerId);
+    };
+
+    const fetchAssignedTemplates = async (dealerId) => {
+        try {
+            const res = await api.get(`/dealers/${dealerId}/templates`);
+            setAssignedTemplates(res.data);
+        } catch (error) {
+            console.error("Atanmış şablonlar yüklenemedi", error);
+        }
+    };
+
+    const handleAssignTemplate = async () => {
+        if (!selectedTemplateId) return;
+        try {
+            await api.post(`/dealers/${selectedDealerId}/templates`, { template_id: selectedTemplateId });
+            alert("Şablon başarıyla atandı.");
+            fetchAssignedTemplates(selectedDealerId);
+            setSelectedTemplateId("");
+        } catch (error) {
+            console.error("Atama hatası", error);
+            alert("Hata: " + (error.response?.data?.message || "İşlem başarısız."));
+        }
+    };
+
+    const handleRevokeTemplate = async (templateId) => {
+        if (!confirm("Atamayı kaldırmak istediğinize emin misiniz?")) return;
+        try {
+            await api.delete(`/dealers/${selectedDealerId}/templates/${templateId}`);
+            alert("Atama kaldırıldı.");
+            fetchAssignedTemplates(selectedDealerId);
+        } catch (error) {
+            console.error("Kaldırma hatası", error);
+            alert("Hata oluştu.");
+        }
+    };
 
     const fetchDealers = async () => {
         try {
@@ -156,6 +213,9 @@ export default function DealersPage() {
                                         )}
                                     </TableCell>
                                     <TableCell className="text-right space-x-2">
+                                        <Button size="sm" variant="secondary" onClick={() => handleOpenTemplateModal(dealer.id)}>
+                                            Şablonlar
+                                        </Button>
                                         <Button variant="outline" size="sm" onClick={() => handleOpenQuotaModal(dealer)}>
                                             <Edit size={14} className="mr-1" /> Kota
                                         </Button>
@@ -176,6 +236,67 @@ export default function DealersPage() {
                     </TableBody>
                 </Table>
             </div>
+
+            <Dialog open={isTemplateModalOpen} onOpenChange={setIsTemplateModalOpen}>
+                <DialogContent className="sm:max-w-[600px]">
+                    <DialogHeader>
+                        <DialogTitle>Şablon Atamaları</DialogTitle>
+                        <DialogDescription>
+                            Bayinin kullanabileceği sertifika şablonlarını yönetin.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="space-y-6">
+                        <div className="flex gap-2 items-end">
+                            <div className="flex-1 space-y-2">
+                                <Label>Şablon Ekle</Label>
+                                <Select onValueChange={setSelectedTemplateId} value={selectedTemplateId}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Şablon Seçin..." />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {templates.map(t => (
+                                            <SelectItem key={t.id} value={t.id.toString()}>
+                                                {t.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <Button onClick={handleAssignTemplate}>Ekle</Button>
+                        </div>
+
+                        <div className="border rounded-md">
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Atanan Şablonlar</TableHead>
+                                        <TableHead className="text-right">İşlem</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {assignedTemplates.length === 0 ? (
+                                        <TableRow>
+                                            <TableCell colSpan={2} className="text-center text-muted-foreground">Atanmış şablon yok.</TableCell>
+                                        </TableRow>
+                                    ) : (
+                                        assignedTemplates.map(t => (
+                                            <TableRow key={t.id}>
+                                                <TableCell>{t.name}</TableCell>
+                                                <TableCell className="text-right">
+                                                    <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700 hover:bg-red-50" onClick={() => handleRevokeTemplate(t.id)}>
+                                                        Kaldır
+                                                    </Button>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))
+                                    )}
+                                </TableBody>
+                            </Table>
+                        </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
 
             <Dialog open={isQuotaModalOpen} onOpenChange={setIsQuotaModalOpen}>
                 <DialogContent>

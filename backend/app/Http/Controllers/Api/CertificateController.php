@@ -76,7 +76,7 @@ class CertificateController extends Controller
                 'certificate_template_id' => $request->certificate_template_id,
                 'issue_date' => $request->issue_date,
                 'qr_code_hash' => $hash,
-                'status' => 'approved', // Auto approve for now
+                'status' => $user->role === 'admin' ? 'approved' : 'pending',
                 'cost' => $program->default_price,
             ]);
 
@@ -107,6 +107,10 @@ class CertificateController extends Controller
         $user = $request->user();
         if ($user->role !== 'admin' && $certificate->student->user_id !== $user->id) {
             return response()->json(['message' => 'Yetkisiz erişim.'], 403);
+        }
+
+        if ($certificate->status !== 'approved') {
+             return response()->json(['message' => 'Sertifika henüz onaylanmamış.'], 403);
         }
 
         // Generate QR Code
@@ -187,8 +191,26 @@ class CertificateController extends Controller
         }
     }
     
-    public function templates()
+    public function updateStatus(Request $request, $id)
     {
-        return response()->json(CertificateTemplate::where('is_active', true)->get());
+        if ($request->user()->role !== 'admin') {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $certificate = Certificate::findOrFail($id);
+        
+        $request->validate([
+            'status' => 'required|in:approved,rejected',
+            'rejection_reason' => 'required_if:status,rejected|string|nullable'
+        ]);
+
+        $certificate->status = $request->status;
+        if ($request->status === 'rejected') {
+            $certificate->rejection_reason = $request->rejection_reason;
+            // Refund balance if rejected? For now, no automatic refund logic specified.
+        }
+        $certificate->save();
+
+        return response()->json($certificate);
     }
 }

@@ -27,6 +27,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Certificates
     Route::get('/certificates', [\App\Http\Controllers\Api\CertificateController::class, 'index']);
     Route::post('/certificates', [\App\Http\Controllers\Api\CertificateController::class, 'store']);
+    Route::put('/certificates/{id}/status', [\App\Http\Controllers\Api\CertificateController::class, 'updateStatus']);
     Route::get('/certificates/{id}/download', [\App\Http\Controllers\Api\CertificateController::class, 'download']);
     Route::get('/certificate-templates', [\App\Http\Controllers\Api\CertificateTemplateController::class, 'index']);
     Route::post('/certificate-templates', [\App\Http\Controllers\Api\CertificateTemplateController::class, 'store']);
@@ -36,6 +37,9 @@ Route::middleware('auth:sanctum')->group(function () {
     // Dealers
     Route::get('/dealers', [\App\Http\Controllers\Api\DealerController::class, 'index']);
     Route::put('/dealers/{id}/status', [\App\Http\Controllers\Api\DealerController::class, 'updateStatus']);
+    Route::get('/dealers/{id}/templates', [\App\Http\Controllers\Api\DealerController::class, 'getTemplates']);
+    Route::post('/dealers/{id}/templates', [\App\Http\Controllers\Api\DealerController::class, 'assignTemplate']);
+    Route::delete('/dealers/{id}/templates/{templateId}', [\App\Http\Controllers\Api\DealerController::class, 'revokeTemplate']);
 });
 
 // Public Routes
