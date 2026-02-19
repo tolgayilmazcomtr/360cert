@@ -99,16 +99,28 @@ export default function CertificatesPage() {
         }
     };
 
+    const [rejectionReason, setRejectionReason] = useState("");
+    const [showRejectInput, setShowRejectInput] = useState(false);
+
+    useEffect(() => {
+        if (!inspectionCert) {
+            setShowRejectInput(false);
+            setRejectionReason("");
+        }
+    }, [inspectionCert]);
+
     const handleUpdateStatus = async (id, status) => {
-        if (!confirm(`Sertifikayı ${status === 'approved' ? 'onaylamak' : 'reddetmek'} istediğinize emin misiniz?`)) return;
+        if (status === 'approved') {
+            if (!confirm('Sertifikayı onaylamak istediğinize emin misiniz?')) return;
+        }
 
         try {
             await api.put(`/certificates/${id}/status`, {
                 status,
-                rejection_reason: status === 'rejected' ? 'Yönetici tarafından reddedildi.' : null
+                rejection_reason: status === 'rejected' ? rejectionReason : null
             });
             alert("Sertifika durumu güncellendi.");
-            setInspectionCert(null); // Close modal if open
+            setInspectionCert(null);
             fetchCertificates();
             fetchStats();
         } catch (error) {
@@ -117,7 +129,67 @@ export default function CertificatesPage() {
         }
     };
 
-    // Helper to download PDF logic
+    // ... (rest of the file until the Modal Footer)
+
+    <DialogFooter className="gap-2 sm:justify-between">
+        {user?.role === 'admin' && inspectionCert.status === 'pending' ? (
+            <>
+                {showRejectInput ? (
+                    <div className="w-full space-y-3">
+                        <div className="space-y-1">
+                            <label className="text-sm font-medium text-slate-700">Red Nedeni (Opsiyonel)</label>
+                            <textarea
+                                className="w-full min-h-[80px] p-2 text-sm border border-slate-200 rounded-md focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500"
+                                placeholder="Lütfen reddetme nedenini belirtin..."
+                                value={rejectionReason}
+                                onChange={(e) => setRejectionReason(e.target.value)}
+                            />
+                        </div>
+                        <div className="flex justify-end gap-2">
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => { setShowRejectInput(false); setRejectionReason(""); }}
+                            >
+                                İptal
+                            </Button>
+                            <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => handleUpdateStatus(inspectionCert.id, 'rejected')}
+                            >
+                                Reddet ve Gönder
+                            </Button>
+                        </div>
+                    </div>
+                ) : (
+                    <>
+                        <Button
+                            variant="destructive"
+                            onClick={() => setShowRejectInput(true)}
+                            className="w-full sm:w-auto"
+                        >
+                            Reddet
+                        </Button>
+                        <Button
+                            className="bg-emerald-600 hover:bg-emerald-700 text-white w-full sm:w-auto"
+                            onClick={() => handleUpdateStatus(inspectionCert.id, 'approved')}
+                        >
+                            Onayla
+                        </Button>
+                    </>
+                )}
+            </>
+        ) : (
+            <Button
+                variant="outline"
+                className="w-full sm:w-auto ml-auto"
+                onClick={() => setInspectionCert(null)}
+            >
+                Kapat
+            </Button>
+        )}
+    </DialogFooter>
     const downloadPdf = async (id, no) => {
         try {
             const response = await api.get(`/certificates/${id}/download`, {
