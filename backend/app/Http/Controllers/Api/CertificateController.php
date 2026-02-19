@@ -18,15 +18,53 @@ class CertificateController extends Controller
     public function index(Request $request) 
     {
         $user = $request->user();
-        $query = Certificate::with(['student', 'training_program'])->orderBy('created_at', 'desc');
+        // Eager load student.user to get dealer info
+        $query = Certificate::with(['student.user', 'training_program']);
 
-        if ($user->role !== 'admin') {
-            $query->whereHas('student', function($q) use ($user) {
-                $q->where('user_id', $user->id);
+        // 1. Search (Student Name, TC, Certificate No)
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('certificate_no', 'like', "%{$search}%")
+                  ->orWhereHas('student', function($subQ) use ($search) {
+                      $subQ->where('first_name', 'like', "%{$search}%")
+                           ->orWhere('last_name', 'like', "%{$search}%")
+                           ->orWhere('tc_number', 'like', "%{$search}%");
+                  });
             });
         }
 
-        return $query->paginate(20);
+        // 2. Status Filter
+        if ($request->filled('status') && $request->status !== 'all') {
+            $query->where('status', $request->status);
+        }
+
+        // 3. Date Range Filter
+        if ($request->filled('startDate') && $request->filled('endDate')) {
+            $query->whereBetween('issue_date', [$request->startDate, $request->endDate]);
+        }
+
+        // 4. Role-Based Access & Dealer Filter
+        if ($user->role !== 'admin') {
+            // Dealers only see their own students' certificates
+            $query->whereHas('student', function($q) use ($user) {
+                $q->where('user_id', $user->id);
+            });
+        } else {
+            // Admins can filter by specific dealer
+            if ($request->filled('dealer_id') && $request->dealer_id !== 'all') {
+                $query->whereHas('student', function($q) use ($request) {
+                    $q->where('user_id', $request->dealer_id);
+                });
+            }
+        }
+
+        // Sorting
+        $sortField = $request->input('sort_by', 'created_at');
+        $sortOrder = $request->input('sort_order', 'desc');
+        $query->orderBy($sortField, $sortOrder);
+
+        return $query->paginate($request->input('per_page', 20));
     }
 
     public function store(Request $request)
