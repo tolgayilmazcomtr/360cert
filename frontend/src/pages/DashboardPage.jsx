@@ -216,53 +216,75 @@ export default function DashboardPage() {
                 </Card>
             </div>
 
-            {/* Quick Actions & Pending Tasks */}
-            <div className="grid gap-6 md:grid-cols-3">
-                <Card className="col-span-1 md:col-span-2 border-none shadow-soft bg-gradient-to-r from-slate-900 to-slate-800 text-white">
-                    <CardContent className="p-8 flex flex-col md:flex-row items-center justify-between gap-6">
+            {/* Premium Quick Actions */}
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+                {/* Create Certificate */}
+                <Link to="/certificates" className="group relative overflow-hidden rounded-2xl bg-white p-6 shadow-soft transition-all hover:-translate-y-1 hover:shadow-lg dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
+                    <div className="absolute top-0 right-0 -mt-4 -mr-4 h-24 w-24 rounded-full bg-blue-500/10 blur-2xl transition-all group-hover:bg-blue-500/20" />
+                    <div className="relative z-10 flex flex-col h-full justify-between">
+                        <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400 group-hover:scale-110 transition-transform">
+                            <FileText size={24} />
+                        </div>
                         <div>
-                            <h3 className="text-2xl font-bold mb-2">Hızlı Sertifika Oluştur</h3>
-                            <p className="text-slate-300 mb-6 max-w-md">
-                                Hemen yeni bir sertifika oluşturarak öğrencilerinize teslim edin.
-                                Şablon seçin, bilgileri girin ve anında PDF alın.
-                            </p>
-                            <Button asChild size="lg" className="bg-white text-slate-900 hover:bg-slate-100 border-none">
-                                <Link to="/certificates">Sertifika Oluştur <ArrowUpRight className="ml-2 h-4 w-4" /></Link>
-                            </Button>
+                            <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 group-hover:text-blue-600 transition-colors">Sertifika Oluştur</h3>
+                            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Yeni bir sertifika hazırlayın ve onaylayın.</p>
                         </div>
-                        <div className="opacity-80 hidden md:block">
-                            <FileText size={120} strokeWidth={0.5} />
+                        <div className="mt-4 flex items-center text-sm font-medium text-blue-600 opacity-0 transition-opacity group-hover:opacity-100">
+                            Hemen Başla <ArrowUpRight className="ml-1 h-4 w-4" />
                         </div>
-                    </CardContent>
-                </Card>
+                    </div>
+                </Link>
 
-                <Card className="col-span-1 border-none shadow-soft">
-                    <CardHeader>
-                        <CardTitle className="text-lg font-semibold text-slate-800">Sistem Durumu</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="space-y-4">
-                            <div className="flex items-center justify-between">
-                                <span className="text-sm text-slate-600">Sunucu Durumu</span>
-                                <span className="flex items-center text-xs font-medium text-green-600">
-                                    <span className="mr-1.5 h-2 w-2 rounded-full bg-green-500"></span>
-                                    Aktif
-                                </span>
-                            </div>
-                            <div className="flex items-center justify-between">
-                                <span className="text-sm text-slate-600">API Yanıt Süresi</span>
-                                <span className="text-xs font-medium text-slate-800">45ms</span>
-                            </div>
-                            <div className="flex items-center justify-between">
-                                <span className="text-sm text-slate-600">Sertifika Kuyruğu</span>
-                                <span className="text-xs font-medium text-slate-800">Boş</span>
-                            </div>
-                            <div className="mt-4 pt-4 border-t">
-                                <Button variant="outline" className="w-full text-xs h-8">Sistem Raporunu İndir</Button>
-                            </div>
+                {/* Add Student */}
+                <Link to="/students" className="group relative overflow-hidden rounded-2xl bg-white p-6 shadow-soft transition-all hover:-translate-y-1 hover:shadow-lg dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
+                    <div className="absolute top-0 right-0 -mt-4 -mr-4 h-24 w-24 rounded-full bg-purple-500/10 blur-2xl transition-all group-hover:bg-purple-500/20" />
+                    <div className="relative z-10 flex flex-col h-full justify-between">
+                        <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-purple-50 text-purple-600 dark:bg-purple-900/20 dark:text-purple-400 group-hover:scale-110 transition-transform">
+                            <Users size={24} />
                         </div>
-                    </CardContent>
-                </Card>
+                        <div>
+                            <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 group-hover:text-purple-600 transition-colors">Öğrenci Ekle</h3>
+                            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Sisteme yeni bir öğrenci kaydedin.</p>
+                        </div>
+                        <div className="mt-4 flex items-center text-sm font-medium text-purple-600 opacity-0 transition-opacity group-hover:opacity-100">
+                            Ekle <ArrowUpRight className="ml-1 h-4 w-4" />
+                        </div>
+                    </div>
+                </Link>
+
+                {/* Load Balance */}
+                <Link to="/wallet" className="group relative overflow-hidden rounded-2xl bg-white p-6 shadow-soft transition-all hover:-translate-y-1 hover:shadow-lg dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
+                    <div className="absolute top-0 right-0 -mt-4 -mr-4 h-24 w-24 rounded-full bg-emerald-500/10 blur-2xl transition-all group-hover:bg-emerald-500/20" />
+                    <div className="relative z-10 flex flex-col h-full justify-between">
+                        <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400 group-hover:scale-110 transition-transform">
+                            <CreditCard size={24} />
+                        </div>
+                        <div>
+                            <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 group-hover:text-emerald-600 transition-colors">Bakiye Yükle</h3>
+                            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Kredi kartı ile güvenli ödeme yapın.</p>
+                        </div>
+                        <div className="mt-4 flex items-center text-sm font-medium text-emerald-600 opacity-0 transition-opacity group-hover:opacity-100">
+                            Yükle <ArrowUpRight className="ml-1 h-4 w-4" />
+                        </div>
+                    </div>
+                </Link>
+
+                {/* View Reports */}
+                <Link to="/reports" className="group relative overflow-hidden rounded-2xl bg-white p-6 shadow-soft transition-all hover:-translate-y-1 hover:shadow-lg dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
+                    <div className="absolute top-0 right-0 -mt-4 -mr-4 h-24 w-24 rounded-full bg-orange-500/10 blur-2xl transition-all group-hover:bg-orange-500/20" />
+                    <div className="relative z-10 flex flex-col h-full justify-between">
+                        <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-orange-50 text-orange-600 dark:bg-orange-900/20 dark:text-orange-400 group-hover:scale-110 transition-transform">
+                            <Activity size={24} />
+                        </div>
+                        <div>
+                            <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 group-hover:text-orange-600 transition-colors">Raporlar</h3>
+                            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Detaylı analiz ve raporları inceleyin.</p>
+                        </div>
+                        <div className="mt-4 flex items-center text-sm font-medium text-orange-600 opacity-0 transition-opacity group-hover:opacity-100">
+                            İncele <ArrowUpRight className="ml-1 h-4 w-4" />
+                        </div>
+                    </div>
+                </Link>
             </div>
         </div>
     );
