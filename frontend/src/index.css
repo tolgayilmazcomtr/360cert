@@ -74,6 +74,32 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-slate-50 text-foreground;
+  }
+}
+
+@layer utilities {
+  .glass-card {
+    @apply bg-white/80 backdrop-blur-md border border-white/20 shadow-xl;
+  }
+
+  .shadow-soft {
+    box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.05);
+  }
+
+  .shadow-glow-primary {
+    box-shadow: 0 4px 20px 0 rgba(24, 144, 255, 0.2);
+  }
+
+  .shadow-glow-success {
+    box-shadow: 0 4px 20px 0 rgba(82, 196, 26, 0.2);
+  }
+
+  .shadow-glow-warning {
+    box-shadow: 0 4px 20px 0 rgba(250, 173, 20, 0.2);
+  }
+
+  .shadow-glow-purple {
+    box-shadow: 0 4px 20px 0 rgba(114, 46, 209, 0.2);
   }
 }

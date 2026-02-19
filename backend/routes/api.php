@@ -14,7 +14,12 @@ Route::middleware('auth:sanctum')->group(function () {
     // Transactions
     Route::get('/transactions', [\App\Http\Controllers\Api\TransactionController::class, 'index']);
     Route::post('/transactions', [\App\Http\Controllers\Api\TransactionController::class, 'store']);
+    Route::get('/transactions', [\App\Http\Controllers\Api\TransactionController::class, 'index']);
+    Route::post('/transactions', [\App\Http\Controllers\Api\TransactionController::class, 'store']);
     Route::put('/transactions/{id}/status', [\App\Http\Controllers\Api\TransactionController::class, 'updateStatus']);
+
+    // Dashboard
+    Route::get('/dashboard/stats', [\App\Http\Controllers\Api\DashboardController::class, 'index']);
 
     // Students
     Route::post('/students/import', [\App\Http\Controllers\Api\StudentController::class, 'import']);
