@@ -14,6 +14,7 @@ class Certificate extends Model
         'student_id',
         'training_program_id',
         'certificate_template_id',
+        'issue_date',
         'expiry_date',
         'status',
         'qr_code_hash',
