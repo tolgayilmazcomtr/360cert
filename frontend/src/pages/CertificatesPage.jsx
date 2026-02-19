@@ -329,7 +329,7 @@ export default function CertificatesPage() {
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="all">Tüm Bayiler</SelectItem>
-                                    {dealers.map(d => (
+                                    {Array.isArray(dealers) && dealers.map(d => (
                                         <SelectItem key={d.id} value={d.id.toString()}>{d.name} ({d.email})</SelectItem>
                                     ))}
                                 </SelectContent>
@@ -402,7 +402,7 @@ export default function CertificatesPage() {
                                     </div>
                                 </TableCell>
                             </TableRow>
-                        ) : certificates.length === 0 ? (
+                        ) : !Array.isArray(certificates) || certificates.length === 0 ? (
                             <TableRow>
                                 <TableCell colSpan={user?.role === 'admin' ? 7 : 6} className="text-center py-12 text-muted-foreground">
                                     <FileText className="h-10 w-10 mx-auto mb-2 opacity-20" />
