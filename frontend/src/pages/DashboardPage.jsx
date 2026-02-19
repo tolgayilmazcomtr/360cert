@@ -115,7 +115,7 @@ export default function DashboardPage() {
     );
 
     const dealerActions = [
-        { title: "Sertifika Oluştur", desc: "Tekil sertifika oluşturun.", icon: FileText, to: "/certificates", color: "blue" },
+        { title: "Sertifika Oluştur", desc: "Tekil sertifika oluşturun.", icon: FileText, to: "/certificates/new", color: "blue" },
         { title: "Toplu Yükleme", desc: "Excel ile çoklu sertifika.", icon: UploadCloud, to: "/certificates/bulk", color: "indigo", badge: "Hızlı" },
         { title: "Bakiye Yükle", desc: "Kredi kartı ile ödeme.", icon: CreditCard, to: "/balance", color: "emerald" },
         { title: "Paket Satın Al", desc: "Avantajlı sertifika paketleri.", icon: Package, to: "/packages", color: "orange", badge: "Fırsat" },
@@ -147,8 +147,8 @@ export default function DashboardPage() {
                         </Link>
                     </Button>
                     <Button asChild className="shadow-glow-primary bg-primary hover:bg-primary/90">
-                        <Link to="/certificates">
-                            <FileText className="mr-2 h-4 w-4" /> Sertifikalar
+                        <Link to="/certificates/new">
+                            <FileText className="mr-2 h-4 w-4" /> Sertifika Oluştur
                         </Link>
                     </Button>
                 </div>

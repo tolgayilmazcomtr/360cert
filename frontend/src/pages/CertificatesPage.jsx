@@ -5,12 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
-import { Plus, Download, Eye, FileText, Search, Filter, Calendar as CalendarIcon, ChevronLeft, ChevronRight, X, ExternalLink } from "lucide-react";
-import { formatCurrency } from "@/lib/utils";
+import { Eye, FileText, Search, X, ExternalLink, Download, Plus, ChevronLeft, ChevronRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Link } from "react-router-dom";
 
 export default function CertificatesPage() {
     const { user } = useAuth();
@@ -38,33 +36,17 @@ export default function CertificatesPage() {
     const [stats, setStats] = useState(null);
 
     // Modal & Download & Inspection
-    const [isModalOpen, setIsModalOpen] = useState(false);
     const [downloadingId, setDownloadingId] = useState(null);
     const [inspectionCert, setInspectionCert] = useState(null);
-
-    // Form Data (Select Options)
-    const [students, setStudents] = useState([]);
-    const [programs, setPrograms] = useState([]);
-    const [templates, setTemplates] = useState([]);
     const [dealers, setDealers] = useState([]); // For Admin filter
-
-    // New Certificate Form
-    const [formData, setFormData] = useState({
-        student_id: "",
-        training_program_id: "",
-        certificate_template_id: "",
-        issue_date: new Date().toISOString().split('T')[0],
-        transcript: null
-    });
 
     useEffect(() => {
         fetchCertificates();
         fetchStats();
-        fetchFormData();
         if (user?.role === 'admin') {
             fetchDealers();
         }
-    }, [pagination.current_page, filters]); // Re-fetch on pagination or filter change (add debounce for search if needed)
+    }, [pagination.current_page, filters]);
 
     // Debounce Search
     useEffect(() => {
@@ -117,55 +99,6 @@ export default function CertificatesPage() {
         }
     };
 
-    const fetchFormData = async () => {
-        try {
-            const [studentsRes, programsRes, templatesRes] = await Promise.all([
-                api.get("/students?per_page=100"),
-                api.get("/training-programs"),
-                api.get("/certificate-templates")
-            ]);
-            setStudents(studentsRes.data.data);
-            setPrograms(programsRes.data);
-            setTemplates(templatesRes.data);
-        } catch (error) {
-            console.error("Form verileri yüklenemedi", error);
-        }
-    };
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-
-        const data = new FormData();
-        data.append('student_id', formData.student_id);
-        data.append('training_program_id', formData.training_program_id);
-        data.append('certificate_template_id', formData.certificate_template_id);
-        data.append('issue_date', formData.issue_date);
-
-        if (formData.transcript) {
-            data.append('transcript', formData.transcript);
-        }
-
-        try {
-            await api.post("/certificates", data, {
-                headers: { 'Content-Type': 'multipart/form-data' }
-            });
-            setIsModalOpen(false);
-            setFormData({
-                student_id: "",
-                training_program_id: "",
-                certificate_template_id: "",
-                issue_date: new Date().toISOString().split('T')[0],
-                transcript: null
-            });
-            fetchCertificates();
-            fetchStats();
-            alert("Sertifika başarıyla oluşturuldu.");
-        } catch (error) {
-            console.error("Sertifika hatası", error);
-            alert("Hata: " + (error.response?.data?.message || "İşlem başarısız."));
-        }
-    };
-
     const handleUpdateStatus = async (id, status) => {
         if (!confirm(`Sertifikayı ${status === 'approved' ? 'onaylamak' : 'reddetmek'} istediğinize emin misiniz?`)) return;
 
@@ -184,7 +117,7 @@ export default function CertificatesPage() {
         }
     };
 
-    // Helper to download PDF logic (reused in table and modal)
+    // Helper to download PDF logic
     const downloadPdf = async (id, no) => {
         try {
             const response = await api.get(`/certificates/${id}/download`, {
@@ -253,9 +186,11 @@ export default function CertificatesPage() {
                     <h2 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100">Sertifikalar</h2>
                     <p className="text-slate-500">Tüm sertifikaları yönetin, filtreleyin ve işlem yapın.</p>
                 </div>
-                <Button onClick={() => setIsModalOpen(true)} className="gap-2 shadow-lg shadow-blue-500/20">
-                    <Plus size={16} />
-                    Yeni Sertifika
+                <Button asChild className="gap-2 shadow-lg shadow-blue-500/20">
+                    <Link to="/certificates/new">
+                        <Plus size={16} />
+                        Yeni Sertifika
+                    </Link>
                 </Button>
             </div>
 
@@ -435,42 +370,36 @@ export default function CertificatesPage() {
                                         </span>
                                     </TableCell>
                                     <TableCell className="text-right space-x-2">
-                                        {/* Admin Actions */}
-                                        {user?.role === 'admin' && (
-                                            <div className="flex items-center justify-end gap-2">
-                                                {cert.status === 'pending' && (
-                                                    <Button
-                                                        size="sm"
-                                                        variant="ghost"
-                                                        className="h-8 w-8 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                                                        onClick={() => handleInspect(cert.id)}
-                                                        title="İncele"
-                                                    >
-                                                        <Eye size={16} />
-                                                    </Button>
-                                                )}
-                                            </div>
-                                        )}
-
-                                        {/* Download Button (Only if Approved) */}
-                                        {cert.status === 'approved' && (
+                                        <div className="flex items-center justify-end gap-2">
                                             <Button
-                                                variant="outline"
                                                 size="sm"
-                                                className="gap-1 min-w-[80px] h-8 text-xs border-slate-200 hover:bg-slate-50"
-                                                onClick={() => handleDownload(cert.id, cert.certificate_no)}
-                                                disabled={downloadingId === cert.id}
+                                                variant="ghost"
+                                                className="h-8 w-8 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                                onClick={() => handleInspect(cert.id)}
+                                                title="Detaylar"
                                             >
-                                                {downloadingId === cert.id ? (
-                                                    <span className="animate-pulse">İniyor...</span>
-                                                ) : (
-                                                    <>
-                                                        <Download size={12} />
-                                                        PDF
-                                                    </>
-                                                )}
+                                                <Eye size={16} />
                                             </Button>
-                                        )}
+
+                                            {cert.status === 'approved' && (
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="gap-1 min-w-[80px] h-8 text-xs border-slate-200 hover:bg-slate-50 hidden md:flex"
+                                                    onClick={() => handleDownload(cert.id, cert.certificate_no)}
+                                                    disabled={downloadingId === cert.id}
+                                                >
+                                                    {downloadingId === cert.id ? (
+                                                        <span className="animate-pulse">İniyor...</span>
+                                                    ) : (
+                                                        <>
+                                                            <Download size={12} />
+                                                            PDF
+                                                        </>
+                                                    )}
+                                                </Button>
+                                            )}
+                                        </div>
                                     </TableCell>
                                 </TableRow>
                             ))
@@ -507,99 +436,14 @@ export default function CertificatesPage() {
                 </div>
             </div>
 
-            {/* Create Modal */}
-            <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-                <DialogContent className="sm:max-w-[500px]">
-                    <DialogHeader>
-                        <DialogTitle>Yeni Sertifika Oluştur</DialogTitle>
-                        <DialogDescription>
-                            Lütfen sertifika verilecek öğrenci ve programı seçiniz. Öğrencinin transkriptini yüklemeyi unutmayınız.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                        <div className="space-y-2">
-                            <Label>Öğrenci Seçin</Label>
-                            <Select onValueChange={(val) => setFormData({ ...formData, student_id: val })} required>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Öğrenci Ara..." />
-                                </SelectTrigger>
-                                <SelectContent className="max-h-[200px]">
-                                    {students.map(s => (
-                                        <SelectItem key={s.id} value={s.id.toString()}>
-                                            {s.first_name} {s.last_name} ({s.tc_number})
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label>Eğitim Programı</Label>
-                            <Select onValueChange={(val) => setFormData({ ...formData, training_program_id: val })} required>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Program Seçin..." />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {programs.map(p => (
-                                        <SelectItem key={p.id} value={p.id.toString()}>
-                                            {p.name} - {formatCurrency(p.default_price)}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label>Sertifika Şablonu</Label>
-                            <Select onValueChange={(val) => setFormData({ ...formData, certificate_template_id: val })} required>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Şablon Seçin..." />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {templates.map(t => (
-                                        <SelectItem key={t.id} value={t.id.toString()}>
-                                            {t.name}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label>Öğrenci Transkripti (Opsiyonel)</Label>
-                            <Input
-                                type="file"
-                                accept=".pdf,.jpg,.jpeg,.png"
-                                onChange={(e) => setFormData({ ...formData, transcript: e.target.files[0] })}
-                            />
-                            <p className="text-xs text-slate-500">PDF veya Resim formatında yükleyebilirsiniz. Max 10MB.</p>
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label>Düzenlenme Tarihi</Label>
-                            <Input
-                                type="date"
-                                value={formData.issue_date}
-                                onChange={e => setFormData({ ...formData, issue_date: e.target.value })}
-                                required
-                            />
-                        </div>
-
-                        <DialogFooter>
-                            <Button type="submit">Oluştur ve Onay Gönder</Button>
-                        </DialogFooter>
-                    </form>
-                </DialogContent>
-            </Dialog>
-
-            {/* Inspection Modal */}
+            {/* Inspection/Details Modal */}
             {inspectionCert && (
                 <Dialog open={!!inspectionCert} onOpenChange={(open) => !open && setInspectionCert(null)}>
                     <DialogContent className="sm:max-w-[900px]">
                         <DialogHeader>
-                            <DialogTitle>Sertifika Önizleme ve Onay</DialogTitle>
+                            <DialogTitle>Sertifika Detayları</DialogTitle>
                             <DialogDescription>
-                                Sertifika bilgilerini ve öğrenci transkriptini inceleyerek onay veya ret veriniz.
+                                Sertifika bilgilerini, transkripti ve durumu inceleyebilirsiniz.
                             </DialogDescription>
                         </DialogHeader>
 
@@ -626,7 +470,25 @@ export default function CertificatesPage() {
                                     <CardContent className="space-y-1">
                                         <div className="font-medium">{inspectionCert.training_program?.name}</div>
                                         <div className="text-sm text-slate-600">Şablon: {inspectionCert.template?.name}</div>
-                                        <div className="text-sm text-slate-600">Tarih: {new Date(inspectionCert.issue_date).toLocaleDateString('tr-TR')}</div>
+                                        <div className="text-sm text-slate-600">Veriliş Tarihi: {new Date(inspectionCert.issue_date).toLocaleDateString('tr-TR')}</div>
+                                        <div className="text-sm text-slate-600 mt-2">
+                                            Durum:
+                                            <span className={`ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border
+                                                ${inspectionCert.status === 'approved'
+                                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
+                                                    : inspectionCert.status === 'rejected'
+                                                        ? 'bg-rose-50 text-rose-700 border-rose-100'
+                                                        : 'bg-amber-50 text-amber-700 border-amber-100'
+                                                }`}>
+                                                {inspectionCert.status === 'approved' ? 'Onaylandı' :
+                                                    inspectionCert.status === 'rejected' ? 'Reddedildi' : 'Onay Bekliyor'}
+                                            </span>
+                                        </div>
+                                        {inspectionCert.rejection_reason && (
+                                            <div className="mt-2 p-2 bg-red-50 text-red-700 text-xs rounded border border-red-100">
+                                                <strong>Ret Nedeni:</strong> {inspectionCert.rejection_reason}
+                                            </div>
+                                        )}
                                     </CardContent>
                                 </Card>
 
@@ -655,33 +517,47 @@ export default function CertificatesPage() {
                                     <div className="text-center">
                                         <FileText className="h-16 w-16 text-slate-400 mx-auto mb-2" />
                                         <p className="text-slate-500 font-medium">Sertifika Önizleme</p>
-                                        <Button
-                                            className="mt-4"
-                                            variant="secondary"
-                                            onClick={() => downloadPdf(inspectionCert.id, inspectionCert.certificate_no)}
-                                        >
-                                            <Download className="mr-2 h-4 w-4" />
-                                            PDF İndir / Önizle
-                                        </Button>
+                                        {inspectionCert.status === 'approved' && (
+                                            <Button
+                                                className="mt-4"
+                                                variant="secondary"
+                                                onClick={() => downloadPdf(inspectionCert.id, inspectionCert.certificate_no)}
+                                            >
+                                                <Download className="mr-2 h-4 w-4" />
+                                                PDF İndir / Önizle
+                                            </Button>
+                                        )}
                                     </div>
                                 </div>
                             </div>
                         </div>
 
                         <DialogFooter className="gap-2 sm:justify-between">
-                            <Button
-                                variant="destructive"
-                                onClick={() => handleUpdateStatus(inspectionCert.id, 'rejected')}
-                                className="w-full sm:w-auto"
-                            >
-                                Reddet
-                            </Button>
-                            <Button
-                                className="bg-emerald-600 hover:bg-emerald-700 text-white w-full sm:w-auto"
-                                onClick={() => handleUpdateStatus(inspectionCert.id, 'approved')}
-                            >
-                                Onayla
-                            </Button>
+                            {user?.role === 'admin' && inspectionCert.status === 'pending' ? (
+                                <>
+                                    <Button
+                                        variant="destructive"
+                                        onClick={() => handleUpdateStatus(inspectionCert.id, 'rejected')}
+                                        className="w-full sm:w-auto"
+                                    >
+                                        Reddet
+                                    </Button>
+                                    <Button
+                                        className="bg-emerald-600 hover:bg-emerald-700 text-white w-full sm:w-auto"
+                                        onClick={() => handleUpdateStatus(inspectionCert.id, 'approved')}
+                                    >
+                                        Onayla
+                                    </Button>
+                                </>
+                            ) : (
+                                <Button
+                                    variant="outline"
+                                    className="w-full sm:w-auto ml-auto"
+                                    onClick={() => setInspectionCert(null)}
+                                >
+                                    Kapat
+                                </Button>
+                            )}
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
