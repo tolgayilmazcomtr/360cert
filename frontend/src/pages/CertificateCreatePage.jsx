@@ -49,10 +49,19 @@ export default function CertificateCreatePage() {
         e.preventDefault();
         setLoading(true);
         try {
+            if (!selectedTemplate || !selectedTemplate.id) {
+                alert("Şablon seçimi hatalı veya ID bulunamadı.");
+                setLoading(false);
+                return;
+            }
+
             const payload = {
                 ...formData,
                 certificate_template_id: selectedTemplate.id
             };
+
+            console.log("Sending payload:", payload);
+
             await api.post("/certificates", payload);
             alert("Sertifika başarıyla oluşturuldu!");
             navigate("/certificates");
@@ -67,7 +76,7 @@ export default function CertificateCreatePage() {
     return (
         <div className="max-w-5xl mx-auto space-y-8 animate-in slide-in-from-bottom-4 duration-500">
             <div>
-                <h2 className="text-3xl font-bold tracking-tight">Sertifika Ekle</h2>
+                <h2 className="text-3xl font-bold tracking-tight">Sertifika Ekle (v2)</h2>
                 <p className="text-muted-foreground">Yeni bir sertifika oluşturmak için şablon seçin ve bilgileri girin.</p>
             </div>
 
