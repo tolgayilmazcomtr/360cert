@@ -51,7 +51,7 @@ export default function CertificateCreatePage() {
         try {
             const payload = {
                 ...formData,
-                template_id: selectedTemplate.id
+                certificate_template_id: selectedTemplate.id
             };
             await api.post("/certificates", payload);
             alert("Sertifika başarıyla oluşturuldu!");
