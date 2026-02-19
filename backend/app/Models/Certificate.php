@@ -20,6 +20,7 @@ class Certificate extends Model
         'qr_code_hash',
         'rejection_reason',
         'cost',
+        'transcript_path',
     ];
 
     public function student()

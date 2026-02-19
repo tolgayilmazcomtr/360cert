@@ -67,6 +67,27 @@ class CertificateController extends Controller
         return $query->paginate($request->input('per_page', 20));
     }
 
+    public function show(Request $request, $id)
+    {
+        $certificate = Certificate::with(['student', 'training_program', 'template'])
+            ->findOrFail($id);
+
+        $user = $request->user();
+        
+        // Authorization
+        if ($user->role !== 'admin' && $certificate->student->user_id !== $user->id) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        // Add transcript URL if exists
+        $data = $certificate->toArray();
+        if ($certificate->transcript_path) {
+            $data['transcript_url'] = url('storage/' . $certificate->transcript_path);
+        }
+
+        return response()->json($data);
+    }
+
     public function store(Request $request)
     {
         $request->validate([
@@ -74,6 +95,7 @@ class CertificateController extends Controller
             'training_program_id' => 'required|exists:training_programs,id',
             'certificate_template_id' => 'required|exists:certificate_templates,id',
             'issue_date' => 'required|date',
+            'transcript' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240', // Max 10MB
         ]);
 
         $user = $request->user();
@@ -103,6 +125,14 @@ class CertificateController extends Controller
                 ]);
             }
 
+            // Upload Transcript
+            $transcriptPath = null;
+            if ($request->hasFile('transcript')) {
+                $file = $request->file('transcript');
+                $filename = 'transcript_' . time() . '_' . Str::random(10) . '.' . $file->getClientOriginalExtension();
+                $transcriptPath = $file->storeAs('transcripts', $filename, 'public');
+            }
+
             // Generate Certificate
             $hash = Str::random(16);
             $certNo = 'IAC-' . date('Y') . '-' . strtoupper(Str::random(6));
@@ -116,6 +146,7 @@ class CertificateController extends Controller
                 'qr_code_hash' => $hash,
                 'status' => $user->role === 'admin' ? 'approved' : 'pending',
                 'cost' => $program->default_price,
+                'transcript_path' => $transcriptPath,
             ]);
 
             DB::commit();
@@ -147,7 +178,8 @@ class CertificateController extends Controller
             return response()->json(['message' => 'Yetkisiz erişim.'], 403);
         }
 
-        if ($certificate->status !== 'approved') {
+        // Allow Admins to download PENDING certificates for preview
+        if ($certificate->status !== 'approved' && $user->role !== 'admin') {
              return response()->json(['message' => 'Sertifika henüz onaylanmamış.'], 403);
         }
 
