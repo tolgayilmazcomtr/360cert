@@ -75,15 +75,28 @@ class DealerController extends Controller
     }
     public function assignTemplate(Request $request, $id)
     {
-        $dealer = User::where('role', 'dealer')->findOrFail($id);
-        
-        $request->validate([
-            'template_id' => 'required|exists:certificate_templates,id',
-        ]);
+        // Admin check
+        if ($request->user()->role !== 'admin') {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
 
-        $dealer->templates()->syncWithoutDetaching([$request->template_id]);
+        try {
+            $dealer = User::where('role', 'dealer')->findOrFail($id);
+            
+            $request->validate([
+                'template_id' => 'required|exists:certificate_templates,id',
+            ]);
 
-        return response()->json(['message' => 'Şablon bayiye atandı.']);
+            // Explicitly pass assigned_at to avoid any DB default value issues
+            $dealer->templates()->syncWithoutDetaching([
+                $request->template_id => ['assigned_at' => now()]
+            ]);
+
+            return response()->json(['message' => 'Şablon bayiye atandı.']);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Template Assignment Error: ' . $e->getMessage());
+            return response()->json(['message' => 'Atama başarısız: ' . $e->getMessage()], 500);
+        }
     }
 
     public function revokeTemplate($id, $templateId)
