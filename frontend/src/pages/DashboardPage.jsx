@@ -8,12 +8,16 @@ import {
     FileText,
     Users,
     TrendingUp,
-    Calendar,
     ArrowUpRight,
-    ArrowDownRight,
     Activity,
     Wallet,
-    Download
+    Package,
+    History,
+    UploadCloud,
+    Settings,
+    Building,
+    GraduationCap,
+    Crown
 } from "lucide-react";
 import {
     AreaChart,
@@ -22,10 +26,7 @@ import {
     YAxis,
     CartesianGrid,
     Tooltip,
-    ResponsiveContainer,
-    BarChart,
-    Bar,
-    Cell
+    ResponsiveContainer
 } from "recharts";
 import { Link } from "react-router-dom";
 import { formatCurrency } from "@/lib/utils";
@@ -60,84 +61,151 @@ export default function DashboardPage() {
         recent_activity: []
     };
 
-    if (!stats) return <div className="p-10 text-center">Veriler yüklenemedi. Lütfen backend servisini kontrol edin.</div>;
+    const gradientMap = {
+        blue: "bg-gradient-to-br from-blue-500 to-blue-600 shadow-glow-primary",
+        purple: "bg-gradient-to-br from-purple-500 to-purple-600 shadow-glow-purple",
+        emerald: "bg-gradient-to-br from-emerald-500 to-emerald-600 shadow-glow-success",
+        orange: "bg-gradient-to-br from-orange-400 to-orange-500 shadow-glow-warning",
+        rose: "bg-gradient-to-br from-rose-500 to-rose-600 shadow-lg shadow-rose-500/20",
+        indigo: "bg-gradient-to-br from-indigo-500 to-indigo-600 shadow-lg shadow-indigo-500/20",
+    };
 
-    const GradientCard = ({ title, value, subtext, icon: Icon, gradient, shadowClass }) => (
-        <div className={`relative overflow-hidden rounded-2xl p-6 text-white shadow-soft transition-transform hover:-translate-y-1 ${gradient} ${shadowClass}`}>
+    const StatCard = ({ title, value, subtext, icon: Icon, color }) => (
+        <div className={`relative overflow-hidden rounded-2xl p-6 text-white transition-all hover:-translate-y-1 ${gradientMap[color]}`}>
             <div className="flex items-start justify-between">
                 <div>
                     <p className="text-sm font-medium opacity-90">{title}</p>
-                    <h3 className="mt-2 text-3xl font-bold">{value}</h3>
-                    {subtext && <p className="mt-1 text-xs opacity-80">{subtext}</p>}
+                    <h3 className="mt-2 text-3xl font-bold tracking-tight">{value}</h3>
+                    {subtext && <p className="mt-1 text-xs opacity-80 font-medium">{subtext}</p>}
                 </div>
                 <div className="rounded-xl bg-white/20 p-3 backdrop-blur-sm">
                     <Icon size={24} className="text-white" />
                 </div>
             </div>
-            {/* Background decoration */}
-            <div className="absolute -right-6 -bottom-6 h-24 w-24 rounded-full bg-white/10 blur-2xl" />
+            {/* Decorative circles */}
+            <div className="absolute -right-6 -bottom-6 h-32 w-32 rounded-full bg-white/10 blur-3xl pointer-events-none" />
+            <div className="absolute top-0 right-0 h-16 w-16 bg-white/5 rounded-bl-full pointer-events-none" />
         </div>
     );
+
+    const QuickActionCard = ({ title, desc, icon: Icon, to, color, badge }) => (
+        <Link to={to} className="group relative overflow-hidden rounded-2xl bg-white p-6 shadow-soft transition-all hover:-translate-y-1 hover:shadow-xl dark:bg-slate-900 border border-slate-100 dark:border-slate-800 h-full flex flex-col justify-between">
+            <div className={`absolute top-0 right-0 -mt-4 -mr-4 h-32 w-32 rounded-full opacity-10 blur-3xl transition-all group-hover:opacity-20 bg-${color}-500`} />
+
+            <div className="relative z-10">
+                <div className="flex justify-between items-start mb-4">
+                    <div className={`inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-${color}-50 text-${color}-600 dark:bg-${color}-900/20 dark:text-${color}-400 group-hover:scale-110 transition-transform duration-300`}>
+                        <Icon size={28} />
+                    </div>
+                    {badge && (
+                        <span className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-white bg-rose-500 rounded-full shadow-sm">{badge}</span>
+                    )}
+                </div>
+
+                <div>
+                    <h3 className={`text-lg font-bold text-slate-800 dark:text-slate-100 group-hover:text-${color}-600 transition-colors`}>{title}</h3>
+                    <p className="mt-1 text-sm text-slate-500 dark:text-slate-400 leading-relaxed">{desc}</p>
+                </div>
+            </div>
+
+            <div className={`mt-6 flex items-center text-sm font-bold text-${color}-600 opacity-0 transform translate-x-2 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-0`}>
+                İşleme Git <ArrowUpRight className="ml-1 h-4 w-4" />
+            </div>
+        </Link>
+    );
+
+    const dealerActions = [
+        { title: "Sertifika Oluştur", desc: "Tekil sertifika oluşturun.", icon: FileText, to: "/certificates", color: "blue" },
+        { title: "Toplu Yükleme", desc: "Excel ile çoklu sertifika.", icon: UploadCloud, to: "/certificates/bulk", color: "indigo", badge: "Hızlı" },
+        { title: "Bakiye Yükle", desc: "Kredi kartı ile ödeme.", icon: CreditCard, to: "/balance", color: "emerald" },
+        { title: "Paket Satın Al", desc: "Avantajlı sertifika paketleri.", icon: Package, to: "/packages", color: "orange", badge: "Fırsat" },
+        { title: "Öğrenci Listesi", desc: "Kayıtlı öğrencilerinizi yönetin.", icon: Users, to: "/students", color: "purple" },
+        { title: "Ödeme Geçmişi", desc: "Faturalar ve ödemeler.", icon: History, to: "/payment-history", color: "rose" },
+    ];
+
+    const adminActions = [
+        { title: "Bayi Yönetimi", desc: "Bayileri ve bakiyeleri yönetin.", icon: Building, to: "/dealers", color: "blue" },
+        { title: "Sertifika Şablonları", desc: "Yeni tasarım oluşturun.", icon: Settings, to: "/templates", color: "purple" },
+        { title: "Eğitim Programları", desc: "Program ve fiyatları düzenleyin.", icon: GraduationCap, to: "/programs", color: "emerald" },
+        { title: "Finansal Raporlar", desc: "Sistem gelirlerini inceleyin.", icon: Activity, to: "/finance", color: "orange" },
+    ];
+
+    const actions = user?.role === 'admin' ? adminActions : dealerActions;
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500 pb-10">
             {/* Header */}
             <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                 <div>
-                    <h2 className="text-3xl font-bold tracking-tight text-slate-800">Ana Sayfa</h2>
-                    <p className="text-slate-500">Hoş geldiniz, {user?.name} 👋</p>
+                    <h2 className="text-3xl font-bold tracking-tight text-slate-800 dark:text-slate-100">Ana Sayfa</h2>
+                    <p className="text-slate-500 dark:text-slate-400">Hoş geldiniz, {user?.name} 👋</p>
                 </div>
                 <div className="flex gap-2">
-                    <Button asChild variant="outline" className="shadow-sm">
-                        <Link to="/reports">Raporlar</Link>
+                    <Button asChild variant="outline" className="shadow-sm border-slate-200 dark:border-slate-800">
+                        <Link to={user.role === 'admin' ? "/finance" : "/payment-history"}>
+                            <History className="mr-2 h-4 w-4" /> Geçmiş
+                        </Link>
                     </Button>
                     <Button asChild className="shadow-glow-primary bg-primary hover:bg-primary/90">
-                        <Link to="/certificates">Sertifikalar</Link>
+                        <Link to="/certificates">
+                            <FileText className="mr-2 h-4 w-4" /> Sertifikalar
+                        </Link>
                     </Button>
                 </div>
             </div>
 
             {/* Stats Grid */}
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-                <GradientCard
+                <StatCard
                     title="Toplam Sertifika"
                     value={metrics.total_certificates}
                     icon={FileText}
-                    gradient="bg-gradient-to-br from-blue-500 to-blue-600"
-                    shadowClass="shadow-glow-primary"
+                    color="blue"
                 />
-                <GradientCard
+                <StatCard
                     title={user.role === 'admin' ? "Toplam Öğrenci" : "Öğrencilerim"}
                     value={metrics.total_students}
                     subtext={user.role !== 'admin' ? `Kota: ${metrics.quota - metrics.total_students} Kalan` : null}
                     icon={Users}
-                    gradient="bg-gradient-to-br from-purple-500 to-purple-600"
-                    shadowClass="shadow-glow-purple"
+                    color="purple"
                 />
-                <GradientCard
+                <StatCard
                     title={user.role === 'admin' ? "Toplam Hasılat" : "Toplam Harcama"}
                     value={formatCurrency(metrics.total_volume)}
                     icon={TrendingUp}
-                    gradient="bg-gradient-to-br from-emerald-500 to-emerald-600"
-                    shadowClass="shadow-glow-success"
+                    color="emerald"
                 />
-                <GradientCard
+                <StatCard
                     title="Güncel Bakiye"
                     value={formatCurrency(metrics.balance)}
                     subtext="Bakiyeniz güvende"
                     icon={Wallet}
-                    gradient="bg-gradient-to-br from-orange-400 to-orange-500"
-                    shadowClass="shadow-glow-warning"
+                    color="orange"
                 />
             </div>
 
-            {/* Main Content Grid */}
+            {/* Quick Actions Grid (Dynamic based on Role) */}
+            <div>
+                <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-4 px-1">
+                    Hızlı İşlemler
+                </h3>
+                <div className={`grid gap-6 sm:grid-cols-2 ${user.role === 'admin' ? 'lg:grid-cols-4' : 'lg:grid-cols-3'}`}>
+                    {actions.map((action, index) => (
+                        <QuickActionCard key={index} {...action} />
+                    ))}
+                </div>
+            </div>
+
+            {/* Main Content Grid (Charts & Activity) */}
             <div className="grid gap-6 lg:grid-cols-7">
                 {/* Chart Section */}
-                <Card className="col-span-1 lg:col-span-4 border-none shadow-soft">
+                <Card className="col-span-1 lg:col-span-4 border-none shadow-soft dark:bg-slate-900">
                     <CardHeader>
-                        <CardTitle className="text-lg font-semibold text-slate-800">Sertifika Trendi</CardTitle>
-                        <p className="text-sm text-slate-500">Son 6 aylık sertifika üretim istatistikleri</p>
+                        <CardTitle className="text-lg font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                            <TrendingUp className="h-5 w-5 text-blue-500" />
+                            Sertifika Trendi
+                        </CardTitle>
+                        <p className="text-sm text-slate-500 dark:text-slate-400">Son 6 aylık sertifika üretim istatistikleri</p>
                     </CardHeader>
                     <CardContent className="pl-0">
                         <div className="h-[300px] w-full">
@@ -183,10 +251,13 @@ export default function DashboardPage() {
                 </Card>
 
                 {/* Recent Activity / Side Panel */}
-                <Card className="col-span-1 lg:col-span-3 border-none shadow-soft flex flex-col">
+                <Card className="col-span-1 lg:col-span-3 border-none shadow-soft flex flex-col dark:bg-slate-900">
                     <CardHeader>
-                        <CardTitle className="text-lg font-semibold text-slate-800">Son İşlemler</CardTitle>
-                        <p className="text-sm text-slate-500">Son oluşturulan 5 sertifika</p>
+                        <CardTitle className="text-lg font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                            <History className="h-5 w-5 text-purple-500" />
+                            Son İşlemler
+                        </CardTitle>
+                        <p className="text-sm text-slate-500 dark:text-slate-400">Son oluşturulan 5 sertifika</p>
                     </CardHeader>
                     <CardContent className="flex-1 overflow-auto pr-2 custom-scrollbar">
                         <div className="space-y-4">
@@ -194,18 +265,18 @@ export default function DashboardPage() {
                                 <p className="text-center text-sm text-muted-foreground py-10">Henüz işlem yok.</p>
                             ) : (
                                 recent_activity.map((item) => (
-                                    <div key={item.id} className="flex items-center justify-between rounded-lg border border-slate-100 p-3 hover:bg-slate-50 transition-colors">
+                                    <div key={item.id} className="flex items-center justify-between rounded-xl border border-slate-100 dark:border-slate-800 p-3 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group">
                                         <div className="flex items-center gap-3">
-                                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-50 text-blue-600">
+                                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400 group-hover:scale-110 transition-transform">
                                                 <FileText size={18} />
                                             </div>
                                             <div>
-                                                <p className="text-sm font-medium text-slate-800">{item.student?.first_name} {item.student?.last_name}</p>
+                                                <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">{item.student?.first_name} {item.student?.last_name}</p>
                                                 <p className="text-xs text-slate-500">{item.training_program?.name}</p>
                                             </div>
                                         </div>
                                         <div className="text-right">
-                                            <p className="text-sm font-bold text-slate-800">{formatCurrency(item.cost)}</p>
+                                            <p className="text-sm font-bold text-slate-800 dark:text-slate-200">{formatCurrency(item.cost)}</p>
                                             <p className="text-[10px] text-slate-400">{new Date(item.created_at).toLocaleDateString('tr-TR')}</p>
                                         </div>
                                     </div>
@@ -214,77 +285,6 @@ export default function DashboardPage() {
                         </div>
                     </CardContent>
                 </Card>
-            </div>
-
-            {/* Premium Quick Actions */}
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-                {/* Create Certificate */}
-                <Link to="/certificates" className="group relative overflow-hidden rounded-2xl bg-white p-6 shadow-soft transition-all hover:-translate-y-1 hover:shadow-lg dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
-                    <div className="absolute top-0 right-0 -mt-4 -mr-4 h-24 w-24 rounded-full bg-blue-500/10 blur-2xl transition-all group-hover:bg-blue-500/20" />
-                    <div className="relative z-10 flex flex-col h-full justify-between">
-                        <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400 group-hover:scale-110 transition-transform">
-                            <FileText size={24} />
-                        </div>
-                        <div>
-                            <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 group-hover:text-blue-600 transition-colors">Sertifika Oluştur</h3>
-                            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Yeni bir sertifika hazırlayın ve onaylayın.</p>
-                        </div>
-                        <div className="mt-4 flex items-center text-sm font-medium text-blue-600 opacity-0 transition-opacity group-hover:opacity-100">
-                            Hemen Başla <ArrowUpRight className="ml-1 h-4 w-4" />
-                        </div>
-                    </div>
-                </Link>
-
-                {/* Add Student */}
-                <Link to="/students" className="group relative overflow-hidden rounded-2xl bg-white p-6 shadow-soft transition-all hover:-translate-y-1 hover:shadow-lg dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
-                    <div className="absolute top-0 right-0 -mt-4 -mr-4 h-24 w-24 rounded-full bg-purple-500/10 blur-2xl transition-all group-hover:bg-purple-500/20" />
-                    <div className="relative z-10 flex flex-col h-full justify-between">
-                        <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-purple-50 text-purple-600 dark:bg-purple-900/20 dark:text-purple-400 group-hover:scale-110 transition-transform">
-                            <Users size={24} />
-                        </div>
-                        <div>
-                            <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 group-hover:text-purple-600 transition-colors">Öğrenci Ekle</h3>
-                            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Sisteme yeni bir öğrenci kaydedin.</p>
-                        </div>
-                        <div className="mt-4 flex items-center text-sm font-medium text-purple-600 opacity-0 transition-opacity group-hover:opacity-100">
-                            Ekle <ArrowUpRight className="ml-1 h-4 w-4" />
-                        </div>
-                    </div>
-                </Link>
-
-                {/* Load Balance */}
-                <Link to="/wallet" className="group relative overflow-hidden rounded-2xl bg-white p-6 shadow-soft transition-all hover:-translate-y-1 hover:shadow-lg dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
-                    <div className="absolute top-0 right-0 -mt-4 -mr-4 h-24 w-24 rounded-full bg-emerald-500/10 blur-2xl transition-all group-hover:bg-emerald-500/20" />
-                    <div className="relative z-10 flex flex-col h-full justify-between">
-                        <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400 group-hover:scale-110 transition-transform">
-                            <CreditCard size={24} />
-                        </div>
-                        <div>
-                            <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 group-hover:text-emerald-600 transition-colors">Bakiye Yükle</h3>
-                            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Kredi kartı ile güvenli ödeme yapın.</p>
-                        </div>
-                        <div className="mt-4 flex items-center text-sm font-medium text-emerald-600 opacity-0 transition-opacity group-hover:opacity-100">
-                            Yükle <ArrowUpRight className="ml-1 h-4 w-4" />
-                        </div>
-                    </div>
-                </Link>
-
-                {/* View Reports */}
-                <Link to="/reports" className="group relative overflow-hidden rounded-2xl bg-white p-6 shadow-soft transition-all hover:-translate-y-1 hover:shadow-lg dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
-                    <div className="absolute top-0 right-0 -mt-4 -mr-4 h-24 w-24 rounded-full bg-orange-500/10 blur-2xl transition-all group-hover:bg-orange-500/20" />
-                    <div className="relative z-10 flex flex-col h-full justify-between">
-                        <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-orange-50 text-orange-600 dark:bg-orange-900/20 dark:text-orange-400 group-hover:scale-110 transition-transform">
-                            <Activity size={24} />
-                        </div>
-                        <div>
-                            <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 group-hover:text-orange-600 transition-colors">Raporlar</h3>
-                            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Detaylı analiz ve raporları inceleyin.</p>
-                        </div>
-                        <div className="mt-4 flex items-center text-sm font-medium text-orange-600 opacity-0 transition-opacity group-hover:opacity-100">
-                            İncele <ArrowUpRight className="ml-1 h-4 w-4" />
-                        </div>
-                    </div>
-                </Link>
             </div>
         </div>
     );
