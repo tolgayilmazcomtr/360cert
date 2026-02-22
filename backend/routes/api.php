@@ -68,6 +68,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/profile/update', [\App\Http\Controllers\Api\ProfileController::class, 'update']);
     Route::get('/profile/update-request', [\App\Http\Controllers\Api\ProfileController::class, 'getUpdateRequest']);
     Route::post('/profile/update-request', [\App\Http\Controllers\Api\ProfileController::class, 'createUpdateRequest']);
+    // Admin Profile & User Management
+    Route::get('/admin/profile', [\App\Http\Controllers\Api\AdminController::class, 'getProfile']);
+    Route::put('/admin/profile', [\App\Http\Controllers\Api\AdminController::class, 'updateProfile']);
+    Route::get('/admin/users', [\App\Http\Controllers\Api\AdminController::class, 'listAdmins']);
+    Route::post('/admin/users', [\App\Http\Controllers\Api\AdminController::class, 'createAdmin']);
+    Route::put('/admin/users/{id}/status', [\App\Http\Controllers\Api\AdminController::class, 'toggleAdminStatus']);
 });
 
 // Public Routes

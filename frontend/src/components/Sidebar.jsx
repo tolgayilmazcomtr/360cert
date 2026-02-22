@@ -12,7 +12,9 @@ import {
     Building,
     QrCode,
     Bell,
-    ChevronRight
+    ChevronRight,
+    Shield,
+    UserCog
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -30,7 +32,9 @@ export default function Sidebar() {
         { name: "Öğrenciler", icon: Users, path: "/students" },
         { name: "Finansal Raporlar", icon: CreditCard, path: "/finance" },
         { name: "Duyurular", icon: Bell, path: "/notifications" },
-        { name: "Sistem Ayarları", icon: Settings, path: "/settings" },
+        { name: "Sistem Ayarı", icon: Settings, path: "/settings" },
+        { name: "Yönetici Profilim", icon: UserCog, path: "/admin/profile" },
+        { name: "Yönetici Hesapları", icon: Shield, path: "/admin/users" },
     ];
 
     const dealerMenu = [
