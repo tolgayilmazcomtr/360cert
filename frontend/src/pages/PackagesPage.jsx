@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Package, Plus, Edit2, Trash2, Star, CheckCircle, Zap, ShoppingCart, Toggle } from "lucide-react";
+import { Package, Plus, Edit2, Trash2, Star, CheckCircle, Zap, ShoppingCart, ToggleLeft } from "lucide-react";
 
 const defaultForm = { name: "", description: "", price: "", credit_amount: "", sort_order: 0, is_active: true, is_featured: false };
 
@@ -176,7 +176,7 @@ export default function PackagesPage() {
                                                 onClick={() => handleToggleActive(pkg)}
                                                 title={pkg.is_active ? 'Pasif Yap' : 'Aktif Yap'}
                                             >
-                                                <Toggle size={12} />
+                                                <ToggleLeft size={12} />
                                             </Button>
                                             <Button variant="outline" size="sm" className="h-8 px-2 border-rose-200 text-rose-600 hover:bg-rose-50" onClick={() => handleDelete(pkg.id)}>
                                                 <Trash2 size={12} />
