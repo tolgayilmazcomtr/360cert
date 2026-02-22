@@ -82,6 +82,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/notifications/{id}/read', [\App\Http\Controllers\Api\NotificationController::class, 'markRead']);
     Route::delete('/notifications/{id}', [\App\Http\Controllers\Api\NotificationController::class, 'destroy']);
     Route::post('/notifications/announce', [\App\Http\Controllers\Api\NotificationController::class, 'announce']);
+
+    // Packages
+    Route::get('/packages', [\App\Http\Controllers\Api\PackageController::class, 'index']);
+    Route::post('/packages', [\App\Http\Controllers\Api\PackageController::class, 'store']);
+    Route::put('/packages/{id}', [\App\Http\Controllers\Api\PackageController::class, 'update']);
+    Route::delete('/packages/{id}', [\App\Http\Controllers\Api\PackageController::class, 'destroy']);
+    Route::post('/packages/{id}/purchase', [\App\Http\Controllers\Api\PackageController::class, 'purchase']);
 });
 
 // Public Routes

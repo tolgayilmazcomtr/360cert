@@ -40,7 +40,9 @@ export default function ProfilePage() {
                 tax_office: user.tax_office || "",
                 city: user.city || "",
             });
-            fetchPendingRequest();
+            if (user.role === 'dealer') {
+                fetchPendingRequest();
+            }
         }
     }, [user]);
 
