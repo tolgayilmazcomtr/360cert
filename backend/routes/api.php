@@ -21,6 +21,10 @@ Route::middleware('auth:sanctum')->group(function () {
     // Dashboard
     Route::get('/dashboard/stats', [\App\Http\Controllers\Api\DashboardController::class, 'index']);
 
+    // Languages
+    Route::get('/languages', [\App\Http\Controllers\Api\LanguageController::class, 'index']);
+    Route::put('/languages/{id}', [\App\Http\Controllers\Api\LanguageController::class, 'update']);
+
     // Students
     Route::post('/students/import', [\App\Http\Controllers\Api\StudentController::class, 'import']);
     Route::apiResource('students', \App\Http\Controllers\Api\StudentController::class);

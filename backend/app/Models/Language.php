@@ -2,23 +2,20 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class TrainingProgram extends Model
+class Language extends Model
 {
     use HasFactory;
 
     protected $fillable = [
+        'code',
         'name',
-        'description',
-        'duration_hours',
-        'default_price',
         'is_active',
     ];
 
     protected $casts = [
-        'name' => 'array',
         'is_active' => 'boolean',
     ];
 }

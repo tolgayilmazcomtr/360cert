@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import api from "../api/axios";
+import { languageService } from "@/services/languageService";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -10,20 +11,39 @@ import { formatCurrency } from "@/lib/utils";
 
 export default function TrainingProgramsPage() {
     const [programs, setPrograms] = useState([]);
+    const [activeLanguages, setActiveLanguages] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     // Form State
     const [formData, setFormData] = useState({
-        name: "",
         description: "",
         duration_hours: "",
         default_price: ""
     });
+    const [nameObj, setNameObj] = useState({}); // Keeps name data per language code
 
     useEffect(() => {
         fetchPrograms();
+        fetchLanguages();
     }, []);
+
+    const fetchLanguages = async () => {
+        try {
+            const data = await languageService.getAll();
+            const active = data.filter(l => l.is_active);
+            setActiveLanguages(active);
+
+            // Initialize name object with empty strings for active languages
+            const initialNameObj = {};
+            active.forEach(lang => {
+                initialNameObj[lang.code] = '';
+            });
+            setNameObj(initialNameObj);
+        } catch (error) {
+            console.error("Diller yüklenemedi", error);
+        }
+    };
 
     const fetchPrograms = async () => {
         try {
@@ -39,9 +59,16 @@ export default function TrainingProgramsPage() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            await api.post("/training-programs", formData);
+            const payload = { ...formData, name: nameObj };
+            await api.post("/training-programs", payload);
             setIsModalOpen(false);
-            setFormData({ name: "", description: "", duration_hours: "", default_price: "" }); // Reset
+            setFormData({ description: "", duration_hours: "", default_price: "" });
+
+            // Reset NameObj
+            const resetNameObj = {};
+            activeLanguages.forEach(lang => { resetNameObj[lang.code] = ''; });
+            setNameObj(resetNameObj);
+
             fetchPrograms();
         } catch (error) {
             console.error("Kayıt hatası", error);
@@ -86,7 +113,9 @@ export default function TrainingProgramsPage() {
                                     <TableCell className="font-medium">
                                         <div className="flex items-center gap-2">
                                             <GraduationCap className="text-slate-400" size={16} />
-                                            {program.name}
+                                            {typeof program.name === 'string'
+                                                ? program.name
+                                                : (program.name?.tr || Object.values(program.name || {})[0] || '-')}
                                         </div>
                                     </TableCell>
                                     <TableCell>{program.description || '-'}</TableCell>
@@ -108,9 +137,26 @@ export default function TrainingProgramsPage() {
                         </DialogDescription>
                     </DialogHeader>
                     <form onSubmit={handleSubmit} className="space-y-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="name">Program Adı</Label>
-                            <Input id="name" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} required />
+                        <div className="space-y-3">
+                            <Label>Program Adı</Label>
+                            {activeLanguages.length === 0 ? (
+                                <p className="text-sm text-red-500">Önce ayarlardan dil aktifleştiriniz!</p>
+                            ) : (
+                                activeLanguages.map(lang => (
+                                    <div key={lang.id} className="flex flex-col space-y-1">
+                                        <Label htmlFor={`name-${lang.code}`} className="text-xs text-muted-foreground">
+                                            {lang.name}
+                                        </Label>
+                                        <Input
+                                            id={`name-${lang.code}`}
+                                            value={nameObj[lang.code] || ''}
+                                            onChange={e => setNameObj({ ...nameObj, [lang.code]: e.target.value })}
+                                            placeholder={`${lang.name} olarak eğitim adı...`}
+                                            required
+                                        />
+                                    </div>
+                                ))
+                            )}
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="description">Açıklama</Label>

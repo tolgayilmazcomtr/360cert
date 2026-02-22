@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../api/axios";
+import { languageService } from "@/services/languageService";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -28,6 +29,8 @@ export default function TemplateDesignPage() {
     const [loading, setLoading] = useState(true);
     const [config, setConfig] = useState({ elements: [] });
     const [selectedElementIndex, setSelectedElementIndex] = useState(null);
+    const [activeLanguages, setActiveLanguages] = useState([]);
+    const [newElementType, setNewElementType] = useState("student_name");
 
     // Zoom state
     const [scale, setScale] = useState(1);
@@ -77,7 +80,18 @@ export default function TemplateDesignPage() {
                 setLoading(false);
             }
         };
+
+        const fetchLanguages = async () => {
+            try {
+                const data = await languageService.getAll();
+                setActiveLanguages(data.filter(l => l.is_active));
+            } catch (error) {
+                console.error("Diller yüklenemedi", error);
+            }
+        };
+
         fetchTemplate();
+        fetchLanguages();
     }, [id]);
 
     // Handle global mouse move/up for dragging
@@ -136,6 +150,45 @@ export default function TemplateDesignPage() {
             newElements[index] = { ...newElements[index], [field]: value };
             return { ...prev, elements: newElements };
         });
+    };
+
+    const handleAddElement = () => {
+        if (!newElementType) return;
+
+        // Find label
+        let label = "Yeni Alan";
+        if (newElementType === 'student_name') label = "Öğrenci Adı Soyadı";
+        else if (newElementType === 'certificate_no') label = "Sertifika No";
+        else if (newElementType === 'issue_date') label = "Veriliş Tarihi";
+        else if (newElementType === 'qr_code') label = "QR Kod";
+        else if (newElementType.startsWith('training_name_')) {
+            const code = newElementType.split('_').pop();
+            const lang = activeLanguages.find(l => l.code === code);
+            label = `Eğitim Adı (${lang ? lang.name : code.toUpperCase()})`;
+        } else if (newElementType === 'custom_text') {
+            label = "Sabit Metin";
+        }
+
+        const newEl = {
+            type: newElementType,
+            label: label,
+            x: 50,
+            y: 50,
+            font_size: 14,
+            color: '#000000',
+            font_family: 'Arial'
+        };
+
+        if (newElementType === 'qr_code') {
+            newEl.width = 100;
+            newEl.height = 100;
+        }
+
+        setConfig(prev => ({
+            ...prev,
+            elements: [...prev.elements, newEl]
+        }));
+        setSelectedElementIndex(config.elements.length); // Select newly added element
     };
 
     const handleElementMouseDown = (e, index) => {
@@ -275,6 +328,27 @@ export default function TemplateDesignPage() {
                             <Type size={16} />
                             Metin Alanları
                         </h3>
+
+                        <div className="flex gap-2 mb-4">
+                            <select
+                                className="flex flex-1 h-9 items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-xs shadow-sm focus:outline-none"
+                                value={newElementType}
+                                onChange={e => setNewElementType(e.target.value)}
+                            >
+                                <option value="student_name">Öğrenci Adı Soyadı</option>
+                                <option value="certificate_no">Sertifika No</option>
+                                <option value="issue_date">Veriliş Tarihi</option>
+                                <option value="qr_code">QR Kod</option>
+                                {activeLanguages.map(lang => (
+                                    <option key={lang.id} value={`training_name_${lang.code}`}>
+                                        Eğitim Adı ({lang.name})
+                                    </option>
+                                ))}
+                                <option value="custom_text">Sabit/Serbest Metin</option>
+                            </select>
+                            <Button size="sm" onClick={handleAddElement}>Ekle</Button>
+                        </div>
+
                         {/* Elements List */}
                         <div className="space-y-4">
                             {config.elements.map((el, index) => (
@@ -285,10 +359,28 @@ export default function TemplateDesignPage() {
                                 >
                                     <div className="flex items-center justify-between mb-2">
                                         <span className="font-medium text-sm">{el.label}</span>
-                                        <GripVertical size={14} className="text-slate-400" />
+                                        <div className="flex items-center gap-2">
+                                            <Button variant="ghost" size="xs" className="h-5 w-5 p-0 text-red-500" onClick={(e) => {
+                                                e.stopPropagation();
+                                                setConfig(prev => ({
+                                                    ...prev,
+                                                    elements: prev.elements.filter((_, i) => i !== index)
+                                                }));
+                                                if (selectedElementIndex === index) setSelectedElementIndex(null);
+                                            }}>
+                                                &times;
+                                            </Button>
+                                            <GripVertical size={14} className="text-slate-400" />
+                                        </div>
                                     </div>
                                     {selectedElementIndex === index && (
                                         <div className="space-y-2 animate-in slide-in-from-top-2">
+                                            {el.type === 'custom_text' && (
+                                                <div className="mb-2">
+                                                    <Label className="text-xs">Metin İçeriği</Label>
+                                                    <Input value={el.label} onChange={e => updateElement(index, 'label', e.target.value)} className="h-7 text-xs" />
+                                                </div>
+                                            )}
                                             <div className="grid grid-cols-2 gap-2">
                                                 <div><Label className="text-xs">X</Label><Input type="number" value={el.x} onChange={e => updateElement(index, 'x', parseInt(e.target.value))} className="h-7 text-xs" /></div>
                                                 <div><Label className="text-xs">Y</Label><Input type="number" value={el.y} onChange={e => updateElement(index, 'y', parseInt(e.target.value))} className="h-7 text-xs" /></div>

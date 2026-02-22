@@ -62,7 +62,23 @@
                     $content = \Carbon\Carbon::parse($certificate->issue_date)->format('d.m.Y');
                     break;
                 case 'training_name':
-                    $content = $certificate->training_program->name;
+                    // Eski sistem geri uyumluluk: JSON ise 'tr' key'ine bak, yoksa direkt bas
+                    $nameData = $certificate->training_program->name;
+                    if (is_array($nameData)) {
+                        $content = $nameData['tr'] ?? current($nameData) ?? '';
+                    } else {
+                        $content = $nameData;
+                    }
+                    break;
+                case (preg_match('/^training_name_(.+)$/', $element['type'], $matches) ? true : false):
+                    // Yeni sistem: training_name_en, training_name_de vb.
+                    $langCode = $matches[1];
+                    $nameData = $certificate->training_program->name;
+                    if (is_array($nameData)) {
+                        $content = $nameData[$langCode] ?? $nameData['tr'] ?? current($nameData) ?? '';
+                    } else {
+                        $content = $nameData; // Yedek
+                    }
                     break;
                 case 'qr_code':
                     $w = $element['width'] ?? 100;
