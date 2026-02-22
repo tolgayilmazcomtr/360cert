@@ -9,6 +9,7 @@ import { Eye, FileText, Search, X, ExternalLink, Download, Plus, ChevronLeft, Ch
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link } from "react-router-dom";
+import { languageService } from "../services/languageService";
 
 export default function CertificatesPage() {
     const { user } = useAuth();
@@ -37,16 +38,35 @@ export default function CertificatesPage() {
 
     // Modal & Download & Inspection
     const [downloadingId, setDownloadingId] = useState(null);
+    const [downloadDialogCert, setDownloadDialogCert] = useState(null);
+    const [availableLanguages, setAvailableLanguages] = useState([]);
+    const [selectedDownloadLang, setSelectedDownloadLang] = useState("");
     const [inspectionCert, setInspectionCert] = useState(null);
     const [dealers, setDealers] = useState([]); // For Admin filter
 
     useEffect(() => {
         fetchCertificates();
         fetchStats();
+        fetchLanguages();
         if (user?.role === 'admin') {
             fetchDealers();
         }
     }, [pagination.current_page, filters]);
+
+    const fetchLanguages = async () => {
+        try {
+            const result = await languageService.getLanguages();
+            const activeLangs = result.data.filter(lang => lang.is_active);
+            setAvailableLanguages(activeLangs);
+            if (activeLangs.length > 0) {
+                // Default to Turkish if available, otherwise first active
+                const tr = activeLangs.find(l => l.code === 'tr');
+                setSelectedDownloadLang(tr ? 'tr' : activeLangs[0].code);
+            }
+        } catch (error) {
+            console.error("Diller yüklenemedi", error);
+        }
+    };
 
     // Debounce Search
     useEffect(() => {
@@ -101,11 +121,13 @@ export default function CertificatesPage() {
 
     const [rejectionReason, setRejectionReason] = useState("");
     const [showRejectInput, setShowRejectInput] = useState(false);
+    const [approvalMernisStatus, setApprovalMernisStatus] = useState("Başarılı");
 
     useEffect(() => {
         if (!inspectionCert) {
             setShowRejectInput(false);
             setRejectionReason("");
+            setApprovalMernisStatus("Başarılı");
         }
     }, [inspectionCert]);
 
@@ -117,7 +139,8 @@ export default function CertificatesPage() {
         try {
             await api.put(`/certificates/${id}/status`, {
                 status,
-                rejection_reason: status === 'rejected' ? rejectionReason : null
+                rejection_reason: status === 'rejected' ? rejectionReason : null,
+                mernis_status: status === 'approved' ? approvalMernisStatus : null
             });
             alert("Sertifika durumu güncellendi.");
             setInspectionCert(null);
@@ -132,9 +155,11 @@ export default function CertificatesPage() {
     // ... (rest of the file until the Modal Footer)
 
 
-    const downloadPdf = async (id, no) => {
+    const downloadPdf = async (id, no, lang = '') => {
+        setDownloadingId(id);
         try {
-            const response = await api.get(`/certificates/${id}/download`, {
+            const urlPath = lang ? `/certificates/${id}/download?lang=${lang}` : `/certificates/${id}/download`;
+            const response = await api.get(urlPath, {
                 responseType: 'blob'
             });
             const url = window.URL.createObjectURL(new Blob([response.data]));
@@ -161,13 +186,14 @@ export default function CertificatesPage() {
             } else {
                 alert("Hata: " + msg);
             }
+        } finally {
+            setDownloadingId(null);
+            setDownloadDialogCert(null);
         }
     };
 
-    const handleDownload = async (id, no) => {
-        setDownloadingId(id);
-        await downloadPdf(id, no);
-        setDownloadingId(null);
+    const handleDownloadClick = (cert) => {
+        setDownloadDialogCert(cert);
     };
 
     const handleInspect = async (id) => {
@@ -325,13 +351,15 @@ export default function CertificatesPage() {
                 <Table>
                     <TableHeader className="bg-slate-50 dark:bg-slate-800">
                         <TableRow>
-                            <TableHead className="font-semibold text-slate-700">Sertifika No</TableHead>
-                            <TableHead className="font-semibold text-slate-700">Öğrenci</TableHead>
-                            {user?.role === 'admin' && <TableHead className="font-semibold text-slate-700">Bayi</TableHead>}
-                            <TableHead className="font-semibold text-slate-700">Eğitim Programı</TableHead>
-                            <TableHead className="font-semibold text-slate-700">Tarih</TableHead>
-                            <TableHead className="font-semibold text-slate-700">Durum</TableHead>
-                            <TableHead className="text-right font-semibold text-slate-700">İşlemler</TableHead>
+                            <TableHead className="font-semibold text-slate-700 whitespace-nowrap">AD VE SOYAD</TableHead>
+                            {user?.role === 'admin' && <TableHead className="font-semibold text-slate-700 whitespace-nowrap">BAYİ</TableHead>}
+                            <TableHead className="font-semibold text-slate-700 whitespace-nowrap">TÜRÜ</TableHead>
+                            <TableHead className="font-semibold text-slate-700 whitespace-nowrap">KİMLİK NO</TableHead>
+                            <TableHead className="font-semibold text-slate-700 whitespace-nowrap">S. NO</TableHead>
+                            <TableHead className="font-semibold text-slate-700 whitespace-nowrap">TARİHİ</TableHead>
+                            <TableHead className="font-semibold text-slate-700 whitespace-nowrap">MERNİS</TableHead>
+                            <TableHead className="font-semibold text-slate-700 whitespace-nowrap">DURUMU</TableHead>
+                            <TableHead className="text-right font-semibold text-slate-700 whitespace-nowrap">İŞLEM</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -354,15 +382,12 @@ export default function CertificatesPage() {
                         ) : (
                             certificates.map((cert) => (
                                 <TableRow key={cert.id} className="hover:bg-slate-50/50 transition-colors">
-                                    <TableCell className="font-medium font-mono text-xs text-slate-600">{cert.certificate_no}</TableCell>
                                     <TableCell>
-                                        <div className="font-medium">{cert.student?.first_name} {cert.student?.last_name}</div>
-                                        <div className="text-xs text-slate-500">{cert.student?.tc_number}</div>
+                                        <div className="font-medium text-sm">{cert.student?.first_name} {cert.student?.last_name}</div>
                                     </TableCell>
                                     {user?.role === 'admin' && (
                                         <TableCell>
-                                            <div className="text-sm font-medium text-slate-700">{cert.student?.user?.name || '-'}</div>
-                                            <div className="text-xs text-slate-400">{cert.student?.user?.email}</div>
+                                            <div className="text-sm text-slate-700">{cert.student?.user?.name || '-'}</div>
                                         </TableCell>
                                     )}
                                     <TableCell>
@@ -373,7 +398,24 @@ export default function CertificatesPage() {
                                         </div>
                                     </TableCell>
                                     <TableCell className="text-sm text-slate-600">
+                                        {cert.student?.tc_number}
+                                    </TableCell>
+                                    <TableCell className="font-medium font-mono text-xs text-slate-600">
+                                        {cert.certificate_no}
+                                    </TableCell>
+                                    <TableCell className="text-sm text-slate-600">
                                         {new Date(cert.issue_date).toLocaleDateString('tr-TR')}
+                                    </TableCell>
+                                    <TableCell>
+                                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium 
+                                            ${cert.mernis_status === 'Başarılı'
+                                                ? 'bg-emerald-100 text-emerald-800'
+                                                : cert.mernis_status === 'Başarısız'
+                                                    ? 'bg-rose-100 text-rose-800'
+                                                    : 'bg-slate-100 text-slate-800'
+                                            }`}>
+                                            {cert.mernis_status || 'Bekliyor'}
+                                        </span>
                                     </TableCell>
                                     <TableCell>
                                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border
@@ -404,8 +446,7 @@ export default function CertificatesPage() {
                                                     variant="outline"
                                                     size="sm"
                                                     className="gap-1 min-w-[80px] h-8 text-xs border-slate-200 hover:bg-slate-50 hidden md:flex"
-                                                    onClick={() => handleDownload(cert.id, cert.certificate_no)}
-                                                    disabled={downloadingId === cert.id}
+                                                    onClick={() => handleDownloadClick(cert)}
                                                 >
                                                     {downloadingId === cert.id ? (
                                                         <span className="animate-pulse">İniyor...</span>
@@ -474,9 +515,19 @@ export default function CertificatesPage() {
                                     </CardHeader>
                                     <CardContent className="space-y-1">
                                         <div className="font-semibold text-lg">{inspectionCert.student?.first_name} {inspectionCert.student?.last_name}</div>
-                                        <div className="text-sm text-slate-600">TC: {inspectionCert.student?.tc_number}</div>
+                                        <div className="text-sm text-slate-600">TC/Pasaport No: {inspectionCert.student?.tc_number}</div>
+                                        <div className="text-sm text-slate-600">Doğum Yılı: {inspectionCert.student?.birth_year || '-'}</div>
+                                        {inspectionCert.student?.photo_path && (
+                                            <div className="mt-2">
+                                                <img
+                                                    src={`${api.defaults.baseURL.replace('/api', '')}/storage/${inspectionCert.student.photo_path}`}
+                                                    alt="Öğrenci"
+                                                    className="w-16 h-16 rounded object-cover border border-slate-200"
+                                                />
+                                            </div>
+                                        )}
                                         {inspectionCert.student?.user && (
-                                            <div className="text-xs text-slate-400 mt-2 pt-2 border-t">Bayi: {inspectionCert.student.user.name}</div>
+                                            <div className="text-xs text-slate-400 mt-2 pt-2 border-t">Bayi: {inspectionCert.student.user.name} ({inspectionCert.student.user.company_name})</div>
                                         )}
                                     </CardContent>
                                 </Card>
@@ -491,9 +542,16 @@ export default function CertificatesPage() {
                                                 ? (inspectionCert.training_program.name[inspectionCert.certificate_language] || inspectionCert.training_program.name.tr || Object.values(inspectionCert.training_program.name)[0])
                                                 : inspectionCert.training_program?.name}
                                         </div>
-                                        <div className="text-sm text-slate-600">Şablon: {inspectionCert.template?.name}</div>
+                                        <div className="text-sm text-slate-600 mt-2">Sertifika Dili: <span className="uppercase font-medium">{inspectionCert.certificate_language || 'TR'}</span></div>
+                                        <div className="text-sm text-slate-600">Eğitim Süresi: {inspectionCert.duration_hours ? `${inspectionCert.duration_hours} Saat` : '-'}</div>
+                                        {(inspectionCert.start_date || inspectionCert.end_date) && (
+                                            <div className="text-sm text-slate-600">
+                                                Eğitim Tarihi: {inspectionCert.start_date ? new Date(inspectionCert.start_date).toLocaleDateString('tr-TR') : '?'} - {inspectionCert.end_date ? new Date(inspectionCert.end_date).toLocaleDateString('tr-TR') : '?'}
+                                            </div>
+                                        )}
                                         <div className="text-sm text-slate-600">Veriliş Tarihi: {new Date(inspectionCert.issue_date).toLocaleDateString('tr-TR')}</div>
-                                        <div className="text-sm text-slate-600 mt-2">
+                                        <div className="text-sm text-slate-600">Şablon: {inspectionCert.template?.name}</div>
+                                        <div className="text-sm text-slate-600 mt-2 pt-2 border-t">
                                             Durum:
                                             <span className={`ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border
                                                 ${inspectionCert.status === 'approved'
@@ -543,7 +601,7 @@ export default function CertificatesPage() {
                                             <Button
                                                 className="mt-4"
                                                 variant="secondary"
-                                                onClick={() => downloadPdf(inspectionCert.id, inspectionCert.certificate_no)}
+                                                onClick={() => handleDownloadClick(inspectionCert)}
                                             >
                                                 <Download className="mr-2 h-4 w-4" />
                                                 PDF İndir / Önizle
@@ -594,12 +652,24 @@ export default function CertificatesPage() {
                                             >
                                                 Reddet
                                             </Button>
-                                            <Button
-                                                className="bg-emerald-600 hover:bg-emerald-700 text-white w-full sm:w-auto"
-                                                onClick={() => handleUpdateStatus(inspectionCert.id, 'approved')}
-                                            >
-                                                Onayla
-                                            </Button>
+                                            <div className="flex w-full sm:w-auto gap-2">
+                                                <Select value={approvalMernisStatus} onValueChange={setApprovalMernisStatus}>
+                                                    <SelectTrigger className="w-[140px] text-sm">
+                                                        <SelectValue placeholder="Mernis Durumu" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="Başarılı">Başarılı</SelectItem>
+                                                        <SelectItem value="Başarısız">Başarısız</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                                <Button
+                                                    className="bg-emerald-600 hover:bg-emerald-700 text-white flex-1 sm:flex-none"
+                                                    onClick={() => handleUpdateStatus(inspectionCert.id, 'approved')}
+                                                    title="Mernis durumu ile birlikte onayla"
+                                                >
+                                                    Onayla
+                                                </Button>
+                                            </div>
                                         </>
                                     )}
                                 </>
@@ -612,6 +682,59 @@ export default function CertificatesPage() {
                                     Kapat
                                 </Button>
                             )}
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+            )}
+
+            {/* Language Selection PDF Download Dialog */}
+            {downloadDialogCert && (
+                <Dialog open={!!downloadDialogCert} onOpenChange={(open) => !open && setDownloadDialogCert(null)}>
+                    <DialogContent className="sm:max-w-[425px]">
+                        <DialogHeader>
+                            <DialogTitle>PDF İndirme Dili Seçimi</DialogTitle>
+                            <DialogDescription>
+                                Lütfen sertifikanın hangi dilde oluşturulmasını istediğinizi seçin. Eğitim adı seçtiğiniz dile göre çevrilecektir.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <div className="grid gap-4 py-4">
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-slate-700">Sertifika Dili</label>
+                                <Select value={selectedDownloadLang} onValueChange={setSelectedDownloadLang}>
+                                    <SelectTrigger className="w-full">
+                                        <SelectValue placeholder="Dil Seçin" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {availableLanguages.map((lang) => (
+                                            <SelectItem key={lang.id} value={lang.code}>
+                                                {lang.name} ({lang.code.toUpperCase()})
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+                        <DialogFooter>
+                            <Button variant="outline" onClick={() => setDownloadDialogCert(null)} disabled={downloadingId === downloadDialogCert.id}>
+                                İptal
+                            </Button>
+                            <Button
+                                className="bg-blue-600 hover:bg-blue-700 text-white"
+                                onClick={() => downloadPdf(downloadDialogCert.id, downloadDialogCert.certificate_no, selectedDownloadLang)}
+                                disabled={downloadingId === downloadDialogCert.id || !selectedDownloadLang}
+                            >
+                                {downloadingId === downloadDialogCert.id ? (
+                                    <>
+                                        <div className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                                        İndiriliyor...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Download className="mr-2 h-4 w-4" />
+                                        İndir
+                                    </>
+                                )}
+                            </Button>
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>

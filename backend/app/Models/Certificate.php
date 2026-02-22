@@ -17,6 +17,7 @@ class Certificate extends Model
         'issue_date',
         'expiry_date',
         'status',
+        'mernis_status',
         'qr_code_hash',
         'rejection_reason',
         'cost',

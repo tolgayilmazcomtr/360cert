@@ -234,6 +234,12 @@ class CertificateController extends Controller
              return response()->json(['message' => 'Sertifika henüz onaylanmamış.'], 403);
         }
 
+        // Language Override Support
+        $overrideLang = $request->input('lang');
+        if ($overrideLang) {
+            $certificate->certificate_language = $overrideLang;
+        }
+
         // Generate QR Code
         // Generate QR Code
         $frontendUrl = env('FRONTEND_URL', config('app.url'));
@@ -322,10 +328,15 @@ class CertificateController extends Controller
         
         $request->validate([
             'status' => 'required|in:approved,rejected',
-            'rejection_reason' => 'required_if:status,rejected|string|nullable'
+            'rejection_reason' => 'required_if:status,rejected|string|nullable',
+            'mernis_status' => 'nullable|string'
         ]);
 
         $certificate->status = $request->status;
+        if ($request->has('mernis_status')) {
+            $certificate->mernis_status = $request->mernis_status;
+        }
+
         if ($request->status === 'rejected') {
             $certificate->rejection_reason = $request->rejection_reason;
             // Refund balance if rejected? For now, no automatic refund logic specified.
