@@ -74,6 +74,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/admin/users', [\App\Http\Controllers\Api\AdminController::class, 'listAdmins']);
     Route::post('/admin/users', [\App\Http\Controllers\Api\AdminController::class, 'createAdmin']);
     Route::put('/admin/users/{id}/status', [\App\Http\Controllers\Api\AdminController::class, 'toggleAdminStatus']);
+
+    // Notifications
+    Route::get('/notifications', [\App\Http\Controllers\Api\NotificationController::class, 'index']);
+    Route::get('/notifications/unread-count', [\App\Http\Controllers\Api\NotificationController::class, 'unreadCount']);
+    Route::put('/notifications/read-all', [\App\Http\Controllers\Api\NotificationController::class, 'markAllRead']);
+    Route::put('/notifications/{id}/read', [\App\Http\Controllers\Api\NotificationController::class, 'markRead']);
+    Route::delete('/notifications/{id}', [\App\Http\Controllers\Api\NotificationController::class, 'destroy']);
+    Route::post('/notifications/announce', [\App\Http\Controllers\Api\NotificationController::class, 'announce']);
 });
 
 // Public Routes

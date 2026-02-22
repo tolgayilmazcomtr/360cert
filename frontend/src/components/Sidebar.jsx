@@ -1,6 +1,8 @@
 import { useAuth } from "@/context/AuthContext";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { useState, useEffect } from "react";
+import api from "../api/axios";
 import {
     Users,
     CreditCard,
@@ -49,6 +51,19 @@ export default function Sidebar() {
 
     const menu = user?.role === 'admin' ? adminMenu : dealerMenu;
 
+    const [unreadCount, setUnreadCount] = useState(0);
+    useEffect(() => {
+        const fetchUnread = async () => {
+            try {
+                const res = await api.get('/notifications/unread-count');
+                setUnreadCount(res.data.count || 0);
+            } catch { }
+        };
+        fetchUnread();
+        const interval = setInterval(fetchUnread, 30000);
+        return () => clearInterval(interval);
+    }, []);
+
     return (
         <div className="flex flex-col h-full bg-white border-r border-border w-[280px] shrink-0 transition-all relative">
             {/* Logo Section */}
@@ -67,6 +82,7 @@ export default function Sidebar() {
                 <p className="px-4 text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider">Menü</p>
                 {menu.map((item) => {
                     const isActive = location.pathname === item.path;
+                    const isNotifLink = item.path === '/notifications';
                     return (
                         <Link key={item.path} to={item.path}>
                             <Button
@@ -82,7 +98,12 @@ export default function Sidebar() {
                                     isActive ? "text-[#1890ff]" : "text-muted-foreground group-hover:text-[#1890ff]"
                                 )} />
                                 <span className="text-sm">{item.name}</span>
-                                {isActive && (
+                                {isNotifLink && unreadCount > 0 && (
+                                    <span className="ml-auto bg-red-500 text-white text-[10px] font-bold rounded-full px-1.5 py-0.5 min-w-[18px] text-center">
+                                        {unreadCount > 9 ? '9+' : unreadCount}
+                                    </span>
+                                )}
+                                {isActive && !isNotifLink && (
                                     <ChevronRight size={14} className="ml-auto opacity-50" />
                                 )}
                             </Button>

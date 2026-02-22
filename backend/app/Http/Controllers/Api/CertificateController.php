@@ -204,7 +204,19 @@ class CertificateController extends Controller
             ]);
 
             DB::commit();
-            
+
+            // Notify all admins about new certificate submission (if submitted by dealer)
+            if ($user->role !== 'admin') {
+                $dealerName = $user->name ?? $user->company_name ?? 'Bayi';
+                $programNameStr = is_array($program->name) ? ($program->name['tr'] ?? current($program->name) ?? '') : $program->name;
+                NotificationController::notifyAllAdmins(
+                    'certificate_submitted',
+                    'Yeni Sertifika Talebi',
+                    "{$dealerName} tarafından {$programNameStr} programı için yeni bir sertifika talebi oluşturuldu.",
+                    ['certificate_id' => $certificate->id, 'certificate_no' => $certNo]
+                );
+            }
+
             return response()->json($certificate, 201);
 
         } catch (\Exception $e) {
@@ -356,6 +368,29 @@ class CertificateController extends Controller
             // Refund balance if rejected? For now, no automatic refund logic specified.
         }
         $certificate->save();
+
+        // Notify the dealer who owns this certificate
+        $certificate->load('student.user');
+        $dealerUserId = $certificate->student->user_id ?? null;
+        if ($dealerUserId) {
+            if ($request->status === 'approved') {
+                NotificationController::createFor(
+                    $dealerUserId,
+                    'certificate_approved',
+                    'Sertifikanız Onaylandı ✅',
+                    "No: {$certificate->certificate_no} numaralı sertifikanız onaylandı. Artık indirebilirsiniz.",
+                    ['certificate_id' => $certificate->id, 'certificate_no' => $certificate->certificate_no]
+                );
+            } elseif ($request->status === 'rejected') {
+                NotificationController::createFor(
+                    $dealerUserId,
+                    'certificate_rejected',
+                    'Sertifikanız Reddedildi ❌',
+                    "No: {$certificate->certificate_no} numaralı sertifikanız reddedildi. Neden: " . ($request->rejection_reason ?? '-'),
+                    ['certificate_id' => $certificate->id, 'certificate_no' => $certificate->certificate_no]
+                );
+            }
+        }
 
         return response()->json($certificate);
     }
