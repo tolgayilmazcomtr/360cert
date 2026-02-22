@@ -162,6 +162,8 @@ class CertificateController extends Controller
             if ($user->role !== 'admin') {
                 $user->decrement('balance', $program->default_price);
                 
+                $programNameStr = is_array($program->name) ? ($program->name['tr'] ?? current($program->name) ?? '') : $program->name;
+                
                 // Log Transaction (Expense)
                 \App\Models\Transaction::create([
                     'user_id' => $user->id,
@@ -169,7 +171,7 @@ class CertificateController extends Controller
                     'type' => 'expense',
                     'method' => 'system',
                     'status' => 'approved',
-                    'description' => $program->name . ' sertifikası üretimi (' . $student->first_name . ' ' . $student->last_name . ')',
+                    'description' => $programNameStr . ' sertifikası üretimi (' . $student->first_name . ' ' . $student->last_name . ')',
                 ]);
             }
 
