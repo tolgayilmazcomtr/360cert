@@ -131,11 +131,13 @@ export default function CertificatesPage() {
             setShowRejectInput(false);
             setRejectionReason("");
             setApprovalMernisStatus("Başarılı");
+        } else {
+            setApprovalMernisStatus(inspectionCert.mernis_status || "Başarılı");
         }
     }, [inspectionCert]);
 
     const handleUpdateStatus = async (id, status) => {
-        if (status === 'approved') {
+        if (status === 'approved' && inspectionCert?.status !== 'approved') {
             if (!confirm('Sertifikayı onaylamak istediğinize emin misiniz?')) return;
         }
 
@@ -454,19 +456,21 @@ export default function CertificatesPage() {
 
                                             <Button
                                                 size="sm"
-                                                variant={user?.role === 'admin' && cert.status === 'pending' ? 'default' : 'outline'}
-                                                className={`h-8 gap-1.5 px-3 text-xs ${user?.role === 'admin' && cert.status === 'pending' ? 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm' : 'border-slate-200 text-slate-700 hover:bg-slate-50'}`}
+                                                variant={user?.role === 'admin' ? 'default' : 'outline'}
+                                                className={`h-8 gap-1.5 px-3 font-medium text-xs ${user?.role === 'admin'
+                                                    ? (cert.status === 'pending' ? 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-md' : 'bg-slate-800 hover:bg-slate-900 text-white shadow-sm')
+                                                    : 'border-slate-200 text-slate-700 hover:bg-slate-50'}`}
                                                 onClick={() => handleInspect(cert.id)}
-                                                title={user?.role === 'admin' ? "Yönet ve İncele" : "Detaylar"}
+                                                title={user?.role === 'admin' ? "Yönetici İşlemleri" : "İncele"}
                                             >
-                                                {user?.role === 'admin' && cert.status === 'pending' ? (
+                                                {user?.role === 'admin' ? (
                                                     <>
-                                                        <ShieldCheck size={14} />
-                                                        Yönet
+                                                        <MoreVertical size={14} />
+                                                        {cert.status === 'pending' ? 'ONAYLA/YÖNET' : 'YÖNET'}
                                                     </>
                                                 ) : (
                                                     <>
-                                                        <MoreVertical size={14} className="opacity-70" />
+                                                        <Eye size={14} className="opacity-70" />
                                                         İncele
                                                     </>
                                                 )}
@@ -630,71 +634,110 @@ export default function CertificatesPage() {
                             {user?.role === 'admin' ? (
                                 inspectionCert.status === 'pending' ? (
                                     <div className="flex flex-col w-full gap-4">
-                                        <div className="flex items-center gap-2 text-indigo-700 bg-indigo-50 px-3 py-2 rounded border border-indigo-100">
-                                            <ShieldCheck size={18} />
-                                            <span className="text-sm font-semibold">Yönetici Kontrol Paneli - İşlem Bekliyor</span>
+                                        <div className="flex items-center gap-2 text-indigo-700 bg-indigo-50 px-3 py-2 rounded border border-indigo-100 shadow-sm">
+                                            <ShieldCheck size={20} />
+                                            <span className="text-sm font-bold uppercase tracking-wider">Yönetici Kontrol Paneli - İşlem Bekliyor</span>
                                         </div>
 
                                         {showRejectInput ? (
-                                            <div className="w-full space-y-3 bg-rose-50/50 p-4 rounded-lg border border-rose-100">
+                                            <div className="w-full space-y-3 bg-rose-50/80 p-5 rounded-lg border border-rose-200 shadow-sm">
                                                 <div className="space-y-1">
-                                                    <label className="text-sm font-medium text-slate-700">Red Nedeni Belirtin (Zorunlu veya Opsiyonel)</label>
+                                                    <label className="text-sm font-bold text-rose-800">Red Nedeni Belirtin</label>
                                                     <textarea
-                                                        className="w-full min-h-[80px] p-3 text-sm border border-slate-200 rounded-md focus:outline-none focus:ring-2 focus:ring-rose-500/30 focus:border-rose-500 bg-white"
+                                                        className="w-full min-h-[80px] p-3 text-sm border border-rose-200 rounded-md focus:outline-none focus:ring-2 focus:ring-rose-500/30 bg-white"
                                                         placeholder="Sertifikanın neden reddedildiğini yazın..."
                                                         value={rejectionReason}
                                                         onChange={(e) => setRejectionReason(e.target.value)}
                                                     />
                                                 </div>
-                                                <div className="flex justify-end gap-2">
-                                                    <Button variant="outline" size="sm" onClick={() => { setShowRejectInput(false); setRejectionReason(""); }}>
+                                                <div className="flex justify-end gap-3 pt-2">
+                                                    <Button variant="outline" className="bg-white hover:bg-slate-50 border-slate-200" onClick={() => { setShowRejectInput(false); setRejectionReason(""); }}>
                                                         İptal
                                                     </Button>
-                                                    <Button variant="destructive" size="sm" onClick={() => handleUpdateStatus(inspectionCert.id, 'rejected')}>
-                                                        <XCircle className="w-4 h-4 mr-1.5" /> Kalıcı Olarak Reddet
+                                                    <Button variant="destructive" className="bg-rose-600 hover:bg-rose-700 font-bold" onClick={() => handleUpdateStatus(inspectionCert.id, 'rejected')}>
+                                                        <XCircle className="w-5 h-5 mr-1.5" /> Kalıcı Olarak Reddet
                                                     </Button>
                                                 </div>
                                             </div>
                                         ) : (
-                                            <div className="flex flex-col sm:flex-row gap-3 w-full bg-slate-50 p-4 rounded-lg border border-slate-200 items-center justify-between">
+                                            <div className="flex flex-col md:flex-row gap-4 w-full bg-slate-50 p-5 rounded-lg border border-slate-200 items-center justify-between shadow-sm">
                                                 <Button
                                                     variant="outline"
-                                                    className="w-full sm:w-auto border-rose-200 text-rose-600 hover:bg-rose-50 hover:text-rose-700"
+                                                    className="w-full md:w-auto border-rose-200 text-rose-600 hover:bg-rose-50 hover:text-rose-700 font-bold h-11"
                                                     onClick={() => setShowRejectInput(true)}
                                                 >
-                                                    <XCircle className="w-4 h-4 mr-2" /> Sertifikayı Reddet
+                                                    <XCircle className="w-5 h-5 mr-2" /> Sertifikayı Reddet
                                                 </Button>
-                                                <div className="flex flex-col sm:flex-row w-full sm:w-auto gap-3 items-center">
-                                                    <div className="flex flex-col w-full sm:w-auto">
-                                                        <span className="text-xs text-slate-500 font-medium mb-1">Mernis Kontrol Durumu</span>
+                                                <div className="flex flex-col md:flex-row w-full md:w-auto gap-4 items-center">
+                                                    <div className="flex flex-col w-full md:w-auto">
+                                                        <span className="text-xs text-slate-500 font-bold mb-1 uppercase tracking-wide">Mernis Kontrol Durumu</span>
                                                         <Select value={approvalMernisStatus} onValueChange={setApprovalMernisStatus}>
-                                                            <SelectTrigger className="w-full sm:w-[150px] bg-white text-sm font-medium border-emerald-200 focus:ring-emerald-500">
+                                                            <SelectTrigger className="w-full md:w-[180px] h-11 bg-white text-sm font-bold border-emerald-200 focus:ring-emerald-500 shadow-sm">
                                                                 <SelectValue placeholder="Mernis Durumu" />
                                                             </SelectTrigger>
                                                             <SelectContent>
-                                                                <SelectItem value="Başarılı" className="text-emerald-700 font-medium">Başarılı</SelectItem>
-                                                                <SelectItem value="Başarısız" className="text-rose-700 font-medium">Başarısız</SelectItem>
+                                                                <SelectItem value="Başarılı" className="text-emerald-700 font-bold">Başarılı (Onaylı)</SelectItem>
+                                                                <SelectItem value="Başarısız" className="text-rose-700 font-bold">Başarısız</SelectItem>
                                                             </SelectContent>
                                                         </Select>
                                                     </div>
                                                     <Button
-                                                        className="bg-emerald-600 hover:bg-emerald-700 text-white w-full sm:w-auto sm:self-end h-10 shadow-sm"
+                                                        className="bg-emerald-600 hover:bg-emerald-700 text-white w-full md:w-auto md:self-end h-11 font-bold shadow-md text-base"
                                                         onClick={() => handleUpdateStatus(inspectionCert.id, 'approved')}
                                                     >
-                                                        <CheckCircle className="w-4 h-4 mr-2" /> Sertifikayı Onayla
+                                                        <CheckCircle className="w-5 h-5 mr-2" /> Sertifikayı Onayla
                                                     </Button>
                                                 </div>
                                             </div>
                                         )}
                                     </div>
+                                ) : inspectionCert.status === 'approved' ? (
+                                    <div className="flex flex-col w-full gap-4">
+                                        <div className="flex items-center gap-2 text-slate-700 bg-slate-100 px-3 py-2 rounded border border-slate-200 shadow-sm">
+                                            <ShieldCheck size={20} />
+                                            <span className="text-sm font-bold uppercase tracking-wider">Yönetici Kontrol Paneli - Gelişmiş İşlemler</span>
+                                        </div>
+                                        <div className="flex flex-col sm:flex-row w-full bg-slate-50 p-5 rounded-lg border border-slate-200 items-center justify-between gap-4 shadow-sm">
+                                            <div className="flex flex-col w-full sm:w-auto">
+                                                <span className="text-xs text-slate-500 font-bold mb-1 uppercase tracking-wide">Mernis Kontrol Durumunu Değiştir</span>
+                                                <Select value={approvalMernisStatus} onValueChange={setApprovalMernisStatus}>
+                                                    <SelectTrigger className="w-full sm:w-[200px] h-11 bg-white text-sm font-bold border-indigo-200 focus:ring-indigo-500 shadow-sm">
+                                                        <SelectValue placeholder="Mernis Durumu Seç" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="Başarılı" className="text-emerald-700 font-bold">Başarılı</SelectItem>
+                                                        <SelectItem value="Başarısız" className="text-rose-700 font-bold">Başarısız</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+                                            <div className="flex gap-2 w-full sm:w-auto mt-4 sm:mt-0 items-center">
+                                                {approvalMernisStatus !== inspectionCert.mernis_status && (
+                                                    <Button
+                                                        className="bg-indigo-600 hover:bg-indigo-700 text-white w-full sm:w-auto h-11 shadow-md font-bold"
+                                                        onClick={() => handleUpdateStatus(inspectionCert.id, 'approved')}
+                                                    >
+                                                        <CheckCircle className="w-4 h-4 mr-2" /> Durumu Güncelle
+                                                    </Button>
+                                                )}
+                                                <Button variant="outline" className="w-full sm:w-auto h-11" onClick={() => setInspectionCert(null)}>
+                                                    Kapat
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    </div>
                                 ) : (
-                                    <div className="flex w-full justify-between items-center text-sm text-slate-500 bg-slate-50 p-3 rounded border border-slate-100">
-                                        <span>Bu bilet üzerinde admin işlemi tamamlanmıştır.</span>
-                                        <Button variant="outline" size="sm" onClick={() => setInspectionCert(null)}>Kapat</Button>
+                                    <div className="flex flex-col w-full gap-4">
+                                        <div className="flex items-center gap-2 text-rose-700 bg-rose-50 px-3 py-2 rounded border border-rose-100 shadow-sm">
+                                            <XCircle size={20} />
+                                            <span className="text-sm font-bold uppercase tracking-wider">Yönetici Kontrol Paneli - Sertifika Reddedilmiş</span>
+                                        </div>
+                                        <div className="flex w-full justify-end">
+                                            <Button variant="outline" size="sm" onClick={() => setInspectionCert(null)}>Kapat</Button>
+                                        </div>
                                     </div>
                                 )
                             ) : (
-                                <div className="flex w-full justify-end">
+                                <div className="flex w-full justify-end border-t border-slate-100 pt-3">
                                     <Button variant="outline" onClick={() => setInspectionCert(null)}>
                                         Kapat
                                     </Button>
