@@ -55,7 +55,7 @@ class ProfileController extends Controller
             ->latest()
             ->first();
             
-        return response()->json($requestData);
+        return response()->json($requestData ?? null);
     }
 
     public function createUpdateRequest(Request $request)

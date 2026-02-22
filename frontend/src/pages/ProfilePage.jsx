@@ -55,9 +55,11 @@ export default function ProfilePage() {
     const fetchPendingRequest = async () => {
         try {
             const res = await api.get("/profile/update-request");
-            setPendingRequest(res.data);
+            // null means no pending request
+            setPendingRequest(res.data && res.data.id ? res.data : null);
         } catch (error) {
-            console.error("Hata", error);
+            console.error("Bekleyen talep alınamadı", error);
+            setPendingRequest(null);
         }
     };
 
@@ -97,14 +99,24 @@ export default function ProfilePage() {
 
     const handleSubmitRequest = async (e) => {
         e.preventDefault();
+        if (!requestData.company_name?.trim()) {
+            toast({ title: "Hata", description: "Firma adı zorunludur.", variant: "destructive" });
+            return;
+        }
         setIsSubmittingRequest(true);
         try {
             await api.post("/profile/update-request", requestData);
-            toast({ title: "Talebiniz Alındı", description: "Yönetici onayından sonra bilgileriniz güncellenecektir." });
+            toast({ title: "Talebiniz Alındı ✅", description: "Yönetici onayından sonra bilgileriniz güncellenecektir." });
             setIsRequestModalOpen(false);
             fetchPendingRequest();
         } catch (error) {
-            toast({ title: "Hata", description: error.response?.data?.message || "Talep oluşturulamadı.", variant: "destructive" });
+            const errors = error.response?.data?.errors;
+            const firstErr = errors ? Object.values(errors)[0]?.[0] : null;
+            toast({
+                title: "Hata",
+                description: firstErr || error.response?.data?.message || "Talep oluşturulamadı. Lütfen tekrar deneyin.",
+                variant: "destructive"
+            });
         } finally {
             setIsSubmittingRequest(false);
         }
