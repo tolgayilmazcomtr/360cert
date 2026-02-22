@@ -66,6 +66,25 @@ export default function TranscriptModal({ isOpen, onClose, certificate }) {
         }
     };
 
+    const handleDownloadTranscriptPdf = async () => {
+        try {
+            const response = await api.get(`/certificates/${certificate.id}/transcript/pdf`, {
+                responseType: 'blob'
+            });
+            const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `Transkript_${certificate.certificate_no}.pdf`);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(url);
+        } catch (err) {
+            console.error(err);
+            alert('Transkript PDF indirilemedi.');
+        }
+    };
+
     const updateModuleInfo = (key, value) => {
         setData(prev => ({
             ...prev,
@@ -313,10 +332,7 @@ export default function TranscriptModal({ isOpen, onClose, certificate }) {
                     <Button
                         variant="outline"
                         className="gap-1 border-green-200 bg-green-50 text-green-700 hover:bg-green-100"
-                        onClick={() => window.open(
-                            `${api.defaults.baseURL}/certificates/${certificate.id}/transcript/pdf`,
-                            '_blank'
-                        )}
+                        onClick={handleDownloadTranscriptPdf}
                         disabled={!data.course_modules.length}
                         title={!data.course_modules.length ? 'Önce transkript verisi kaydedin' : ''}
                     >

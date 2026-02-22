@@ -213,6 +213,25 @@ export default function CertificatesPage() {
         }
     };
 
+    const handleDownloadTranscriptPdf = async (certId, certNo) => {
+        try {
+            const response = await api.get(`/certificates/${certId}/transcript/pdf`, {
+                responseType: 'blob'
+            });
+            const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `Transkript_${certNo}.pdf`);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(url);
+        } catch (err) {
+            console.error(err);
+            alert('Transkript PDF indirilemedi.');
+        }
+    };
+
     const clearFilters = () => {
         setFilters({
             search: "",
@@ -604,23 +623,25 @@ export default function CertificatesPage() {
                                     </CardContent>
                                 </Card>
 
-                                {inspectionCert.transcript_url ? (
-                                    <div className="p-4 bg-blue-50 border border-blue-100 rounded-lg flex items-center justify-between">
-                                        <div className="flex items-center gap-2 text-blue-700">
-                                            <FileText size={20} />
-                                            <span className="font-medium">Öğrenci Transkripti</span>
-                                        </div>
-                                        <a href={inspectionCert.transcript_url} target="_blank" rel="noopener noreferrer">
-                                            <Button variant="outline" size="sm" className="gap-2 border-blue-200 text-blue-700 hover:bg-blue-100">
-                                                <ExternalLink size={14} /> Görüntüle
-                                            </Button>
-                                        </a>
+                                {/* Transcript PDF Section - Dynamic */}
+                                <div className="p-4 bg-violet-50 border border-violet-100 rounded-lg flex items-center justify-between">
+                                    <div className="flex items-center gap-2 text-violet-700">
+                                        <FileText size={20} />
+                                        <span className="font-medium">Transkript PDF</span>
                                     </div>
-                                ) : (
-                                    <div className="p-4 bg-slate-50 border border-slate-100 rounded-lg text-slate-500 text-sm text-center">
-                                        Transkript yüklenmemiş.
-                                    </div>
-                                )}
+                                    {inspectionCert.transcript_data ? (
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="gap-2 border-violet-200 text-violet-700 hover:bg-violet-100"
+                                            onClick={() => handleDownloadTranscriptPdf(inspectionCert.id, inspectionCert.certificate_no)}
+                                        >
+                                            <Download size={14} /> PDF İndir
+                                        </Button>
+                                    ) : (
+                                        <span className="text-sm text-slate-400">Transkript henüz eklenmemiş</span>
+                                    )}
+                                </div>
                             </div>
 
                             {/* Right Side: Preview */}
