@@ -14,6 +14,7 @@ class Student extends Model
         'email',
         'phone',
         'city',
+        'birth_year',
         'photo_path'
     ];
     

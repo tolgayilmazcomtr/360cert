@@ -91,10 +91,21 @@ class CertificateController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'student_id' => 'required|exists:students,id',
+            'tc_number' => 'required|string|max:11',
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'birth_year' => 'required|string|max:4',
+            'photo' => 'nullable|image|mimes:jpeg,png,jpg|max:5120', // Öğrenci Resmi
+            
             'training_program_id' => 'required|exists:training_programs,id',
             'certificate_template_id' => 'required|exists:certificate_templates,id',
-            'issue_date' => 'required|date',
+            'certificate_language' => 'required|string|max:10',
+            
+            'duration_hours' => 'required|integer|min:1',
+            'start_date' => 'required|date',
+            'issue_date' => 'required|date', // This acts as END DATE based on UI/logic mapping, or we take end_date
+            'end_date' => 'required|date',
+            
             'transcript' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240', // Max 10MB
         ]);
 
@@ -110,6 +121,42 @@ class CertificateController extends Controller
 
         DB::beginTransaction();
         try {
+            // Find or Create Student based on TC Number under this dealer/admin
+            $student = Student::where('tc_number', $request->tc_number)->first();
+            
+            if (!$student) {
+                // Determine user_id to assign the student to. If admin creates it, we just attach to admin, or you can have a dealer_id picker later.
+                // Assuming it binds to whoever is creating it.
+                $student = new Student();
+                $student->user_id = $user->id;
+                $student->tc_number = $request->tc_number;
+            } else {
+                // Optional: Ensure the dealer owns the student or the user is admin
+                if ($user->role !== 'admin' && $student->user_id !== $user->id) {
+                     // In a real multi-tenant you would block, but maybe they belong to another dealer?
+                     // Return generic error or create logic. For now, let's update if allowed or error.
+                     if ($student->user_id !== $user->id) {
+                         return response()->json(['message' => 'Bu TC kimlik numarası başka bir bayiye aittir.'], 403);
+                     }
+                }
+            }
+
+            $student->first_name = $request->first_name;
+            $student->last_name = $request->last_name;
+            $student->birth_year = $request->birth_year;
+
+            // Handle Student Photo
+            if ($request->hasFile('photo')) {
+                // If there's an old photo, could delete it here
+                $file = $request->file('photo');
+                $filename = 'student_' . time() . '_' . Str::random(10) . '.' . $file->getClientOriginalExtension();
+                $photoPath = $file->storeAs('student_photos', $filename, 'public');
+                $student->photo_path = $photoPath;
+            }
+
+            $student->save();
+
+
             // Deduct Balance
             if ($user->role !== 'admin') {
                 $user->decrement('balance', $program->default_price);
@@ -121,7 +168,7 @@ class CertificateController extends Controller
                     'type' => 'expense',
                     'method' => 'system',
                     'status' => 'approved',
-                    'description' => $program->name . ' sertifikası üretimi',
+                    'description' => $program->name . ' sertifikası üretimi (' . $student->first_name . ' ' . $student->last_name . ')',
                 ]);
             }
 
@@ -139,9 +186,13 @@ class CertificateController extends Controller
 
             $certificate = Certificate::create([
                 'certificate_no' => $certNo,
-                'student_id' => $request->student_id,
+                'student_id' => $student->id,
                 'training_program_id' => $request->training_program_id,
                 'certificate_template_id' => $request->certificate_template_id,
+                'certificate_language' => $request->certificate_language,
+                'duration_hours' => $request->duration_hours,
+                'start_date' => $request->start_date,
+                'end_date' => $request->end_date,
                 'issue_date' => $request->issue_date,
                 'qr_code_hash' => $hash,
                 'status' => $user->role === 'admin' ? 'approved' : 'pending',

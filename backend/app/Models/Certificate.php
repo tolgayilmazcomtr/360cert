@@ -20,6 +20,10 @@ class Certificate extends Model
         'qr_code_hash',
         'rejection_reason',
         'cost',
+        'certificate_language',
+        'duration_hours',
+        'start_date',
+        'end_date',
         'transcript_path',
     ];
 

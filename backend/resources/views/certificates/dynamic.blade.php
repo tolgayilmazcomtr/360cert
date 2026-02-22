@@ -62,16 +62,18 @@
                     $content = \Carbon\Carbon::parse($certificate->issue_date)->format('d.m.Y');
                     break;
                 case 'training_name':
-                    // Eski sistem geri uyumluluk: JSON ise 'tr' key'ine bak, yoksa direkt bas
+                    // Eski sistem geri uyumluluk: JSON ise 'certificate_language' key'ine bak, yoksa tr'ye bak, yoksa direkt bas
                     $nameData = $certificate->training_program->name;
+                    $certLang = $certificate->certificate_language ?? 'tr';
                     if (is_array($nameData)) {
-                        $content = $nameData['tr'] ?? current($nameData) ?? '';
+                        $content = $nameData[$certLang] ?? $nameData['tr'] ?? current($nameData) ?? '';
                     } else {
                         $content = $nameData;
                     }
                     break;
                 case (preg_match('/^training_name_(.+)$/', $element['type'], $matches) ? true : false):
                     // Yeni sistem: training_name_en, training_name_de vb.
+                    // (Ancak artık şablonlarda direkt training_name kullanılması öneriliyor. Geriye dönük uyumluluk için tutuluyor)
                     $langCode = $matches[1];
                     $nameData = $certificate->training_program->name;
                     if (is_array($nameData)) {
@@ -79,6 +81,18 @@
                     } else {
                         $content = $nameData; // Yedek
                     }
+                    break;
+                case 'start_date':
+                    $content = $certificate->start_date ? \Carbon\Carbon::parse($certificate->start_date)->format('d.m.Y') : '';
+                    break;
+                case 'end_date':
+                    $content = $certificate->end_date ? \Carbon\Carbon::parse($certificate->end_date)->format('d.m.Y') : '';
+                    break;
+                case 'duration_hours':
+                    $content = $certificate->duration_hours ? $certificate->duration_hours . ' Saat' : '';
+                    break;
+                case 'birth_year':
+                    $content = $certificate->student->birth_year ?? '';
                     break;
                 case 'qr_code':
                     $w = $element['width'] ?? 100;
