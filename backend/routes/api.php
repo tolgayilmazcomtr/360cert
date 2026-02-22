@@ -23,7 +23,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Languages
     Route::get('/languages', [\App\Http\Controllers\Api\LanguageController::class, 'index']);
+    Route::post('/languages', [\App\Http\Controllers\Api\LanguageController::class, 'store']);
     Route::put('/languages/{id}', [\App\Http\Controllers\Api\LanguageController::class, 'update']);
+    Route::delete('/languages/{id}', [\App\Http\Controllers\Api\LanguageController::class, 'destroy']);
 
     // Students
     Route::post('/students/import', [\App\Http\Controllers\Api\StudentController::class, 'import']);

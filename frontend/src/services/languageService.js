@@ -28,5 +28,15 @@ export const languageService = {
     updateStatus: async (id, isActive) => {
         const response = await apiClient.put(`/languages/${id}`, { is_active: isActive });
         return response.data;
+    },
+
+    create: async (data) => {
+        const response = await apiClient.post('/languages', data);
+        return response.data;
+    },
+
+    delete: async (id) => {
+        const response = await apiClient.delete(`/languages/${id}`);
+        return response.data;
     }
 };
