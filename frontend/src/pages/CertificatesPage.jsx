@@ -5,11 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Eye, FileText, Search, X, ExternalLink, Download, Plus, ChevronLeft, ChevronRight, MoreVertical, ShieldCheck, CheckCircle, XCircle } from "lucide-react";
+import { Eye, FileText, Search, X, ExternalLink, Download, Plus, ChevronLeft, ChevronRight, MoreVertical, ShieldCheck, CheckCircle, XCircle, ScrollText } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import { languageService } from "../services/languageService";
+import TranscriptModal from "../components/TranscriptModal";
 
 export default function CertificatesPage() {
     const { user } = useAuth();
@@ -43,6 +44,7 @@ export default function CertificatesPage() {
     const [selectedDownloadLang, setSelectedDownloadLang] = useState("");
     const [inspectionCert, setInspectionCert] = useState(null);
     const [dealers, setDealers] = useState([]); // For Admin filter
+    const [transcriptCert, setTranscriptCert] = useState(null); // Transcript modal target
 
     useEffect(() => {
         fetchCertificates();
@@ -436,6 +438,19 @@ export default function CertificatesPage() {
                                     </TableCell>
                                     <TableCell className="text-right space-x-2">
                                         <div className="flex items-center justify-end gap-2">
+                                            {/* Transcript Button */}
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className="gap-1 h-8 text-xs border-violet-200 bg-violet-50 text-violet-700 hover:bg-violet-100 hidden md:flex"
+                                                onClick={() => setTranscriptCert(cert)}
+                                                title="Transkript Ekle / Düzenle"
+                                            >
+                                                <ScrollText size={12} />
+                                                Transkript
+                                            </Button>
+
+                                            {/* Certificate PDF Download */}
                                             {cert.status === 'approved' && (
                                                 <Button
                                                     variant="outline"
@@ -799,6 +814,16 @@ export default function CertificatesPage() {
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
+            )}
+            {transcriptCert && (
+                <TranscriptModal
+                    isOpen={!!transcriptCert}
+                    certificate={transcriptCert}
+                    onClose={(shouldRefresh) => {
+                        setTranscriptCert(null);
+                        if (shouldRefresh) fetchCertificates();
+                    }}
+                />
             )}
         </div>
     );

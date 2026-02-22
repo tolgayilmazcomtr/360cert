@@ -359,4 +359,66 @@ class CertificateController extends Controller
 
         return response()->json($certificate);
     }
+
+    public function saveTranscript(Request $request, $id)
+    {
+        $certificate = Certificate::findOrFail($id);
+        $user = $request->user();
+
+        // Check if user is admin or the dealer who owns the student
+        if ($user->role !== 'admin' && $certificate->student->user_id !== $user->id) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $request->validate([
+            'transcript_data' => 'required|array'
+        ]);
+
+        $certificate->transcript_data = $request->transcript_data;
+        $certificate->save();
+
+        return response()->json(['message' => 'Transkript verisi başarıyla kaydedildi.', 'data' => $certificate->transcript_data]);
+    }
+
+    public function downloadTranscriptData(Request $request, $id)
+    {
+        $certificate = Certificate::with(['student.user', 'training_program'])->findOrFail($id);
+        $user = $request->user();
+
+        // Check if user is admin or the dealer who owns the student
+        if ($user->role !== 'admin' && $certificate->student->user_id !== $user->id) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        if (!$certificate->transcript_data) {
+            return response()->json(['message' => 'Bu sertifikaya ait transkript verisi bulunamadı.'], 404);
+        }
+
+        $data = [
+            'certificate' => $certificate,
+            'transcriptData' => $certificate->transcript_data,
+        ];
+
+        // Increase memory limit for PDF generation
+        ini_set('memory_limit', '512M');
+        set_time_limit(300);
+
+        try {
+            $pdf = Pdf::loadView('transcripts.pdf', $data);
+            
+            // Generate A4 Portrait PDF
+            $pdf->setPaper('a4', 'portrait');
+            
+            $pdf->setOptions([
+                'isRemoteEnabled' => true, 
+                'dpi' => 150, 
+            ]);
+
+            return $pdf->download('Transkript_' . $certificate->certificate_no . '.pdf');
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Transcript PDF Generation Error: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error($e->getTraceAsString());
+            return response()->json(['message' => 'Transkript PDF oluşturulurken hata oluştu: ' . $e->getMessage()], 500);
+        }
+    }
 }
