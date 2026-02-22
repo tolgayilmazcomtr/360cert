@@ -161,6 +161,7 @@ export default function TemplateDesignPage() {
         else if (newElementType === 'certificate_no') label = "Sertifika No";
         else if (newElementType === 'issue_date') label = "Veriliş Tarihi";
         else if (newElementType === 'qr_code') label = "QR Kod";
+        else if (newElementType === 'dealer_logo') label = "Yetkili Logosu";
         else if (newElementType.startsWith('training_name_')) {
             const code = newElementType.split('_').pop();
             const lang = activeLanguages.find(l => l.code === code);
@@ -179,7 +180,7 @@ export default function TemplateDesignPage() {
             font_family: 'Arial'
         };
 
-        if (newElementType === 'qr_code') {
+        if (newElementType === 'qr_code' || newElementType === 'dealer_logo') {
             newEl.width = 100;
             newEl.height = 100;
         }
@@ -339,6 +340,7 @@ export default function TemplateDesignPage() {
                                 <option value="certificate_no">Sertifika No</option>
                                 <option value="issue_date">Veriliş Tarihi</option>
                                 <option value="qr_code">QR Kod</option>
+                                <option value="dealer_logo">Yetkili Logosu</option>
                                 {activeLanguages.map(lang => (
                                     <option key={lang.id} value={`training_name_${lang.code}`}>
                                         Eğitim Adı ({lang.name})
@@ -389,7 +391,7 @@ export default function TemplateDesignPage() {
                                                 <div><Label className="text-xs">Font B.</Label><Input type="number" value={el.font_size || 14} onChange={e => updateElement(index, 'font_size', parseInt(e.target.value))} className="h-7 text-xs" /></div>
                                                 <div><Label className="text-xs">Renk</Label><Input type="color" value={el.color || '#000000'} onChange={e => updateElement(index, 'color', e.target.value)} className="h-7 w-full p-1" /></div>
                                             </div>
-                                            {el.type === 'qr_code' && (
+                                            {(el.type === 'qr_code' || el.type === 'dealer_logo') && (
                                                 <div className="pt-2">
                                                     <Label className="text-xs">Boyut (px)</Label>
                                                     <Input
@@ -474,15 +476,15 @@ export default function TemplateDesignPage() {
                                     }}
                                     onMouseDown={(e) => handleElementMouseDown(e, index)}
                                 >
-                                    {el.type === 'qr_code' ? (
+                                    {(el.type === 'qr_code' || el.type === 'dealer_logo') ? (
                                         <div
-                                            className="border border-dashed border-black inline-flex items-center justify-center text-xs bg-white/50"
+                                            className={`border border-dashed border-black inline-flex items-center justify-center text-xs bg-white/50 ${el.type === 'dealer_logo' ? 'rounded' : ''}`}
                                             style={{
                                                 width: `${el.width || 100}px`,
                                                 height: `${el.height || 100}px`
                                             }}
                                         >
-                                            QR
+                                            {el.type === 'qr_code' ? 'QR' : 'LOGO'}
                                         </div>
                                     ) : (
                                         `[${el.label}]`

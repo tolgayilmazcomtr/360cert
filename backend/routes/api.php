@@ -50,10 +50,22 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Dealers
     Route::get('/dealers', [\App\Http\Controllers\Api\DealerController::class, 'index']);
+    Route::post('/dealers', [\App\Http\Controllers\Api\DealerController::class, 'store']);
+    Route::put('/dealers/{id}', [\App\Http\Controllers\Api\DealerController::class, 'update']);
     Route::put('/dealers/{id}/status', [\App\Http\Controllers\Api\DealerController::class, 'updateStatus']);
     Route::get('/dealers/{id}/templates', [\App\Http\Controllers\Api\DealerController::class, 'getTemplates']);
     Route::post('/dealers/{id}/templates', [\App\Http\Controllers\Api\DealerController::class, 'assignTemplate']);
     Route::delete('/dealers/{id}/templates/{templateId}', [\App\Http\Controllers\Api\DealerController::class, 'revokeTemplate']);
+    
+    // Dealer Admin Review Requests
+    Route::get('/dealers/update-requests', [\App\Http\Controllers\Api\DealerController::class, 'getUpdateRequests']);
+    Route::post('/dealers/update-requests/{id}/approve', [\App\Http\Controllers\Api\DealerController::class, 'approveUpdateRequest']);
+    Route::post('/dealers/update-requests/{id}/reject', [\App\Http\Controllers\Api\DealerController::class, 'rejectUpdateRequest']);
+
+    // Profile (Dealer)
+    Route::post('/profile/update', [\App\Http\Controllers\Api\ProfileController::class, 'update']);
+    Route::get('/profile/update-request', [\App\Http\Controllers\Api\ProfileController::class, 'getUpdateRequest']);
+    Route::post('/profile/update-request', [\App\Http\Controllers\Api\ProfileController::class, 'createUpdateRequest']);
 });
 
 // Public Routes

@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class CertificateController extends Controller
@@ -279,10 +280,21 @@ class CertificateController extends Controller
 
         $bgBase64 = 'data:image/' . pathinfo($bgPath, PATHINFO_EXTENSION) . ';base64,' . base64_encode(file_get_contents($bgPath));
 
+        $dealerLogoBase64 = null;
+        if ($certificate->student && $certificate->student->user && $certificate->student->user->logo_path) {
+            $logoPath = $certificate->student->user->logo_path;
+            if (Storage::disk('public')->exists($logoPath)) {
+                $ext = pathinfo($logoPath, PATHINFO_EXTENSION);
+                $content = Storage::disk('public')->get($logoPath);
+                $dealerLogoBase64 = 'data:image/' . $ext . ';base64,' . base64_encode($content);
+            }
+        }
+
         $data = [
             'certificate' => $certificate,
             'qrCode' => $qrCode,
             'bgImage' => $bgBase64,
+            'dealerLogo' => $dealerLogoBase64,
             'config' => $config,
             'width' => $width,
             'height' => $height

@@ -38,8 +38,9 @@ export default function Sidebar() {
         { name: "Öğrenciler", icon: Users, path: "/students" },
         { name: "Sertifikalar", icon: FileText, path: "/certificates" },
         { name: "Bakiye & Ödeme", icon: CreditCard, path: "/balance" },
-        { name: "Paketler", icon: CreditCard, path: "/packages" }, // Eğer menüde varsa
-        { name: "Ödeme Geçmişi", icon: CreditCard, path: "/payment-history" }, // Eğer menüde varsa
+        { name: "Paketler", icon: CreditCard, path: "/packages" },
+        { name: "Ödeme Geçmişi", icon: CreditCard, path: "/payment-history" },
+        { name: "Profilim", icon: Settings, path: "/profile" },
     ];
 
     const menu = user?.role === 'admin' ? adminMenu : dealerMenu;

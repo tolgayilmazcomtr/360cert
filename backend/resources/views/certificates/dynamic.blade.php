@@ -99,6 +99,15 @@
                     $h = $element['height'] ?? 100;
                     $content = '<img src="data:image/svg+xml;base64,'.$qrCode.'" style="width: '.$w.'px; height: '.$h.'px; display: block;">';
                     break;
+                case 'dealer_logo':
+                    $w = $element['width'] ?? 100;
+                    $h = $element['height'] ?? 100;
+                    if (isset($dealerLogo) && $dealerLogo) {
+                        $content = '<img src="'.$dealerLogo.'" style="width: '.$w.'px; height: '.$h.'px; display: block; object-fit: contain;">';
+                    } else {
+                        $content = '';
+                    }
+                    break;
                 default:
                     $content = $element['label'] ?? '';
             }

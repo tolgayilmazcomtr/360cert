@@ -19,6 +19,7 @@ import CertificateCreatePage from "./pages/CertificateCreatePage";
 import BulkUploadPage from "./pages/BulkUploadPage";
 import PackagesPage from "./pages/PackagesPage";
 import PaymentHistoryPage from "./pages/PaymentHistoryPage";
+import ProfilePage from "./pages/ProfilePage";
 
 const ProtectedRoute = ({ children }) => {
   const { user, isLoading } = useAuth();
@@ -60,6 +61,7 @@ function AppRoutes() {
         <Route path="settings" element={<SettingsPage />} />
         <Route path="packages" element={<PackagesPage />} />
         <Route path="payment-history" element={<PaymentHistoryPage />} />
+        <Route path="profile" element={<ProfilePage />} />
         {/* Diğer alt sayfalar buraya eklenecek */}
       </Route>
     </Routes>

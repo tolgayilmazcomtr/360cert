@@ -32,7 +32,15 @@ class User extends Authenticatable
         'company_name',
         'tax_number',
         'tax_office',
+        'city',
+        'photo_path',
+        'logo_path',
     ];
+
+    public function profileUpdateRequests()
+    {
+        return $this->hasMany(ProfileUpdateRequest::class);
+    }
 
     /**
      * The attributes that should be hidden for serialization.

@@ -4,7 +4,10 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\ProfileUpdateRequest;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 
 class DealerController extends Controller
 {
@@ -27,6 +30,103 @@ class DealerController extends Controller
         }
 
         return response()->json($query->orderBy('created_at', 'desc')->paginate(20));
+    }
+
+    public function store(Request $request)
+    {
+        if ($request->user()->role !== 'admin') {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users',
+            'password' => 'required|string|min:6',
+            'phone' => 'nullable|string',
+            'company_name' => 'nullable|string',
+            'tax_number' => 'nullable|string',
+            'tax_office' => 'nullable|string',
+            'city' => 'nullable|string',
+            'photo' => 'nullable|image|max:2048',
+            'logo' => 'nullable|image|max:2048',
+        ]);
+
+        $dealer = User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+            'role' => 'dealer',
+            'is_approved' => true,
+            'phone' => $request->phone,
+            'company_name' => $request->company_name,
+            'tax_number' => $request->tax_number,
+            'tax_office' => $request->tax_office,
+            'city' => $request->city,
+        ]);
+
+        if ($request->hasFile('photo')) {
+            $dealer->photo_path = $request->file('photo')->store('dealers/photos', 'public');
+        }
+
+        if ($request->hasFile('logo')) {
+            $dealer->logo_path = $request->file('logo')->store('dealers/logos', 'public');
+        }
+
+        $dealer->save();
+
+        return response()->json($dealer, 201);
+    }
+
+    public function update(Request $request, $id)
+    {
+        if ($request->user()->role !== 'admin') {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $dealer = User::where('role', 'dealer')->findOrFail($id);
+
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users,email,' . $dealer->id,
+            'password' => 'nullable|string|min:6',
+            'phone' => 'nullable|string',
+            'company_name' => 'nullable|string',
+            'tax_number' => 'nullable|string',
+            'tax_office' => 'nullable|string',
+            'city' => 'nullable|string',
+            'photo' => 'nullable|image|max:2048',
+            'logo' => 'nullable|image|max:2048',
+        ]);
+
+        $dealer->name = $request->name;
+        $dealer->email = $request->email;
+        $dealer->phone = $request->phone;
+        $dealer->company_name = $request->company_name;
+        $dealer->tax_number = $request->tax_number;
+        $dealer->tax_office = $request->tax_office;
+        $dealer->city = $request->city;
+
+        if ($request->filled('password')) {
+            $dealer->password = Hash::make($request->password);
+        }
+
+        if ($request->hasFile('photo')) {
+            if ($dealer->photo_path) {
+                Storage::disk('public')->delete($dealer->photo_path);
+            }
+            $dealer->photo_path = $request->file('photo')->store('dealers/photos', 'public');
+        }
+
+        if ($request->hasFile('logo')) {
+            if ($dealer->logo_path) {
+                Storage::disk('public')->delete($dealer->logo_path);
+            }
+            $dealer->logo_path = $request->file('logo')->store('dealers/logos', 'public');
+        }
+
+        $dealer->save();
+
+        return response()->json($dealer);
     }
 
     // Approve/Reject Dealer
@@ -111,5 +211,63 @@ class DealerController extends Controller
     {
         $dealer = User::where('role', 'dealer')->findOrFail($id);
         return response()->json($dealer->templates);
+    }
+
+    // Update Requests Management
+    public function getUpdateRequests(Request $request)
+    {
+        if ($request->user()->role !== 'admin') {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $requests = ProfileUpdateRequest::with('user')->orderBy('created_at', 'desc')->get();
+        return response()->json($requests);
+    }
+
+    public function approveUpdateRequest(Request $request, $id)
+    {
+        if ($request->user()->role !== 'admin') {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $updateRequest = ProfileUpdateRequest::with('user')->findOrFail($id);
+        
+        if ($updateRequest->status !== 'pending') {
+            return response()->json(['message' => 'Bu talep daha önce işlenmiş.'], 400);
+        }
+
+        $dealer = $updateRequest->user;
+        $requestedData = $updateRequest->requested_data;
+
+        // Apply changes
+        if (isset($requestedData['company_name'])) $dealer->company_name = $requestedData['company_name'];
+        if (isset($requestedData['tax_number'])) $dealer->tax_number = $requestedData['tax_number'];
+        if (isset($requestedData['tax_office'])) $dealer->tax_office = $requestedData['tax_office'];
+        if (isset($requestedData['city'])) $dealer->city = $requestedData['city'];
+        
+        $dealer->save();
+
+        $updateRequest->status = 'approved';
+        $updateRequest->save();
+
+        return response()->json(['message' => 'Talep onaylandı ve bilgiler güncellendi.']);
+    }
+
+    public function rejectUpdateRequest(Request $request, $id)
+    {
+        if ($request->user()->role !== 'admin') {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $updateRequest = ProfileUpdateRequest::findOrFail($id);
+        
+        if ($updateRequest->status !== 'pending') {
+            return response()->json(['message' => 'Bu talep daha önce işlenmiş.'], 400);
+        }
+
+        $updateRequest->status = 'rejected';
+        $updateRequest->save();
+
+        return response()->json(['message' => 'Talep reddedildi.']);
     }
 }
