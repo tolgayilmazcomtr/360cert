@@ -366,7 +366,11 @@ export default function CertificatesPage() {
                                         </TableCell>
                                     )}
                                     <TableCell>
-                                        <div className="text-sm">{cert.training_program?.name}</div>
+                                        <div className="text-sm">
+                                            {typeof cert.training_program?.name === 'object'
+                                                ? (cert.training_program.name[cert.certificate_language] || cert.training_program.name.tr || Object.values(cert.training_program.name)[0])
+                                                : cert.training_program?.name}
+                                        </div>
                                     </TableCell>
                                     <TableCell className="text-sm text-slate-600">
                                         {new Date(cert.issue_date).toLocaleDateString('tr-TR')}
@@ -482,7 +486,11 @@ export default function CertificatesPage() {
                                         <CardTitle className="text-sm font-medium text-slate-500">Sertifika Detayları</CardTitle>
                                     </CardHeader>
                                     <CardContent className="space-y-1">
-                                        <div className="font-medium">{inspectionCert.training_program?.name}</div>
+                                        <div className="font-medium">
+                                            {typeof inspectionCert.training_program?.name === 'object'
+                                                ? (inspectionCert.training_program.name[inspectionCert.certificate_language] || inspectionCert.training_program.name.tr || Object.values(inspectionCert.training_program.name)[0])
+                                                : inspectionCert.training_program?.name}
+                                        </div>
                                         <div className="text-sm text-slate-600">Şablon: {inspectionCert.template?.name}</div>
                                         <div className="text-sm text-slate-600">Veriliş Tarihi: {new Date(inspectionCert.issue_date).toLocaleDateString('tr-TR')}</div>
                                         <div className="text-sm text-slate-600 mt-2">
