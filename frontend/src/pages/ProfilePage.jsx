@@ -9,6 +9,12 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { useToast } from "@/hooks/use-toast";
 import { Save, User as UserIcon, Building2, Send } from "lucide-react";
 
+// Safe storage base URL — works with either VITE_API_URL or VITE_API_BASE_URL
+const storageBase = (() => {
+    const raw = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || '';
+    return raw.replace('/api', '');
+})();
+
 export default function ProfilePage() {
     const { user, login } = useAuth(); // Assuming login context updates user state
     const { toast } = useToast();
@@ -134,14 +140,14 @@ export default function ProfilePage() {
                                     <div className="space-y-2">
                                         <Label className="text-xs text-muted-foreground">Yetkili İşletme Logosu (Sertifikalara basılacak)</Label>
                                         {user.logo_path && (
-                                            <img src={`${import.meta.env.VITE_API_URL.replace('/api', '')}/storage/${user.logo_path}`} alt="Logo" className="w-16 h-16 object-cover rounded shadow-sm border mb-2 bg-white" />
+                                            <img src={`${storageBase}/storage/${user.logo_path}`} alt="Logo" className="w-16 h-16 object-cover rounded shadow-sm border mb-2 bg-white" />
                                         )}
                                         <Input type="file" accept="image/*" onChange={e => setLogo(e.target.files[0])} className="text-xs" />
                                     </div>
                                     <div className="space-y-2">
                                         <Label className="text-xs text-muted-foreground">Yetkili Fotoğrafı (Paneli Kişiselleştirmek İçin)</Label>
                                         {user.photo_path && (
-                                            <img src={`${import.meta.env.VITE_API_URL.replace('/api', '')}/storage/${user.photo_path}`} alt="Photo" className="w-16 h-16 object-cover rounded shadow-sm border mb-2 bg-white" />
+                                            <img src={`${storageBase}/storage/${user.photo_path}`} alt="Photo" className="w-16 h-16 object-cover rounded shadow-sm border mb-2 bg-white" />
                                         )}
                                         <Input type="file" accept="image/*" onChange={e => setPhoto(e.target.files[0])} className="text-xs" />
                                     </div>
