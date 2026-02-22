@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, GraduationCap } from "lucide-react";
+import { Plus, GraduationCap, Edit, Trash2 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 
 export default function TrainingProgramsPage() {
@@ -14,6 +14,7 @@ export default function TrainingProgramsPage() {
     const [activeLanguages, setActiveLanguages] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [editingId, setEditingId] = useState(null);
 
     // Form State
     const [formData, setFormData] = useState({
@@ -60,8 +61,15 @@ export default function TrainingProgramsPage() {
         e.preventDefault();
         try {
             const payload = { ...formData, name: nameObj };
-            await api.post("/training-programs", payload);
+
+            if (editingId) {
+                await api.put(`/training-programs/${editingId}`, payload);
+            } else {
+                await api.post("/training-programs", payload);
+            }
+
             setIsModalOpen(false);
+            setEditingId(null);
             setFormData({ description: "", duration_hours: "", default_price: "" });
 
             // Reset NameObj
@@ -76,11 +84,57 @@ export default function TrainingProgramsPage() {
         }
     };
 
+    const handleEdit = (program) => {
+        setEditingId(program.id);
+        setFormData({
+            description: program.description || "",
+            duration_hours: program.duration_hours || "",
+            default_price: program.default_price || ""
+        });
+
+        // Map existing name JSON to the current active languages
+        const newNameObj = {};
+        activeLanguages.forEach(lang => {
+            if (typeof program.name === 'object' && program.name !== null) {
+                newNameObj[lang.code] = program.name[lang.code] || "";
+            } else if (lang.code === 'tr') { // Fallback for old records
+                newNameObj[lang.code] = program.name || "";
+            } else {
+                newNameObj[lang.code] = "";
+            }
+        });
+        setNameObj(newNameObj);
+        setIsModalOpen(true);
+    };
+
+    const handleDelete = async (id) => {
+        if (!window.confirm("Bu eğitim programını silmek istediğinize emin misiniz?")) return;
+
+        try {
+            await api.delete(`/training-programs/${id}`);
+            alert("Eğitim programı silindi.");
+            fetchPrograms();
+        } catch (error) {
+            console.error("Silme hatası", error);
+            const msg = error.response?.data?.message || "İşlem başarısız.";
+            alert("Hata: " + msg);
+        }
+    };
+
+    const openCreateModal = () => {
+        setEditingId(null);
+        setFormData({ description: "", duration_hours: "", default_price: "" });
+        const resetNameObj = {};
+        activeLanguages.forEach(lang => { resetNameObj[lang.code] = ''; });
+        setNameObj(resetNameObj);
+        setIsModalOpen(true);
+    };
+
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <h2 className="text-3xl font-bold tracking-tight">Eğitim Programları</h2>
-                <Button onClick={() => setIsModalOpen(true)} className="gap-2">
+                <Button onClick={openCreateModal} className="gap-2">
                     <Plus size={16} />
                     Yeni Program Ekle
                 </Button>
@@ -94,16 +148,17 @@ export default function TrainingProgramsPage() {
                             <TableHead>Açıklama</TableHead>
                             <TableHead>Süre (Saat)</TableHead>
                             <TableHead>Varsayılan Ücret</TableHead>
+                            <TableHead className="text-right">İşlemler</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {loading ? (
                             <TableRow>
-                                <TableCell colSpan={4} className="text-center py-8">Yükleniyor...</TableCell>
+                                <TableCell colSpan={5} className="text-center py-8">Yükleniyor...</TableCell>
                             </TableRow>
                         ) : programs.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
+                                <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
                                     Henüz program eklenmemiş.
                                 </TableCell>
                             </TableRow>
@@ -121,6 +176,28 @@ export default function TrainingProgramsPage() {
                                     <TableCell>{program.description || '-'}</TableCell>
                                     <TableCell>{program.duration_hours} Saat</TableCell>
                                     <TableCell>{formatCurrency(program.default_price)}</TableCell>
+                                    <TableCell className="text-right space-x-2">
+                                        <div className="flex items-center justify-end gap-2">
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                                onClick={() => handleEdit(program)}
+                                                title="Düzenle"
+                                            >
+                                                <Edit className="h-4 w-4" />
+                                            </Button>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                                                onClick={() => handleDelete(program.id)}
+                                                title="Sil"
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                    </TableCell>
                                 </TableRow>
                             ))
                         )}
@@ -131,7 +208,7 @@ export default function TrainingProgramsPage() {
             <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
                 <DialogContent className="sm:max-w-[425px]">
                     <DialogHeader>
-                        <DialogTitle>Yeni Eğitim Programı</DialogTitle>
+                        <DialogTitle>{editingId ? "Eğitim Programını Düzenle" : "Yeni Eğitim Programı"}</DialogTitle>
                         <DialogDescription>
                             Sertifika verilecek eğitim programını tanımlayınız.
                         </DialogDescription>
