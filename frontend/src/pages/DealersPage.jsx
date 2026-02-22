@@ -279,7 +279,7 @@ export default function DealersPage() {
                                             <TableCell>
                                                 <div className="flex items-center gap-3">
                                                     {dealer.logo_path ? (
-                                                        <img src={`${import.meta.env.VITE_API_URL.replace('/api', '')}/storage/${dealer.logo_path}`} className="w-10 h-10 rounded-md object-contain border bg-white" alt="Logo" />
+                                                        <img src={`${(import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000/api").replace('/api', '')}/storage/${dealer.logo_path}`} className="w-10 h-10 rounded-md object-contain border bg-white" alt="Logo" />
                                                     ) : (
                                                         <div className="w-10 h-10 rounded-md bg-slate-100 flex items-center justify-center border text-slate-400">
                                                             <ImageIcon size={20} />
