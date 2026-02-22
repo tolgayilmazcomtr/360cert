@@ -221,7 +221,7 @@ export default function CertificateCreatePage() {
                                     <SelectContent>
                                         {programs.map(p => (
                                             <SelectItem key={p.id} value={p.id.toString()}>
-                                                {p.name?.tr || p.name || 'İsimsiz Eğitim'}
+                                                {typeof p.name === 'object' ? (p.name.tr || Object.values(p.name)[0] || 'İsimsiz Eğitim') : (p.name || 'İsimsiz Eğitim')}
                                             </SelectItem>
                                         ))}
                                     </SelectContent>

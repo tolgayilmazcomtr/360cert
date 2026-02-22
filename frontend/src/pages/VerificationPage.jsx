@@ -68,7 +68,11 @@ export default function VerificationPage() {
                                 </div>
                                 <div className="col-span-2">
                                     <p className="text-muted-foreground">Eğitim Programı</p>
-                                    <p className="font-medium text-lg">{certificate.training_program?.name}</p>
+                                    <p className="font-medium text-lg">
+                                        {typeof certificate.training_program?.name === 'object'
+                                            ? (certificate.training_program.name[certificate.certificate_language] || certificate.training_program.name.tr || Object.values(certificate.training_program.name)[0])
+                                            : certificate.training_program?.name}
+                                    </p>
                                 </div>
                                 <div>
                                     <p className="text-muted-foreground">Sertifika No</p>

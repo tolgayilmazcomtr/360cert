@@ -272,7 +272,11 @@ export default function DashboardPage() {
                                             </div>
                                             <div>
                                                 <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">{item.student?.first_name} {item.student?.last_name}</p>
-                                                <p className="text-xs text-slate-500">{item.training_program?.name}</p>
+                                                <p className="text-xs text-slate-500">
+                                                    {typeof item.training_program?.name === 'object'
+                                                        ? (item.training_program.name[item.certificate_language] || item.training_program.name.tr || Object.values(item.training_program.name)[0])
+                                                        : item.training_program?.name}
+                                                </p>
                                             </div>
                                         </div>
                                         <div className="text-right">
