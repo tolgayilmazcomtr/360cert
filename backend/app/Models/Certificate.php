@@ -26,6 +26,11 @@ class Certificate extends Model
         'start_date',
         'end_date',
         'transcript_path',
+        'transcript_data',
+    ];
+
+    protected $casts = [
+        'transcript_data' => 'array',
     ];
 
     public function student()
@@ -43,3 +48,4 @@ class Certificate extends Model
         return $this->belongsTo(CertificateTemplate::class, 'certificate_template_id');
     }
 }
+
