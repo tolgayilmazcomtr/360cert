@@ -51,7 +51,16 @@
         @foreach($config['elements'] as $element)
         @php
             $content = '';
-            switch($element['type']) {
+            $type = $element['type'] ?? '';
+            
+            // Check for dynamic language tags before switch
+            $langCode = null;
+            if (preg_match('/^training_name_(.+)$/', $type, $matches)) {
+                $langCode = $matches[1];
+                $type = 'training_name_dynamic'; // Rewrite type for switch
+            }
+
+            switch($type) {
                 case 'student_name':
                     $content = $certificate->student->first_name . ' ' . $certificate->student->last_name;
                     break;
@@ -71,10 +80,8 @@
                         $content = $nameData;
                     }
                     break;
-                case (preg_match('/^training_name_(.+)$/', $element['type'], $matches) ? true : false):
+                case 'training_name_dynamic':
                     // Yeni sistem: training_name_en, training_name_de vb.
-                    // (Ancak artık şablonlarda direkt training_name kullanılması öneriliyor. Geriye dönük uyumluluk için tutuluyor)
-                    $langCode = $matches[1];
                     $nameData = $certificate->training_program->name;
                     if (is_array($nameData)) {
                         $content = $nameData[$langCode] ?? $nameData['tr'] ?? current($nameData) ?? '';
