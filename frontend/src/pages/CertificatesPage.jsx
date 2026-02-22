@@ -55,8 +55,11 @@ export default function CertificatesPage() {
 
     const fetchLanguages = async () => {
         try {
-            const result = await languageService.getLanguages();
-            const activeLangs = result.data.filter(lang => lang.is_active);
+            const result = await languageService.getAll();
+            // result could be the array directly or wrapped in data property
+            const langsArray = Array.isArray(result) ? result : (result.data || []);
+            const activeLangs = langsArray.filter(lang => lang.is_active);
+
             setAvailableLanguages(activeLangs);
             if (activeLangs.length > 0) {
                 // Default to Turkish if available, otherwise first active
