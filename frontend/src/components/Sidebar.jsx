@@ -43,6 +43,7 @@ export default function Sidebar() {
         { name: "Genel Bakış", icon: Home, path: "/" },
         { name: "Öğrenciler", icon: Users, path: "/students" },
         { name: "Sertifikalar", icon: FileText, path: "/certificates" },
+        { name: "Bildirimler", icon: Bell, path: "/notifications" },
         { name: "Bakiye & Ödeme", icon: CreditCard, path: "/balance" },
         { name: "Paketler", icon: CreditCard, path: "/packages" },
         { name: "Ödeme Geçmişi", icon: CreditCard, path: "/payment-history" },
