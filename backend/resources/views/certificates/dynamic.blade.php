@@ -6,7 +6,7 @@
     <style>
         @foreach(collect($config['elements'])->pluck('font_family')->unique()->filter() as $font)
             @if($font != 'Arial' && $font != 'DejaVu Sans')
-                @import url('https://fonts.googleapis.com/css2?family={{ urlencode($font) }}:ital,wght@0,400;0,700;1,400&display=swap');
+                @import url('https://fonts.googleapis.com/css?family={{ urlencode($font) }}:400,400i,700,700i&subset=latin,latin-ext&display=swap');
             @endif
         @endforeach
 
@@ -146,12 +146,18 @@
             }
         @endphp
 
+        @php
+            $fontFamily = $element['font_family'] ?? 'DejaVu Sans';
+            if ($fontFamily === 'Arial') {
+                $fontFamily = 'DejaVu Sans'; // Force DejaVu Sans for Arial because DomPDF Helvetica lacks TR characters
+            }
+        @endphp
         <div class="element" style="
             left: {{ $element['x'] }}px; 
             top: {{ $element['y'] }}px; 
             font-size: {{ $element['font_size'] ?? 14 }}px; 
             color: {{ $element['color'] ?? '#000000' }};
-            font-family: '{{ $element['font_family'] ?? 'DejaVu Sans' }}', sans-serif;
+            font-family: '{{ $fontFamily }}', 'DejaVu Sans', sans-serif;
             font-weight: {{ $element['font_weight'] ?? 'normal' }};
             font-style: {{ $element['font_style'] ?? 'normal' }};
             @if(isset($element['max_width']) && $element['max_width'])
