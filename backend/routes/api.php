@@ -34,6 +34,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // Training Programs
     Route::get('/training-programs', [\App\Http\Controllers\Api\TrainingProgramController::class, 'index']);
     Route::post('/training-programs', [\App\Http\Controllers\Api\TrainingProgramController::class, 'store']);
+    Route::post('/training-programs/import', [\App\Http\Controllers\Api\TrainingProgramController::class, 'import']);
+    Route::get('/training-programs/import/template', [\App\Http\Controllers\Api\TrainingProgramController::class, 'importTemplate']);
     Route::put('/training-programs/{id}', [\App\Http\Controllers\Api\TrainingProgramController::class, 'update']);
     Route::delete('/training-programs/{id}', [\App\Http\Controllers\Api\TrainingProgramController::class, 'destroy']);
 

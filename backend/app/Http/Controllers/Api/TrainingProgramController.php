@@ -5,6 +5,9 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\TrainingProgram;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Imports\TrainingProgramsImport;
+use Exception;
 
 class TrainingProgramController extends Controller
 {
@@ -64,5 +67,51 @@ class TrainingProgramController extends Controller
 
         $program->delete();
         return response()->json(['message' => 'Eğitim programı silindi.']);
+    }
+
+    public function importTemplate()
+    {
+        // Generate a blank Excel file with required headers
+        $headers = [
+            'Eğitim Adı (TR)',
+            'Eğitim Adı (EN)',
+            'Eğitim Adı (DE)',
+            'Eğitim Adı (FR)',
+            'Eğitim Adı (RU)',
+            'Eğitim Adı (AR)',
+            'Eğitim Süresi (Saat)',
+            'Fiyat',
+            'Açıklama'
+        ];
+
+        // Using a basic array export via Maatwebsite Excel
+        $exportData = new class($headers) implements \Maatwebsite\Excel\Concerns\FromArray {
+            protected $data;
+            public function __construct(array $data) { $this->data = [$data]; }
+            public function array(): array { return $this->data; }
+        };
+
+        return Excel::download($exportData, 'egitim_sablonu.xlsx');
+    }
+
+    public function import(Request $request)
+    {
+        if ($request->user()->role !== 'admin') {
+             return response()->json(['message' => 'Yetkisiz işlem.'], 403);
+        }
+
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx,xls'
+        ]);
+
+        try {
+            Excel::import(new TrainingProgramsImport, $request->file('file'));
+            return response()->json(['message' => 'Eğitimler başarıyla içe aktarıldı.']);
+        } catch (Exception $e) {
+            return response()->json([
+                'message' => 'İçe aktarma sırasında bir hata oluştu.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }

@@ -8,13 +8,19 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plus, GraduationCap, Edit, Trash2 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
+import { Download, Upload } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 export default function TrainingProgramsPage() {
     const [programs, setPrograms] = useState([]);
     const [activeLanguages, setActiveLanguages] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isImportModalOpen, setIsImportModalOpen] = useState(false);
     const [editingId, setEditingId] = useState(null);
+    const [importFile, setImportFile] = useState(null);
+    const [importing, setImporting] = useState(false);
+    const { toast } = useToast();
 
     // Form State
     const [formData, setFormData] = useState({
@@ -130,14 +136,64 @@ export default function TrainingProgramsPage() {
         setIsModalOpen(true);
     };
 
+    const handleDownloadTemplate = async () => {
+        try {
+            const response = await api.get('/training-programs/import/template', { responseType: 'blob' });
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', 'egitim_sablonu.xlsx');
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+        } catch (error) {
+            console.error("Şablon indirme hatası:", error);
+            toast({ title: "Hata", description: "Şablon indirilemedi.", variant: "destructive" });
+        }
+    };
+
+    const handleImportSubmit = async (e) => {
+        e.preventDefault();
+        if (!importFile) {
+            toast({ title: "Uyarı", description: "Lütfen bir Excel dosyası seçin.", variant: "destructive" });
+            return;
+        }
+
+        setImporting(true);
+        const formData = new FormData();
+        formData.append("file", importFile);
+
+        try {
+            const res = await api.post('/training-programs/import', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+            toast({ title: "Başarılı", description: res.data.message || "Eğitimler başarıyla içeri aktarıldı." });
+            setIsImportModalOpen(false);
+            setImportFile(null);
+            fetchPrograms();
+        } catch (error) {
+            console.error("Import hatası:", error);
+            const msg = error.response?.data?.message || "İçe aktarma sırasında bir hata oluştu.";
+            toast({ title: "Hata", description: msg, variant: "destructive" });
+        } finally {
+            setImporting(false);
+        }
+    };
+
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <h2 className="text-3xl font-bold tracking-tight">Eğitim Programları</h2>
-                <Button onClick={openCreateModal} className="gap-2">
-                    <Plus size={16} />
-                    Yeni Program Ekle
-                </Button>
+                <div className="flex gap-2">
+                    <Button variant="outline" onClick={() => setIsImportModalOpen(true)} className="gap-2">
+                        <Upload size={16} />
+                        Excel İle İçeri Aktar
+                    </Button>
+                    <Button onClick={openCreateModal} className="gap-2">
+                        <Plus size={16} />
+                        Yeni Program Ekle
+                    </Button>
+                </div>
             </div>
 
             <div className="rounded-md border bg-white dark:bg-slate-900 shadow-sm">
@@ -250,11 +306,54 @@ export default function TrainingProgramsPage() {
                             </div>
                         </div>
                         <DialogFooter>
+                            <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>İptal</Button>
                             <Button type="submit">Kaydet</Button>
                         </DialogFooter>
                     </form>
                 </DialogContent>
             </Dialog>
+
+            {/* Import Modal */}
+            <Dialog open={isImportModalOpen} onOpenChange={setIsImportModalOpen}>
+                <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                        <DialogTitle>Excel İle Toplu Yükleme</DialogTitle>
+                        <DialogDescription>
+                            Örnek şablonu indirip doldurduktan sonra sisteme yükleyebilirsiniz.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="grid gap-4 py-4">
+                        <Button
+                            type="button"
+                            variant="secondary"
+                            className="w-full gap-2 border-dashed border-2 bg-slate-50 hover:bg-slate-100"
+                            onClick={handleDownloadTemplate}
+                        >
+                            <Download size={16} className="text-blue-500" />
+                            Örnek Şablonu İndir
+                        </Button>
+
+                        <div className="space-y-2 mt-4">
+                            <Label htmlFor="excel_file">Doldurulmuş Excel Dosyası (.xlsx)</Label>
+                            <Input
+                                id="excel_file"
+                                type="file"
+                                accept=".xlsx, .xls"
+                                onChange={(e) => setImportFile(e.target.files[0])}
+                            />
+                        </div>
+                    </div>
+
+                    <DialogFooter>
+                        <Button type="button" variant="outline" onClick={() => setIsImportModalOpen(false)}>İptal</Button>
+                        <Button onClick={handleImportSubmit} disabled={importing || !importFile}>
+                            {importing ? "Yükleniyor..." : "Yükle"}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
         </div>
     );
 }
