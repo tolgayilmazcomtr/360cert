@@ -88,7 +88,7 @@ export default function CertificateCreatePage() {
             });
             await refreshUser(); // Update balance in frontend
             alert("Sertifika başarıyla oluşturuldu!");
-            navigate("/certificates");
+            navigate("/dashboard/certificates");
         } catch (error) {
             console.error("Oluşturma hatası", error);
             alert("Hata oluştu: " + (error.response?.data?.message || "Bilinmeyen hata"));
@@ -157,7 +157,7 @@ export default function CertificateCreatePage() {
 
                     {templates.length === 0 && (
                         <div className="col-span-full text-center py-12 text-muted-foreground">
-                            Henüz tanımlı şablon yok. <Button variant="link" onClick={() => navigate('/templates')}>Şablon Ekle</Button>
+                            Henüz tanımlı şablon yok. <Button variant="link" onClick={() => navigate('/dashboard/templates')}>Şablon Ekle</Button>
                         </div>
                     )}
                 </div>

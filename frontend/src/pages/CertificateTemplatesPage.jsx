@@ -105,7 +105,7 @@ export default function CertificateTemplatesPage() {
                             )}
 
                             <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                                <Button variant="secondary" onClick={() => navigate(`/templates/${template.id}/design`)}>
+                                <Button variant="secondary" onClick={() => navigate(`/dashboard/templates/${template.id}/design`)}>
                                     <Settings size={16} className="mr-2" />
                                     Tasarla
                                 </Button>

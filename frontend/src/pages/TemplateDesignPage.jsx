@@ -250,7 +250,7 @@ export default function TemplateDesignPage() {
         <div className="h-[calc(100vh-100px)] flex flex-col">
             <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                    <Button variant="ghost" onClick={() => navigate('/templates')}>
+                    <Button variant="ghost" onClick={() => navigate('/dashboard/templates')}>
                         <ArrowLeft size={16} />
                     </Button>
                     <h2 className="text-2xl font-bold">{template.name} Tasarımı</h2>
