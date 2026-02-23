@@ -117,7 +117,9 @@ class StudentController extends Controller
     public function show(Request $request, $id)
     {
         $student = Student::findOrFail($id);
-        $this->authorize('view', $student); // In a real app, use policy
+        if ($request->user()->id !== $student->user_id && $request->user()->role !== 'admin') {
+            return response()->json(['message' => 'Yetkisiz erişim.'], 403);
+        }
         return response()->json($student);
     }
 

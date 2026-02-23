@@ -34,6 +34,10 @@ class SystemSettingController extends Controller
      */
     public function update(Request $request)
     {
+        if ($request->user()->role !== 'admin') {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
         $settingsData = $request->except(['logo', '_method']);
 
         foreach ($settingsData as $key => $value) {

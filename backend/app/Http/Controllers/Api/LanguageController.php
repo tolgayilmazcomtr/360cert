@@ -15,6 +15,10 @@ class LanguageController extends Controller
 
     public function update(Request $request, $id)
     {
+        if ($request->user()->role !== 'admin') {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
         $request->validate([
             'is_active' => 'required|boolean' // We might also want to update name/code later, but stick to toggle for now
         ]);
@@ -28,6 +32,10 @@ class LanguageController extends Controller
 
     public function store(Request $request)
     {
+        if ($request->user()->role !== 'admin') {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
         $request->validate([
             'code' => 'required|string|max:10|unique:languages,code',
             'name' => 'required|string|max:255',
@@ -43,8 +51,12 @@ class LanguageController extends Controller
         return response()->json($language, 201);
     }
 
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
+        if ($request->user()->role !== 'admin') {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
         $language = Language::findOrFail($id);
         $language->delete();
 

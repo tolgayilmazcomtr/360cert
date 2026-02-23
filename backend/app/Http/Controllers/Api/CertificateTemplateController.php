@@ -22,6 +22,10 @@ class CertificateTemplateController extends Controller
 
     public function store(Request $request)
     {
+        if ($request->user()->role !== 'admin') {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
         $request->validate([
             'name' => 'required|string|max:255',
             'background_image' => 'required|image|mimes:jpeg,png,jpg|max:2048',
@@ -91,6 +95,10 @@ class CertificateTemplateController extends Controller
 
     public function update(Request $request, $id)
     {
+        if ($request->user()->role !== 'admin') {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
         $template = CertificateTemplate::findOrFail($id);
         
         $request->validate([
@@ -105,8 +113,11 @@ class CertificateTemplateController extends Controller
         return response()->json($template);
     }
 
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
+        if ($request->user()->role !== 'admin') {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
         try {
             $template = CertificateTemplate::findOrFail($id);
             // Optional: Delete file from storage
