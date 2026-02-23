@@ -22,9 +22,12 @@ class ParamPosService
         $this->guid = config('parampos.guid');
         $this->mode = config('parampos.mode', 'test');
 
-        $this->wsdlUrl = $this->mode === 'production' 
-            ? 'https://posws.param.com.tr/turkpos.ws/service_turkpos_prod.asmx?WSDL' 
-            : 'https://testposws.param.com.tr/turkpos.ws/service_turkpos_prod.asmx?WSDL';
+        // Always use production WSDL for schema as test WSDL is sometimes blocked by Cloudflare 403
+        $this->wsdlUrl = 'https://posws.param.com.tr/turkpos.ws/service_turkpos_prod.asmx?WSDL';
+
+        $this->endpointUrl = $this->mode === 'production' 
+            ? 'https://posws.param.com.tr/turkpos.ws/service_turkpos_prod.asmx' 
+            : 'https://test-api.param.com.tr/turkpos.ws/service_turkpos_prod.asmx';
     }
 
     /**
@@ -85,7 +88,10 @@ class ParamPosService
                 'Data5' => '',
             ];
 
-            $client = new \SoapClient($this->wsdlUrl, ['trace' => 1]);
+            $client = new \SoapClient($this->wsdlUrl, [
+                'trace' => 1,
+                'location' => $this->endpointUrl
+            ]);
             $response = $client->Pos_Odeme($params);
 
             if (isset($response->Pos_OdemeResult)) {
