@@ -14,10 +14,10 @@ class CertificateTemplateController extends Controller
         $user = $request->user();
 
         if ($user->role === 'admin') {
-            return response()->json(CertificateTemplate::orderBy('created_at', 'desc')->get());
+            return response()->json(CertificateTemplate::with('certificateType')->orderBy('created_at', 'desc')->get());
         }
 
-        return response()->json($user->templates()->orderBy('created_at', 'desc')->get());
+        return response()->json($user->templates()->with('certificateType')->orderBy('created_at', 'desc')->get());
     }
 
     public function store(Request $request)
@@ -26,6 +26,7 @@ class CertificateTemplateController extends Controller
             'name' => 'required|string|max:255',
             'background_image' => 'required|image|mimes:jpeg,png,jpg|max:2048',
             'type' => 'required|in:standard,card',
+            'certificate_type_id' => 'nullable|exists:certificate_types,id',
         ]);
 
         if ($request->hasFile('background_image')) {
@@ -79,6 +80,7 @@ class CertificateTemplateController extends Controller
                 'type' => $request->type,
                 'layout_config' => $defaultConfig,
                 'is_active' => true,
+                'certificate_type_id' => $request->certificate_type_id,
             ]);
 
             return response()->json($template, 201);
@@ -94,10 +96,11 @@ class CertificateTemplateController extends Controller
         $request->validate([
             'name' => 'sometimes|string',
             'layout_config' => 'sometimes|array',
-            'is_active' => 'sometimes|boolean'
+            'is_active' => 'sometimes|boolean',
+            'certificate_type_id' => 'nullable|exists:certificate_types,id',
         ]);
 
-        $template->update($request->only(['name', 'layout_config', 'is_active']));
+        $template->update($request->only(['name', 'layout_config', 'is_active', 'certificate_type_id']));
 
         return response()->json($template);
     }

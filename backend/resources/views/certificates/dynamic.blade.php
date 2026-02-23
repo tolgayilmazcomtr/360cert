@@ -152,6 +152,8 @@
             font-size: {{ $element['font_size'] ?? 14 }}px; 
             color: {{ $element['color'] ?? '#000000' }};
             font-family: '{{ $element['font_family'] ?? 'DejaVu Sans' }}', sans-serif;
+            font-weight: {{ $element['font_weight'] ?? 'normal' }};
+            font-style: {{ $element['font_style'] ?? 'normal' }};
             @if(isset($element['max_width']) && $element['max_width'])
                 width: {{ $element['max_width'] }}px;
                 white-space: normal;

@@ -100,7 +100,6 @@ class CertificateController extends Controller
             
             'training_program_id' => 'required|exists:training_programs,id',
             'certificate_template_id' => 'required|exists:certificate_templates,id',
-            'certificate_type_id' => 'nullable|exists:certificate_types,id',
             'certificate_language' => 'required|string|max:10',
             
             'duration_hours' => 'required|integer|min:1',
@@ -113,6 +112,7 @@ class CertificateController extends Controller
 
         $user = $request->user();
         $program = TrainingProgram::findOrFail($request->training_program_id);
+        $template = CertificateTemplate::findOrFail($request->certificate_template_id);
         
         // Balance Check for Dealers
         if ($user->role !== 'admin') {
@@ -193,7 +193,7 @@ class CertificateController extends Controller
                 'student_id' => $student->id,
                 'training_program_id' => $request->training_program_id,
                 'certificate_template_id' => $request->certificate_template_id,
-                'certificate_type_id' => $request->certificate_type_id,
+                'certificate_type_id' => $template->certificate_type_id,
                 'certificate_language' => $request->certificate_language,
                 'duration_hours' => $request->duration_hours,
                 'start_date' => $request->start_date,

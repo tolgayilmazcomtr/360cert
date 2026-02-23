@@ -15,6 +15,7 @@ class CertificateTemplate extends Model
         'type',
         'layout_config',
         'is_active',
+        'certificate_type_id',
     ];
 
     protected $casts = [
@@ -26,5 +27,10 @@ class CertificateTemplate extends Model
         return $this->belongsToMany(User::class, 'certificate_template_user')
                     ->withPivot('assigned_at')
                     ->withTimestamps();
+    }
+
+    public function certificateType()
+    {
+        return $this->belongsTo(CertificateType::class, 'certificate_type_id');
     }
 }

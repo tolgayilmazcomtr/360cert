@@ -446,6 +446,30 @@ export default function TemplateDesignPage() {
                                                     {FONTS.map(f => <option key={f} value={f}>{f}</option>)}
                                                 </select>
                                             </div>
+                                            <div className="grid grid-cols-2 gap-2 pt-2">
+                                                <div>
+                                                    <Label className="text-xs">Kalınlık</Label>
+                                                    <select
+                                                        className="flex h-8 w-full items-center justify-between rounded-md border border-input bg-background px-2 py-1 text-xs"
+                                                        value={el.font_weight || 'normal'}
+                                                        onChange={e => updateElement(index, 'font_weight', e.target.value)}
+                                                    >
+                                                        <option value="normal">Normal</option>
+                                                        <option value="bold">Kalın (Bold)</option>
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <Label className="text-xs">Stil</Label>
+                                                    <select
+                                                        className="flex h-8 w-full items-center justify-between rounded-md border border-input bg-background px-2 py-1 text-xs"
+                                                        value={el.font_style || 'normal'}
+                                                        onChange={e => updateElement(index, 'font_style', e.target.value)}
+                                                    >
+                                                        <option value="normal">Normal</option>
+                                                        <option value="italic">İtalik</option>
+                                                    </select>
+                                                </div>
+                                            </div>
                                         </div>
                                     )}
                                 </div>
@@ -498,6 +522,8 @@ export default function TemplateDesignPage() {
                                             fontSize: `${el.font_size || 14}px`,
                                             color: el.color || '#000000',
                                             fontFamily: el.font_family || 'Arial',
+                                            fontWeight: el.font_weight || 'normal',
+                                            fontStyle: el.font_style || 'normal',
                                             width: el.max_width ? `${el.max_width}px` : 'auto',
                                             whiteSpace: el.max_width && !isImage ? 'normal' : 'nowrap',
                                             wordWrap: el.max_width && !isImage ? 'break-word' : 'normal',
@@ -524,7 +550,7 @@ export default function TemplateDesignPage() {
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
+            </div >
+        </div >
     );
 }

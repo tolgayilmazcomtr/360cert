@@ -3,6 +3,7 @@ import api from "../api/axios";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plus, Trash2, Settings, Image as ImageIcon } from "lucide-react";
@@ -11,6 +12,7 @@ import { getStorageUrl } from "@/lib/utils";
 
 export default function CertificateTemplatesPage() {
     const [templates, setTemplates] = useState([]);
+    const [certificateTypes, setCertificateTypes] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const navigate = useNavigate();
@@ -18,6 +20,7 @@ export default function CertificateTemplatesPage() {
     const [formData, setFormData] = useState({
         name: "",
         type: "standard",
+        certificate_type_id: "",
         file: null
     });
 
@@ -27,8 +30,12 @@ export default function CertificateTemplatesPage() {
 
     const fetchTemplates = async () => {
         try {
-            const response = await api.get("/certificate-templates");
-            setTemplates(response.data);
+            const [templatesRes, typesRes] = await Promise.all([
+                api.get("/certificate-templates"),
+                api.get("/certificate-types")
+            ]);
+            setTemplates(templatesRes.data);
+            setCertificateTypes(typesRes.data);
         } catch (error) {
             console.error("Şablonlar yüklenemedi", error);
         } finally {
@@ -41,6 +48,9 @@ export default function CertificateTemplatesPage() {
         const data = new FormData();
         data.append("name", formData.name);
         data.append("type", formData.type);
+        if (formData.certificate_type_id && formData.certificate_type_id !== "none") {
+            data.append("certificate_type_id", formData.certificate_type_id);
+        }
         data.append("background_image", formData.file);
 
         try {
@@ -130,6 +140,22 @@ export default function CertificateTemplatesPage() {
                                 onChange={e => setFormData({ ...formData, name: e.target.value })}
                                 required
                             />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Sertifika Türü <span className="text-muted-foreground text-xs">(Opsiyonel)</span></Label>
+                            <Select onValueChange={(v) => setFormData({ ...formData, certificate_type_id: v })} value={formData.certificate_type_id || "none"}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Sertifika Türü Seçiniz" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="none">Seçiniz (Opsiyonel)</SelectItem>
+                                    {certificateTypes.map(ct => (
+                                        <SelectItem key={ct.id} value={ct.id.toString()}>
+                                            {typeof ct.name === 'object' ? (ct.name.tr || Object.values(ct.name)[0]) : ct.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                         </div>
                         <div className="space-y-2">
                             <Label>Görsel Dosyası</Label>
