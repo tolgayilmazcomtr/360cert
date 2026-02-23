@@ -24,7 +24,7 @@ class ParamPosService
 
         $this->wsdlUrl = $this->mode === 'production' 
             ? 'https://posws.param.com.tr/turkpos.ws/service_turkpos_prod.asmx?WSDL' 
-            : 'https://test-api.param.com.tr/turkpos.ws/service_turkpos_prod.asmx?WSDL';
+            : 'https://testposws.param.com.tr/turkpos.ws/service_turkpos_prod.asmx?WSDL';
     }
 
     /**
