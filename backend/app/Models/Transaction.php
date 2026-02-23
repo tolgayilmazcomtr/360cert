@@ -13,7 +13,8 @@ class Transaction extends Model
         'method', // credit_card, wire_transfer, system
         'status', // pending, approved, rejected
         'description',
-        'document_path'
+        'document_path',
+        'meta'
     ];
     
     public function user()
