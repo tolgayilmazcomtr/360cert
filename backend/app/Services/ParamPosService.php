@@ -27,7 +27,7 @@ class ParamPosService
 
         $this->endpointUrl = $this->mode === 'production' 
             ? 'https://posws.param.com.tr/turkpos.ws/service_turkpos_prod.asmx' 
-            : 'https://test-api.param.com.tr/turkpos.ws/service_turkpos_prod.asmx';
+            : 'https://testposws.param.com.tr/turkpos.ws/service_turkpos_prod.asmx';
     }
 
     /**
