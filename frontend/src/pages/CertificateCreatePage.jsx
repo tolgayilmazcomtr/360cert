@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api/axios";
+import { useAuth } from "@/context/AuthContext";
 import { languageService } from "@/services/languageService";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
