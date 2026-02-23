@@ -90,7 +90,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/packages/{id}', [\App\Http\Controllers\Api\PackageController::class, 'update']);
     Route::delete('/packages/{id}', [\App\Http\Controllers\Api\PackageController::class, 'destroy']);
     Route::post('/packages/{id}/purchase', [\App\Http\Controllers\Api\PackageController::class, 'purchase']);
+
+    // Payment Processing
+    Route::post('/payment/process', [\App\Http\Controllers\Api\PaymentController::class, 'process']);
 });
 
 // Public Routes
 Route::get('/certificates/verify/{hash}', [\App\Http\Controllers\Api\CertificateController::class, 'verify']);
+Route::get('/certificates/verify/{hash}/download', [\App\Http\Controllers\Api\CertificateController::class, 'downloadByHash']);
+
+Route::match(['get', 'post'], '/payment/callback', [\App\Http\Controllers\Api\PaymentController::class, 'callback']);

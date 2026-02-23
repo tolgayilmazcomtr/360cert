@@ -11,15 +11,34 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CreditCard, Wallet, ArrowUpCircle, ArrowDownCircle, History } from "lucide-react";
+import { useSearchParams } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
 
 export default function BalancePage() {
     const { user } = useAuth();
+    const { toast } = useToast();
+    const [searchParams, setSearchParams] = useSearchParams();
     const [transactions, setTransactions] = useState([]);
     const [loading, setLoading] = useState(true);
     const [amount, setAmount] = useState("");
     const [open, setOpen] = useState(false);
 
     useEffect(() => {
+        const paymentStatus = searchParams.get('payment_status');
+        const message = searchParams.get('message');
+
+        if (paymentStatus) {
+            if (paymentStatus === 'success') {
+                toast({ title: "Ödeme Başarılı", description: message || "Paket başarıyla satın alındı ve bakiye eklendi." });
+            } else if (paymentStatus === 'error') {
+                toast({ title: "Ödeme Hatası", description: message || "İşlem başarısız.", variant: "destructive" });
+            } else if (paymentStatus === 'info') {
+                toast({ title: "Bilgi", description: message });
+            }
+            // Clear the params from URL
+            setSearchParams({});
+        }
+
         fetchTransactions();
     }, []);
 

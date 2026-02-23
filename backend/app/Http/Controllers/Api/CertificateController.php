@@ -234,6 +234,94 @@ class CertificateController extends Controller
         return response()->json($certificate);
     }
 
+    public function downloadByHash(Request $request, $hash)
+    {
+        $certificate = Certificate::with(['student', 'training_program', 'template'])
+            ->where('qr_code_hash', $hash)
+            ->firstOrFail();
+
+        // Language Override Support
+        $overrideLang = $request->input('lang');
+        if ($overrideLang) {
+            $certificate->certificate_language = $overrideLang;
+        }
+
+        // Generate QR Code
+        $frontendUrl = env('FRONTEND_URL', config('app.url'));
+        $frontendUrl = rtrim($frontendUrl, '/');
+        $verifyUrl = $frontendUrl . "/verify/" . $certificate->qr_code_hash;
+        $qrCode = base64_encode(QrCode::format('svg')->size(100)->generate($verifyUrl));
+
+        // Get Background Image Base64
+        $bgPath = storage_path('app/public/' . $certificate->template->background_path);
+
+        if (!file_exists($bgPath)) {
+            return response()->json(['message' => 'Arkaplan dosyası bulunamadı.'], 404);
+        }
+
+        $config = $certificate->template->layout_config;
+        
+        list($width, $height) = getimagesize($bgPath);
+        
+        if (!$width || !$height) {
+             if (!empty($config['canvasWidth']) && !empty($config['canvasHeight'])) {
+                $width = $config['canvasWidth'];
+                $height = $config['canvasHeight'];
+            } else {
+                $width = 842;
+                $height = 595;
+            }
+        }
+        
+        $customPaper = [0, 0, $width * 72 / 96, $height * 72 / 96];
+        $bgBase64 = 'data:image/' . pathinfo($bgPath, PATHINFO_EXTENSION) . ';base64,' . base64_encode(file_get_contents($bgPath));
+
+        $dealerLogoBase64 = null;
+        if ($certificate->student && $certificate->student->user && $certificate->student->user->logo_path) {
+            $logoPath = $certificate->student->user->logo_path;
+            if (Storage::disk('public')->exists($logoPath)) {
+                $ext = pathinfo($logoPath, PATHINFO_EXTENSION);
+                $content = Storage::disk('public')->get($logoPath);
+                $dealerLogoBase64 = 'data:image/' . $ext . ';base64,' . base64_encode($content);
+            }
+        }
+
+        $data = [
+            'certificate' => $certificate,
+            'qrCode' => $qrCode,
+            'bgImage' => $bgBase64,
+            'dealerLogo' => $dealerLogoBase64,
+            'config' => $config,
+            'width' => $width,
+            'height' => $height
+        ];
+
+        ini_set('memory_limit', '512M');
+        set_time_limit(300);
+
+        if (!file_exists(storage_path('fonts'))) {
+            mkdir(storage_path('fonts'), 0775, true);
+        }
+
+        try {
+            $pdf = Pdf::loadView('certificates.dynamic', $data);
+            $pdf->setPaper($customPaper);
+            $pdf->setOptions([
+                'isRemoteEnabled' => true, 
+                'dpi' => 96, 
+                'defaultFont' => 'sans-serif',
+                'fontDir' => storage_path('fonts'),
+                'fontCache' => storage_path('fonts'),
+            ]);
+
+            return $pdf->download($certificate->certificate_no . '.pdf');
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('PDF Generation Error: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error($e->getTraceAsString());
+            return response()->json(['message' => 'PDF oluşturulurken hata oluştu: ' . $e->getMessage()], 500);
+        }
+    }
+
     public function download(Request $request, $id)
     {
         $certificate = Certificate::with(['student', 'training_program', 'template'])->findOrFail($id);

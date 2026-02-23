@@ -9,9 +9,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Package, Plus, Edit2, Trash2, Star, CheckCircle, Zap, ShoppingCart, ToggleLeft } from "lucide-react";
+import { Package, Plus, Edit2, Trash2, Star, CheckCircle, Zap, ShoppingCart, ToggleLeft, CreditCard, Lock } from "lucide-react";
 
 const defaultForm = { name: "", description: "", price: "", credit_amount: "", sort_order: 0, is_active: true, is_featured: false };
+const defaultCheckoutForm = { card_name: '', card_number: '', expire_month: '', expire_year: '', cvc: '' };
 
 export default function PackagesPage() {
     const { user } = useAuth();
@@ -25,6 +26,8 @@ export default function PackagesPage() {
     const [form, setForm] = useState(defaultForm);
     const [saving, setSaving] = useState(false);
     const [purchasingId, setPurchasingId] = useState(null);
+    const [checkoutPkg, setCheckoutPkg] = useState(null);
+    const [checkoutForm, setCheckoutForm] = useState(defaultCheckoutForm);
 
     const fetchPackages = async () => {
         setLoading(true);
@@ -82,14 +85,37 @@ export default function PackagesPage() {
         } catch { }
     };
 
-    const handlePurchase = async (pkg) => {
-        if (!confirm(`"${pkg.name}" paketini ${formatCurrency(pkg.price)} fiyatına satın almak istiyor musunuz?\n\nBakiyenize ${formatCurrency(pkg.credit_amount)} eklenecektir.`)) return;
-        setPurchasingId(pkg.id);
+    const handleOpenCheckout = (pkg) => {
+        setCheckoutPkg(pkg);
+        setCheckoutForm({ card_name: '', card_number: '', expire_month: '', expire_year: '', cvc: '' });
+    };
+
+    const submitCheckout = async (e) => {
+        e.preventDefault();
+        setPurchasingId(checkoutPkg.id);
         try {
-            await api.post(`/packages/${pkg.id}/purchase`);
-            toast({ title: "Talep Oluşturuldu ✅", description: "Satın alma talebiniz alındı. Ödeme onayından sonra bakiyenize eklenecektir." });
+            const res = await api.post('/payment/process', {
+                package_id: checkoutPkg.id,
+                ...checkoutForm
+            });
+
+            // Redirect to 3D Secure
+            if (res.data.status === 'success') {
+                if (res.data.redirect_url) {
+                    window.location.href = res.data.redirect_url;
+                } else if (res.data.html) {
+                    document.open();
+                    document.write(res.data.html);
+                    document.close();
+                } else {
+                    toast({ title: "Başarılı", description: "Ödeme işlemi tamamlandı." });
+                    setCheckoutPkg(null);
+                }
+            } else {
+                toast({ title: "Ödeme Hatası", description: res.data.message || "İşlem başarısız.", variant: "destructive" });
+            }
         } catch (err) {
-            toast({ title: "Hata", description: err.response?.data?.message || "İşlem başarısız.", variant: "destructive" });
+            toast({ title: "Ödeme Hatası", description: err.response?.data?.message || "İşlem başarısız.", variant: "destructive" });
         } finally {
             setPurchasingId(null);
         }
@@ -185,7 +211,7 @@ export default function PackagesPage() {
                                     ) : (
                                         <Button
                                             className={`w-full gap-2 ${pkg.is_featured ? 'bg-indigo-600 hover:bg-indigo-700' : ''}`}
-                                            onClick={() => handlePurchase(pkg)}
+                                            onClick={() => handleOpenCheckout(pkg)}
                                             disabled={purchasingId === pkg.id}
                                         >
                                             <ShoppingCart size={14} />
@@ -247,6 +273,101 @@ export default function PackagesPage() {
                             <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>İptal</Button>
                             <Button type="submit" disabled={saving} className="bg-indigo-600 hover:bg-indigo-700">
                                 {saving ? 'Kaydediliyor...' : (editingPackage ? 'Güncelle' : 'Oluştur')}
+                            </Button>
+                        </DialogFooter>
+                    </form>
+                </DialogContent>
+            </Dialog>
+
+            {/* Dealer: Checkout Modal */}
+            <Dialog open={!!checkoutPkg} onOpenChange={(open) => !open && setCheckoutPkg(null)}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            <CreditCard size={18} className="text-indigo-600" /> Güvenli Ödeme
+                        </DialogTitle>
+                        <DialogDescription>
+                            {checkoutPkg?.name} paketini satın almak üzeresiniz.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="bg-slate-50 p-4 rounded-lg flex justify-between items-center border mb-2">
+                        <div>
+                            <p className="text-sm text-slate-500">Ödenecek Tutar</p>
+                            <p className="text-2xl font-bold text-slate-900">{checkoutPkg && formatCurrency(checkoutPkg.price)}</p>
+                        </div>
+                        <div className="text-right">
+                            <p className="text-sm text-slate-500">Eklenecek Bakiye</p>
+                            <p className="font-bold text-emerald-600">{checkoutPkg && formatCurrency(checkoutPkg.credit_amount)}</p>
+                        </div>
+                    </div>
+
+                    <form onSubmit={submitCheckout}>
+                        <div className="space-y-4 py-2">
+                            <div className="space-y-1.5">
+                                <Label htmlFor="cc-name">Kart Üzerindeki İsim *</Label>
+                                <Input id="cc-name" required value={checkoutForm.card_name} onChange={e => setCheckoutForm(p => ({ ...p, card_name: e.target.value.toUpperCase() }))} placeholder="AD SOYAD" />
+                            </div>
+                            <div className="space-y-1.5">
+                                <Label htmlFor="cc-number">Kart Numarası *</Label>
+                                <Input
+                                    id="cc-number"
+                                    required
+                                    maxLength="19"
+                                    value={checkoutForm.card_number}
+                                    onChange={e => {
+                                        let val = e.target.value.replace(/\D/g, '');
+                                        let formatted = val.match(/.{1,4}/g)?.join(' ') || val;
+                                        setCheckoutForm(p => ({ ...p, card_number: formatted }));
+                                    }}
+                                    placeholder="0000 0000 0000 0000"
+                                />
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-1.5">
+                                    <Label>Son Kullanma Tarihi *</Label>
+                                    <div className="flex gap-2">
+                                        <Input
+                                            placeholder="Ay (MM)"
+                                            required
+                                            maxLength="2"
+                                            value={checkoutForm.expire_month}
+                                            onChange={e => setCheckoutForm(p => ({ ...p, expire_month: e.target.value.replace(/\D/g, '') }))}
+                                            className="text-center"
+                                        />
+                                        <Input
+                                            placeholder="Yıl (YYYY)"
+                                            required
+                                            maxLength="4"
+                                            value={checkoutForm.expire_year}
+                                            onChange={e => setCheckoutForm(p => ({ ...p, expire_year: e.target.value.replace(/\D/g, '') }))}
+                                            className="text-center"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="space-y-1.5 flex flex-col items-end">
+                                    <Label htmlFor="cc-cvc" className="w-full text-left">Güvenlik Kodu (CVC) *</Label>
+                                    <Input
+                                        id="cc-cvc"
+                                        required
+                                        maxLength="4"
+                                        type="password"
+                                        value={checkoutForm.cvc}
+                                        onChange={e => setCheckoutForm(p => ({ ...p, cvc: e.target.value.replace(/\D/g, '') }))}
+                                        placeholder="***"
+                                        className="w-full"
+                                    />
+                                </div>
+                            </div>
+                            <p className="text-[10px] text-muted-foreground flex items-center gap-1 mt-2">
+                                <Lock size={10} className="text-emerald-600" />
+                                Kart bilgileriniz 256-bit SSL ile şifrelenerek Param POS altyapısına iletilir. 3D Secure ekranına yönlendirileceksiniz.
+                            </p>
+                        </div>
+                        <DialogFooter className="mt-4">
+                            <Button type="button" variant="outline" onClick={() => setCheckoutPkg(null)} disabled={purchasingId}>İptal</Button>
+                            <Button type="submit" disabled={purchasingId} className="bg-indigo-600 hover:bg-indigo-700 w-[140px]">
+                                {purchasingId ? 'İşleniyor...' : 'Ödeme Yap'}
                             </Button>
                         </DialogFooter>
                     </form>

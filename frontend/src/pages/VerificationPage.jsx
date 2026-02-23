@@ -3,19 +3,47 @@ import { useParams } from "react-router-dom";
 import api from "../api/axios";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, XCircle, Loader2 } from "lucide-react";
+import { CheckCircle, XCircle, Loader2, Download, Globe } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function VerificationPage() {
     const { hash } = useParams();
     const [certificate, setCertificate] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [selectedLang, setSelectedLang] = useState('tr');
+    const [availableLangs, setAvailableLangs] = useState(['tr']);
+    const [isDownloading, setIsDownloading] = useState(false);
+
+    // Safe base URL for downloads
+    const apiBaseUrl = (() => {
+        const raw = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || '';
+        return raw.replace(/\/$/, ""); // Remove trailing slash if any
+    })();
 
     useEffect(() => {
         const verify = async () => {
             try {
                 const response = await api.get(`/certificates/verify/${hash}`);
-                setCertificate(response.data);
+                const cert = response.data;
+                setCertificate(cert);
+
+                // Determine available languages from training_program.name
+                if (cert.training_program && typeof cert.training_program.name === 'object') {
+                    const langs = Object.keys(cert.training_program.name);
+                    if (langs.length > 0) {
+                        setAvailableLangs(langs);
+                        // Default to the language it was created in if available, else first lang
+                        if (langs.includes(cert.certificate_language)) {
+                            setSelectedLang(cert.certificate_language);
+                        } else {
+                            setSelectedLang(langs[0]);
+                        }
+                    }
+                } else if (cert.certificate_language) {
+                    setSelectedLang(cert.certificate_language);
+                }
             } catch (err) {
                 setError("Sertifika bulunamadı veya geçersiz.");
             } finally {
@@ -24,6 +52,14 @@ export default function VerificationPage() {
         };
         verify();
     }, [hash]);
+
+    const handleDownload = () => {
+        setIsDownloading(true);
+        // We use window.open to directly trigger the browser download
+        const url = `${apiBaseUrl}/certificates/verify/${hash}/download?lang=${selectedLang}`;
+        window.open(url, '_blank');
+        setTimeout(() => setIsDownloading(false), 2000);
+    };
 
     return (
         <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
@@ -86,9 +122,40 @@ export default function VerificationPage() {
 
 
                             <div className="pt-4 border-t text-center">
-                                <Badge variant="outline" className="text-xs">
+                                <Badge variant="outline" className="text-xs mb-4">
                                     Hash: {certificate.qr_code_hash}
                                 </Badge>
+
+                                <div className="p-4 bg-slate-100/50 rounded-xl space-y-4 border border-slate-200">
+                                    <h4 className="text-sm font-semibold text-slate-700">Sertifikayı İndir</h4>
+                                    <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+                                        <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border shadow-sm">
+                                            <Globe size={16} className="text-slate-500" />
+                                            <Select value={selectedLang} onValueChange={setSelectedLang}>
+                                                <SelectTrigger className="w-[120px] h-8 border-0 bg-transparent shadow-none focus-visible:ring-0 px-0">
+                                                    <SelectValue placeholder="Dil Seçin" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {availableLangs.map(lang => (
+                                                        <SelectItem key={lang} value={lang} className="uppercase font-medium">
+                                                            {lang === 'tr' ? 'Türkçe' : lang === 'en' ? 'English' : lang === 'de' ? 'Deutsch' : lang}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+
+                                        <Button
+                                            onClick={handleDownload}
+                                            disabled={isDownloading}
+                                            className="w-full sm:w-auto gap-2 bg-blue-600 hover:bg-blue-700 text-white"
+                                        >
+                                            {isDownloading ? <Loader2 className="animate-spin w-4 h-4" /> : <Download className="w-4 h-4" />}
+                                            {isDownloading ? 'Hazırlanıyor...' : 'PDF İndir'}
+                                        </Button>
+                                    </div>
+                                    <p className="text-[10px] text-muted-foreground">İstediğiniz dili seçerek sertifikanızın orijinal PDF formatını indirebilirsiniz.</p>
+                                </div>
                             </div>
                         </div>
                     ) : (
