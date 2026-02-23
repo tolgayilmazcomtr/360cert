@@ -142,8 +142,8 @@ export default function DashboardPage() {
                 </div>
                 <div className="flex gap-2">
                     <Button asChild variant="outline" className="shadow-sm border-slate-200 dark:border-slate-800">
-                        <Link to={user.role === 'admin' ? "/finance" : "/payment-history"}>
-                            <History className="mr-2 h-4 w-4" /> Geçmiş
+                        <Link to={user.role === 'admin' ? "/dashboard/finance" : "/dashboard/payment-history"}>
+                            <History className="mr-2 h-4 w-4" /> {user.role === 'admin' ? "Raporlar" : "Ödemeler"}
                         </Link>
                     </Button>
                     <Button asChild className="shadow-glow-primary bg-primary hover:bg-primary/90">
