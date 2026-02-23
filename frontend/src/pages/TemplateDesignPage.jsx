@@ -162,14 +162,10 @@ export default function TemplateDesignPage() {
         else if (newElementType === 'issue_date') label = "Veriliş Tarihi";
         else if (newElementType === 'qr_code') label = "QR Kod";
         else if (newElementType === 'dealer_logo') label = "Yetkili Logosu";
-        else if (newElementType.startsWith('training_name_')) {
-            const code = newElementType.split('_').pop();
-            const lang = activeLanguages.find(l => l.code === code);
-            label = `Eğitim Adı (${lang ? lang.name : code.toUpperCase()})`;
-        } else if (newElementType.startsWith('certificate_type_')) {
-            const code = newElementType.split('_').pop();
-            const lang = activeLanguages.find(l => l.code === code);
-            label = `Sertifika Türü (${lang ? lang.name : code.toUpperCase()})`;
+        else if (newElementType === 'training_name') {
+            label = "Eğitim Adı";
+        } else if (newElementType === 'certificate_type') {
+            label = "Sertifika Türü";
         } else if (newElementType === 'custom_text') {
             label = "Sabit Metin";
         }
@@ -345,16 +341,8 @@ export default function TemplateDesignPage() {
                                 <option value="issue_date">Veriliş Tarihi</option>
                                 <option value="qr_code">QR Kod</option>
                                 <option value="dealer_logo">Yetkili Logosu</option>
-                                {activeLanguages.map(lang => (
-                                    <option key={lang.id} value={`training_name_${lang.code}`}>
-                                        Eğitim Adı ({lang.name})
-                                    </option>
-                                ))}
-                                {activeLanguages.map(lang => (
-                                    <option key={`ct_${lang.id}`} value={`certificate_type_${lang.code}`}>
-                                        Sertifika Türü ({lang.name})
-                                    </option>
-                                ))}
+                                <option value="training_name">Eğitim Adı</option>
+                                <option value="certificate_type">Sertifika Türü</option>
                                 <option value="custom_text">Sabit/Serbest Metin</option>
                             </select>
                             <Button size="sm" onClick={handleAddElement}>Ekle</Button>

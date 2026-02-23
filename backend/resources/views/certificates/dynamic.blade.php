@@ -74,13 +74,26 @@
                     $content = \Carbon\Carbon::parse($certificate->issue_date)->format('d.m.Y');
                     break;
                 case 'training_name':
-                    // Eski sistem geri uyumluluk: JSON ise 'certificate_language' key'ine bak, yoksa tr'ye bak, yoksa direkt bas
+                    // JSON ise 'certificate_language' key'ine bak, yoksa tr'ye bak, yoksa direkt bas
                     $nameData = $certificate->training_program->name;
                     $certLang = $certificate->certificate_language ?? 'tr';
                     if (is_array($nameData)) {
                         $content = $nameData[$certLang] ?? $nameData['tr'] ?? current($nameData) ?? '';
                     } else {
                         $content = $nameData;
+                    }
+                    break;
+                case 'certificate_type':
+                    if ($certificate->certificateType) {
+                        $typeData = $certificate->certificateType->name;
+                        $certLang = $certificate->certificate_language ?? 'tr';
+                        if (is_array($typeData)) {
+                            $content = $typeData[$certLang] ?? $typeData['tr'] ?? current($typeData) ?? '';
+                        } else {
+                            $content = $typeData;
+                        }
+                    } else {
+                        $content = '';
                     }
                     break;
                 case 'training_name_dynamic':
