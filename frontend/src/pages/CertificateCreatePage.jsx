@@ -11,6 +11,7 @@ import { CheckCircle, ArrowRight, FileText, UploadCloud, ChevronLeft } from "luc
 import { getStorageUrl } from "@/lib/utils";
 
 export default function CertificateCreatePage() {
+    const { refreshUser } = useAuth();
     const navigate = useNavigate();
     const [templates, setTemplates] = useState([]);
     const [programs, setPrograms] = useState([]);
@@ -84,6 +85,7 @@ export default function CertificateCreatePage() {
             await api.post("/certificates", data, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
+            await refreshUser(); // Update balance in frontend
             alert("Sertifika başarıyla oluşturuldu!");
             navigate("/certificates");
         } catch (error) {

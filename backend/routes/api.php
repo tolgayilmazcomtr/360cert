@@ -60,6 +60,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/dealers/{id}/templates/{templateId}', [\App\Http\Controllers\Api\DealerController::class, 'revokeTemplate']);
     
     // Dealer Admin Review Requests
+    Route::get('/dealers/update-requests/pending-count', [\App\Http\Controllers\Api\DealerController::class, 'getPendingUpdateRequestsCount']);
     Route::get('/dealers/update-requests', [\App\Http\Controllers\Api\DealerController::class, 'getUpdateRequests']);
     Route::post('/dealers/update-requests/{id}/approve', [\App\Http\Controllers\Api\DealerController::class, 'approveUpdateRequest']);
     Route::post('/dealers/update-requests/{id}/reject', [\App\Http\Controllers\Api\DealerController::class, 'rejectUpdateRequest']);

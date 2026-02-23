@@ -214,6 +214,16 @@ class DealerController extends Controller
     }
 
     // Update Requests Management
+    public function getPendingUpdateRequestsCount(Request $request)
+    {
+        if ($request->user()->role !== 'admin') {
+            return response()->json(['count' => 0]);
+        }
+
+        $count = ProfileUpdateRequest::where('status', 'pending')->count();
+        return response()->json(['count' => $count]);
+    }
+
     public function getUpdateRequests(Request $request)
     {
         if ($request->user()->role !== 'admin') {

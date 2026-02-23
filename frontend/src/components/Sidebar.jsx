@@ -53,17 +53,26 @@ export default function Sidebar() {
     const menu = user?.role === 'admin' ? adminMenu : dealerMenu;
 
     const [unreadCount, setUnreadCount] = useState(0);
+    const [pendingUpdatesCount, setPendingUpdatesCount] = useState(0);
+
     useEffect(() => {
-        const fetchUnread = async () => {
+        const fetchCounts = async () => {
             try {
                 const res = await api.get('/notifications/unread-count');
                 setUnreadCount(res.data.count || 0);
             } catch { }
+
+            if (user?.role === 'admin') {
+                try {
+                    const res = await api.get('/dealers/update-requests/pending-count');
+                    setPendingUpdatesCount(res.data.count || 0);
+                } catch { }
+            }
         };
-        fetchUnread();
-        const interval = setInterval(fetchUnread, 30000);
+        fetchCounts();
+        const interval = setInterval(fetchCounts, 30000);
         return () => clearInterval(interval);
-    }, []);
+    }, [user?.role]);
 
     return (
         <div className="flex flex-col h-full bg-white border-r border-border w-[280px] shrink-0 transition-all relative">
@@ -84,6 +93,7 @@ export default function Sidebar() {
                 {menu.map((item) => {
                     const isActive = location.pathname === item.path;
                     const isNotifLink = item.path === '/notifications';
+                    const isDealerLink = item.path === '/dealers';
                     return (
                         <Link key={item.path} to={item.path}>
                             <Button
@@ -104,7 +114,12 @@ export default function Sidebar() {
                                         {unreadCount > 9 ? '9+' : unreadCount}
                                     </span>
                                 )}
-                                {isActive && !isNotifLink && (
+                                {isDealerLink && pendingUpdatesCount > 0 && user?.role === 'admin' && (
+                                    <span className="ml-auto bg-red-500 text-white text-[10px] font-bold rounded-full px-1.5 py-0.5 min-w-[18px] text-center">
+                                        {pendingUpdatesCount > 9 ? '9+' : pendingUpdatesCount}
+                                    </span>
+                                )}
+                                {isActive && !isNotifLink && !isDealerLink && (
                                     <ChevronRight size={14} className="ml-auto opacity-50" />
                                 )}
                             </Button>
