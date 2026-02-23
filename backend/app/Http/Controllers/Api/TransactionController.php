@@ -10,18 +10,46 @@ use Illuminate\Support\Facades\DB;
 
 class TransactionController extends Controller
 {
-    // List transactions for the authenticated user (or all if admin)
+    // List transactions for the authenticated user (or all if admin) with advanced filtering
     public function index(Request $request)
     {
         $user = $request->user();
 
         $query = Transaction::with('user')->orderBy('created_at', 'desc');
 
+        // Filter by user context
         if ($user->role !== 'admin') {
             $query->where('user_id', $user->id);
         }
 
-        return $query->paginate(20);
+        // Apply Search (User name or company name) - only makes sense for Admin really
+        if ($request->has('search') && $user->role === 'admin') {
+            $search = $request->search;
+            $query->whereHas('user', function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('company_name', 'like', "%{$search}%");
+            });
+        }
+
+        // Apply Date Range
+        if ($request->has('start_date') && $request->has('end_date')) {
+            $query->whereBetween('created_at', [
+                $request->start_date . ' 00:00:00',
+                $request->end_date . ' 23:59:59'
+            ]);
+        }
+
+        // Apply Type Filter
+        if ($request->has('type') && $request->type !== 'all') {
+            $query->where('type', $request->type);
+        }
+
+        // Apply Status Filter
+        if ($request->has('status') && $request->status !== 'all') {
+            $query->where('status', $request->status);
+        }
+
+        return $query->paginate($request->get('per_page', 20));
     }
 
     // Create a new deposit request (Credit Card or Wire Transfer)

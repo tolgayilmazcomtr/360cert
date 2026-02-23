@@ -40,7 +40,14 @@ export default function Sidebar() {
             ]
         },
         { name: "Öğrenciler", icon: Users, path: "/dashboard/students" },
-        { name: "Finansal Raporlar", icon: CreditCard, path: "/dashboard/finance" },
+        {
+            name: "Finansal Raporlar",
+            icon: CreditCard,
+            subItems: [
+                { name: "Özet Raporlar", path: "/dashboard/finance" },
+                { name: "Hesap Hareketleri", path: "/dashboard/transactions" },
+            ]
+        },
         { name: "Duyurular", icon: Bell, path: "/dashboard/notifications" },
         { name: "Sistem Ayarı", icon: Settings, path: "/dashboard/settings" },
         { name: "Yönetici Profilim", icon: UserCog, path: "/dashboard/admin/profile" },

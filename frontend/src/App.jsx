@@ -16,6 +16,7 @@ import DealerApplicationPage from "./pages/DealerApplicationPage";
 import Register from "./pages/Register";
 import DealersPage from "./pages/DealersPage";
 import FinancePage from "./pages/FinancePage";
+import TransactionsPage from "./pages/TransactionsPage";
 import NotificationsPage from "./pages/NotificationsPage";
 import SettingsPage from "./pages/SettingsPage";
 import CertificateCreatePage from "./pages/CertificateCreatePage";
@@ -67,6 +68,7 @@ function AppRoutes() {
         <Route path="certificate-types" element={<CertificateTypesPage />} />
         <Route path="dealers" element={<DealersPage />} />
         <Route path="finance" element={<FinancePage />} />
+        <Route path="transactions" element={<TransactionsPage />} />
         <Route path="notifications" element={<NotificationsPage />} />
         <Route path="settings" element={<SettingsPage />} />
         <Route path="packages" element={<PackagesPage />} />
