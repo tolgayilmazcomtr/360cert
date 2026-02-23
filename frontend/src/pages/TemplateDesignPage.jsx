@@ -377,7 +377,14 @@ export default function TemplateDesignPage() {
                                             {el.type === 'custom_text' && (
                                                 <div className="mb-2">
                                                     <Label className="text-xs">Metin İçeriği</Label>
-                                                    <Input value={el.label} onChange={e => updateElement(index, 'label', e.target.value)} className="h-7 text-xs" />
+                                                    <textarea
+                                                        value={el.label}
+                                                        onChange={e => updateElement(index, 'label', e.target.value)}
+                                                        className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-xs ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 min-h-[80px] mt-1"
+                                                    />
+                                                    <p className="text-[10px] text-muted-foreground mt-1 leading-tight">
+                                                        Değişkenler: {`{dealer_name}`}, {`{student_name}`}, {`{training_name}`}, {`{training_name_en}`}, {`{duration_hours}`}. (Değişkenler otomatik kalın yazılır)
+                                                    </p>
                                                 </div>
                                             )}
                                             <div className="grid grid-cols-2 gap-2">

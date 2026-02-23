@@ -143,6 +143,40 @@
                     break;
                 default:
                     $content = $element['label'] ?? '';
+                    if (str_contains($content, '{')) {
+                        // Dealer Name
+                        $dealerName = '';
+                        if (isset($certificate->student->user)) {
+                            $dealerName = $certificate->student->user->company_name ?: $certificate->student->user->name;
+                        }
+                        $content = str_replace('{dealer_name}', '<strong>' . htmlspecialchars($dealerName) . '</strong>', $content);
+                        
+                        // Student Name
+                        $studentName = isset($certificate->student) ? ($certificate->student->first_name . ' ' . $certificate->student->last_name) : '';
+                        $content = str_replace('{student_name}', '<strong>' . htmlspecialchars($studentName) . '</strong>', $content);
+                        
+                        // Duration
+                        $duration = $certificate->duration_hours ?? '';
+                        $content = str_replace('{duration_hours}', '<strong>' . htmlspecialchars($duration) . '</strong>', $content);
+                        
+                        // Training Name
+                        if (isset($certificate->training_program)) {
+                            $nameData = $certificate->training_program->name;
+                            if (is_array($nameData)) {
+                                foreach ($nameData as $lang => $val) {
+                                    $content = str_replace('{training_name_' . $lang . '}', '<strong>' . htmlspecialchars($val) . '</strong>', $content);
+                                }
+                                $fallback = $nameData['tr'] ?? current($nameData) ?? '';
+                                $content = str_replace('{training_name}', '<strong>' . htmlspecialchars($fallback) . '</strong>', $content);
+                            } else {
+                                $content = str_replace('{training_name}', '<strong>' . htmlspecialchars($nameData) . '</strong>', $content);
+                            }
+                        }
+                        $content = nl2br($content);
+                    } else {
+                        $content = nl2br(htmlspecialchars($content));
+                    }
+                    break;
             }
         @endphp
 
