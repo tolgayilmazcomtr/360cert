@@ -42,7 +42,7 @@ class FinanceController extends Controller
         // Admin sees total active dealer balances
         $activeDealerBalance = 0;
         if ($user->role === 'admin') {
-            $activeDealerBalance = User::where('role', 'dealer')->where('status', 'active')->sum('balance');
+            $activeDealerBalance = User::where('role', 'dealer')->where('is_active', true)->sum('balance');
         } else {
             $activeDealerBalance = collect([$user])->sum('balance');
         }
@@ -84,7 +84,7 @@ class FinanceController extends Controller
             ->where('status', 'approved')
             ->where('description', 'like', '%Paket%')
             ->where('created_at', '>=', Carbon::now()->startOfMonth())
-            ->groupBy('name')
+            ->groupBy('description')
             ->orderByDesc('count')
             ->limit(5)
             ->get();
