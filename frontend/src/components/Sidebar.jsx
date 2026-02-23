@@ -15,6 +15,7 @@ import {
     QrCode,
     Bell,
     ChevronRight,
+    ChevronDown,
     Shield,
     UserCog
 } from "lucide-react";
@@ -28,9 +29,16 @@ export default function Sidebar() {
     const adminMenu = [
         { name: "Genel Bakış", icon: Home, path: "/" },
         { name: "Bayi Yönetimi", icon: Building, path: "/dealers" },
-        { name: "Sertifikalar", icon: FileText, path: "/certificates" },
-        { name: "Sertifika Türleri", icon: FileText, path: "/certificate-types" },
-        { name: "Eğitim Programları", icon: GraduationCap, path: "/programs" },
+        {
+            name: "Sertifikasyon",
+            icon: FileText,
+            subItems: [
+                { name: "Sertifika Veritabanı", path: "/certificates" },
+                { name: "Şablon Tasarımları", path: "/templates" },
+                { name: "Sertifika Türleri", path: "/certificate-types" },
+                { name: "Eğitim Programları", path: "/programs" },
+            ]
+        },
         { name: "Öğrenciler", icon: Users, path: "/students" },
         { name: "Finansal Raporlar", icon: CreditCard, path: "/finance" },
         { name: "Duyurular", icon: Bell, path: "/notifications" },
@@ -54,6 +62,11 @@ export default function Sidebar() {
 
     const [unreadCount, setUnreadCount] = useState(0);
     const [pendingUpdatesCount, setPendingUpdatesCount] = useState(0);
+    const [openMenus, setOpenMenus] = useState({});
+
+    const toggleMenu = (name) => {
+        setOpenMenus(prev => ({ ...prev, [name]: !prev[name] }));
+    };
 
     useEffect(() => {
         const fetchCounts = async () => {
@@ -91,7 +104,54 @@ export default function Sidebar() {
             <div className="flex-1 py-4 px-3 space-y-1 overflow-y-auto custom-scrollbar">
                 <p className="px-4 text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider">Menü</p>
                 {menu.map((item) => {
-                    const isActive = location.pathname === item.path;
+                    if (item.subItems) {
+                        const isAnyChildActive = item.subItems.some(sub => location.pathname === sub.path || location.pathname.startsWith(sub.path + '/'));
+                        const isOpen = openMenus[item.name] !== undefined ? openMenus[item.name] : isAnyChildActive;
+
+                        return (
+                            <div key={item.name} className="mb-1">
+                                <Button
+                                    variant="ghost"
+                                    onClick={() => toggleMenu(item.name)}
+                                    className={cn(
+                                        "w-full justify-start gap-3 px-4 py-6 rounded-lg transition-all duration-200 group relative",
+                                        isAnyChildActive ? "text-[#1890ff] font-medium" : "text-muted-foreground hover:text-primary hover:bg-blue-50/50"
+                                    )}
+                                >
+                                    <item.icon size={18} className={cn(
+                                        "transition-colors",
+                                        isAnyChildActive ? "text-[#1890ff]" : "text-muted-foreground group-hover:text-[#1890ff]"
+                                    )} />
+                                    <span className="text-sm font-medium">{item.name}</span>
+                                    <div className="ml-auto">
+                                        {isOpen ? <ChevronDown size={14} className="opacity-50" /> : <ChevronRight size={14} className="opacity-50" />}
+                                    </div>
+                                </Button>
+                                {isOpen && (
+                                    <div className="ml-[22px] mt-1 pl-4 border-l border-slate-200 space-y-1 py-1">
+                                        {item.subItems.map(subItem => {
+                                            const isActive = location.pathname === subItem.path || location.pathname.startsWith(subItem.path + '/');
+                                            return (
+                                                <Link key={subItem.path} to={subItem.path}>
+                                                    <Button
+                                                        variant="ghost"
+                                                        className={cn(
+                                                            "w-full justify-start gap-3 px-3 py-1.5 h-auto min-h-[32px] rounded-md transition-all duration-200 my-0.5",
+                                                            isActive ? "bg-[#e6f7ff] text-[#1890ff] font-medium" : "text-muted-foreground hover:text-primary hover:bg-slate-50"
+                                                        )}
+                                                    >
+                                                        <span className="text-[13px]">{subItem.name}</span>
+                                                    </Button>
+                                                </Link>
+                                            )
+                                        })}
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    }
+
+                    const isActive = location.pathname === item.path || (item.path !== '/' && location.pathname.startsWith(item.path + '/'));
                     const isNotifLink = item.path === '/notifications';
                     const isDealerLink = item.path === '/dealers';
                     return (
