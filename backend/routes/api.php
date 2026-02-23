@@ -25,6 +25,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Dashboard
     Route::get('/dashboard/stats', [\App\Http\Controllers\Api\DashboardController::class, 'index']);
+    Route::get('/finance/stats', [\App\Http\Controllers\Api\FinanceController::class, 'stats']);
 
     // Settings
     Route::get('/settings', [SystemSettingController::class, 'index']);

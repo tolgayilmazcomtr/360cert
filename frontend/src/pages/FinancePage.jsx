@@ -1,15 +1,7 @@
+import { useState, useEffect } from "react";
+import api from "../api/axios";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis, Bar, BarChart, Legend } from "recharts";
-
-const data = [
-    { name: "Ocak", income: 4000, expense: 2400 },
-    { name: "Şubat", income: 3000, expense: 1398 },
-    { name: "Mart", income: 2000, expense: 9800 },
-    { name: "Nisan", income: 2780, expense: 3908 },
-    { name: "Mayıs", income: 1890, expense: 4800 },
-    { name: "Haziran", income: 2390, expense: 3800 },
-    { name: "Temmuz", income: 3490, expense: 4300 },
-];
 
 const packageData = [
     { name: "Standart Paket", count: 400 },
@@ -19,6 +11,32 @@ const packageData = [
 ];
 
 export default function FinancePage() {
+    const [financeData, setFinanceData] = useState({
+        metrics: { total_income: 0, pending_amount: 0, pending_count: 0, active_dealer_balance: 0, trend: "+0%" },
+        chart_data: [],
+        package_data: []
+    });
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchFinanceData = async () => {
+            try {
+                const response = await api.get('/finance/stats');
+                setFinanceData(response.data);
+            } catch (error) {
+                console.error("Finans verileri yüklenemedi", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchFinanceData();
+    }, []);
+
+    if (loading) return <div className="p-8 text-center text-muted-foreground">Yükleniyor...</div>;
+
+    const { metrics, chart_data, package_data } = financeData;
+
     return (
         <div className="space-y-6">
             <h2 className="text-3xl font-bold tracking-tight">Finansal Raporlar</h2>
@@ -28,8 +46,8 @@ export default function FinancePage() {
                         <CardTitle className="text-sm font-medium">Toplam Gelir</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">₺45,231.89</div>
-                        <p className="text-xs text-muted-foreground">+20.1% geçen aydan beri</p>
+                        <div className="text-2xl font-bold">₺{Number(metrics.total_income).toLocaleString('tr-TR')}</div>
+                        <p className="text-xs text-muted-foreground">{metrics.trend} geçen döneme göre</p>
                     </CardContent>
                 </Card>
                 <Card>
@@ -37,8 +55,8 @@ export default function FinancePage() {
                         <CardTitle className="text-sm font-medium">Bekleyen Ödemeler</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">₺2,350.00</div>
-                        <p className="text-xs text-muted-foreground">3 adet onay bekleyen</p>
+                        <div className="text-2xl font-bold">₺{Number(metrics.pending_amount).toLocaleString('tr-TR')}</div>
+                        <p className="text-xs text-muted-foreground">{metrics.pending_count} adet onay bekleyen</p>
                     </CardContent>
                 </Card>
                 <Card>
@@ -46,7 +64,7 @@ export default function FinancePage() {
                         <CardTitle className="text-sm font-medium">Aktif Bayi Bakiyesi</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">₺12,000.00</div>
+                        <div className="text-2xl font-bold">₺{Number(metrics.active_dealer_balance).toLocaleString('tr-TR')}</div>
                         <p className="text-xs text-muted-foreground">Sistemdeki hazır bakiye</p>
                     </CardContent>
                 </Card>
@@ -63,7 +81,7 @@ export default function FinancePage() {
                     <CardContent className="pl-2">
                         <div className="h-[350px] w-full mt-4">
                             <ResponsiveContainer width="100%" height="100%">
-                                <AreaChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                                <AreaChart data={chart_data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                                     <defs>
                                         <linearGradient id="colorIncome" x1="0" y1="0" x2="0" y2="1">
                                             <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8} />
@@ -101,7 +119,7 @@ export default function FinancePage() {
                     <CardContent>
                         <div className="h-[350px] w-full mt-4">
                             <ResponsiveContainer width="100%" height="100%">
-                                <BarChart data={packageData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                                <BarChart data={package_data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                                     <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.3} />
                                     <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#888' }} dy={10} />
                                     <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#888' }} />
