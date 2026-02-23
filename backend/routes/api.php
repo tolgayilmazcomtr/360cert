@@ -1,11 +1,16 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\SystemSettingController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
+
+// Public API Routes
+Route::get('/public/settings', [SystemSettingController::class, 'index']);
+Route::get('/public/certificates/search', [\App\Http\Controllers\Api\CertificateController::class, 'searchByNo']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
@@ -20,6 +25,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Dashboard
     Route::get('/dashboard/stats', [\App\Http\Controllers\Api\DashboardController::class, 'index']);
+
+    // Settings
+    Route::get('/settings', [SystemSettingController::class, 'index']);
+    Route::post('/settings', [SystemSettingController::class, 'update']);
 
     // Languages
     Route::get('/languages', [\App\Http\Controllers\Api\LanguageController::class, 'index']);

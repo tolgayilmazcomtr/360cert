@@ -27,35 +27,35 @@ export default function Sidebar() {
     const location = useLocation();
 
     const adminMenu = [
-        { name: "Genel Bakış", icon: Home, path: "/" },
-        { name: "Bayi Yönetimi", icon: Building, path: "/dealers" },
+        { name: "Genel Bakış", icon: Home, path: "/dashboard" },
+        { name: "Bayi Yönetimi", icon: Building, path: "/dashboard/dealers" },
         {
             name: "Sertifikasyon",
             icon: FileText,
             subItems: [
-                { name: "Sertifika Veritabanı", path: "/certificates" },
-                { name: "Şablon Tasarımları", path: "/templates" },
-                { name: "Sertifika Türleri", path: "/certificate-types" },
-                { name: "Eğitim Programları", path: "/programs" },
+                { name: "Sertifika Veritabanı", path: "/dashboard/certificates" },
+                { name: "Şablon Tasarımları", path: "/dashboard/templates" },
+                { name: "Sertifika Türleri", path: "/dashboard/certificate-types" },
+                { name: "Eğitim Programları", path: "/dashboard/programs" },
             ]
         },
-        { name: "Öğrenciler", icon: Users, path: "/students" },
-        { name: "Finansal Raporlar", icon: CreditCard, path: "/finance" },
-        { name: "Duyurular", icon: Bell, path: "/notifications" },
-        { name: "Sistem Ayarı", icon: Settings, path: "/settings" },
-        { name: "Yönetici Profilim", icon: UserCog, path: "/admin/profile" },
-        { name: "Yönetici Hesapları", icon: Shield, path: "/admin/users" },
+        { name: "Öğrenciler", icon: Users, path: "/dashboard/students" },
+        { name: "Finansal Raporlar", icon: CreditCard, path: "/dashboard/finance" },
+        { name: "Duyurular", icon: Bell, path: "/dashboard/notifications" },
+        { name: "Sistem Ayarı", icon: Settings, path: "/dashboard/settings" },
+        { name: "Yönetici Profilim", icon: UserCog, path: "/dashboard/admin/profile" },
+        { name: "Yönetici Hesapları", icon: Shield, path: "/dashboard/admin/users" },
     ];
 
     const dealerMenu = [
-        { name: "Genel Bakış", icon: Home, path: "/" },
-        { name: "Öğrenciler", icon: Users, path: "/students" },
-        { name: "Sertifikalar", icon: FileText, path: "/certificates" },
-        { name: "Bildirimler", icon: Bell, path: "/notifications" },
-        { name: "Bakiye & Ödeme", icon: CreditCard, path: "/balance" },
-        { name: "Paketler", icon: CreditCard, path: "/packages" },
-        { name: "Ödeme Geçmişi", icon: CreditCard, path: "/payment-history" },
-        { name: "Profilim", icon: Settings, path: "/profile" },
+        { name: "Genel Bakış", icon: Home, path: "/dashboard" },
+        { name: "Öğrenciler", icon: Users, path: "/dashboard/students" },
+        { name: "Sertifikalar", icon: FileText, path: "/dashboard/certificates" },
+        { name: "Bildirimler", icon: Bell, path: "/dashboard/notifications" },
+        { name: "Bakiye & Ödeme", icon: CreditCard, path: "/dashboard/balance" },
+        { name: "Paketler", icon: CreditCard, path: "/dashboard/packages" },
+        { name: "Ödeme Geçmişi", icon: CreditCard, path: "/dashboard/payment-history" },
+        { name: "Profilim", icon: Settings, path: "/dashboard/profile" },
     ];
 
     const menu = user?.role === 'admin' ? adminMenu : dealerMenu;
@@ -63,6 +63,8 @@ export default function Sidebar() {
     const [unreadCount, setUnreadCount] = useState(0);
     const [pendingUpdatesCount, setPendingUpdatesCount] = useState(0);
     const [openMenus, setOpenMenus] = useState({});
+    const [siteLogo, setSiteLogo] = useState(null);
+    const [siteTitle, setSiteTitle] = useState("IAC");
 
     const toggleMenu = (name) => {
         setOpenMenus(prev => ({ ...prev, [name]: !prev[name] }));
@@ -82,7 +84,19 @@ export default function Sidebar() {
                 } catch { }
             }
         };
+
+        const fetchPublicSettings = async () => {
+            try {
+                const res = await api.get('/public/settings');
+                if (res.data) {
+                    if (res.data.site_logo) setSiteLogo(res.data.site_logo);
+                    if (res.data.site_title) setSiteTitle(res.data.site_title);
+                }
+            } catch (err) { }
+        };
+
         fetchCounts();
+        fetchPublicSettings();
         const interval = setInterval(fetchCounts, 30000);
         return () => clearInterval(interval);
     }, [user?.role]);
@@ -91,13 +105,19 @@ export default function Sidebar() {
         <div className="flex flex-col h-full bg-white border-r border-border w-[280px] shrink-0 transition-all relative">
             {/* Logo Section */}
             <div className="p-6 flex items-center gap-3">
-                <div className="w-8 h-8 rounded bg-primary flex items-center justify-center text-white font-bold text-lg">
-                    3
-                </div>
-                <div>
-                    <h1 className="text-xl font-bold tracking-tight text-foreground">IAC</h1>
-                    <p className="text-[10px] text-muted-foreground tracking-wider uppercase">v1.0.0</p>
-                </div>
+                {siteLogo ? (
+                    <img src={siteLogo} alt="Logo" className="w-auto h-10 object-contain" />
+                ) : (
+                    <>
+                        <div className="w-8 h-8 rounded bg-primary flex items-center justify-center text-white font-bold text-lg shrink-0">
+                            {siteTitle.charAt(0) || '3'}
+                        </div>
+                        <div className="overflow-hidden">
+                            <h1 className="text-xl font-bold tracking-tight text-foreground truncate">{siteTitle}</h1>
+                            <p className="text-[10px] text-muted-foreground tracking-wider uppercase truncate">v1.0.0</p>
+                        </div>
+                    </>
+                )}
             </div>
 
             {/* Menu Section */}

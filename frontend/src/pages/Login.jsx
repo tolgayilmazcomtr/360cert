@@ -18,7 +18,7 @@ export default function Login() {
         setError("");
         const result = await login(email, password);
         if (result.success) {
-            navigate("/"); // Dashboard'a yönlendir
+            navigate("/dashboard"); // Dashboard'a yönlendir
         } else {
             setError(result.error);
         }

@@ -11,6 +11,8 @@ import CertificateTypesPage from "./pages/CertificateTypesPage";
 import CertificateTemplatesPage from "./pages/CertificateTemplatesPage";
 import TemplateDesignPage from "./pages/TemplateDesignPage";
 import VerificationPage from "./pages/VerificationPage";
+import LandingPage from "./pages/LandingPage";
+import DealerApplicationPage from "./pages/DealerApplicationPage";
 import Register from "./pages/Register";
 import DealersPage from "./pages/DealersPage";
 import FinancePage from "./pages/FinancePage";
@@ -41,10 +43,14 @@ const ProtectedRoute = ({ children }) => {
 function AppRoutes() {
   return (
     <Routes>
+      <Route path="/" element={<LandingPage />} />
+      <Route path="/apply-dealer" element={<DealerApplicationPage />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/verify/:hash" element={<VerificationPage />} />
-      <Route path="/" element={
+
+      {/* Dashboard Routes are now under /dashboard or simply as the main protected layer */}
+      <Route path="/dashboard" element={
         <ProtectedRoute>
           <DashboardLayout />
         </ProtectedRoute>
@@ -70,6 +76,9 @@ function AppRoutes() {
         <Route path="admin/users" element={<AdminUsersPage />} />
         {/* Diğer alt sayfalar buraya eklenecek */}
       </Route>
+
+      {/* Legacy Fallback for dashboard base paths if they omit /dashboard (optional, but a catchall redirect is safer) */}
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }

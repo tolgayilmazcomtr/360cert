@@ -68,6 +68,25 @@ class CertificateController extends Controller
         return $query->paginate($request->input('per_page', 20));
     }
 
+    public function searchByNo(Request $request)
+    {
+        $request->validate([
+            'no' => 'required|string'
+        ]);
+
+        $certificate = Certificate::where('certificate_no', $request->no)
+            ->where('status', 'approved') // Only allow verifying approved certificates
+            ->first();
+
+        if (!$certificate) {
+            return response()->json(['message' => 'Sertifika bulunamadı veya henüz onaylanmadı.'], 404);
+        }
+
+        return response()->json([
+            'hash' => $certificate->qr_code_hash
+        ]);
+    }
+
     public function show(Request $request, $id)
     {
         $certificate = Certificate::with(['student', 'training_program', 'template'])

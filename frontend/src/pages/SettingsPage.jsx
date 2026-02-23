@@ -7,16 +7,80 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { useState, useEffect } from "react";
 import { languageService } from "@/services/languageService";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Upload, Loader2, Image as ImageIcon } from "lucide-react";
+import api from "../api/axios";
 
 export default function SettingsPage() {
     const [languages, setLanguages] = useState([]);
     const [loadingLanguages, setLoadingLanguages] = useState(true);
     const { toast } = useToast();
 
+    // System Settings State
+    const [settings, setSettings] = useState({
+        site_title: "",
+        support_email: "",
+        smtp_host: "",
+        smtp_port: ""
+    });
+    const [logoPreview, setLogoPreview] = useState(null);
+    const [newLogoFile, setNewLogoFile] = useState(null);
+    const [isSavingSettings, setIsSavingSettings] = useState(false);
+    const [isLoadingSettings, setIsLoadingSettings] = useState(true);
+
     useEffect(() => {
         fetchLanguages();
+        fetchSettings();
     }, []);
+
+    const fetchSettings = async () => {
+        try {
+            setIsLoadingSettings(true);
+            const response = await api.get('/settings');
+            if (response.data) {
+                setSettings(prev => ({ ...prev, ...response.data }));
+                if (response.data.site_logo) {
+                    setLogoPreview(response.data.site_logo);
+                }
+            }
+        } catch (error) {
+            console.error("Ayarlar yüklenirken hata oluştu:", error);
+        } finally {
+            setIsLoadingSettings(false);
+        }
+    };
+
+    const handleSaveSettings = async () => {
+        try {
+            setIsSavingSettings(true);
+            const formData = new FormData();
+            Object.keys(settings).forEach(key => {
+                if (settings[key] !== null && settings[key] !== undefined) {
+                    formData.append(key, settings[key]);
+                }
+            });
+            if (newLogoFile) {
+                formData.append('logo', newLogoFile);
+            }
+
+            await api.post('/settings', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                }
+            });
+
+            toast({ title: "Başarılı", description: "Sistem ayarları güncellendi." });
+            setNewLogoFile(null);
+            fetchSettings(); // Refresh to get the actual logo URL
+        } catch (error) {
+            toast({
+                title: "Hata",
+                description: "Ayarlar kaydedilirken bir hata oluştu.",
+                variant: "destructive"
+            });
+        } finally {
+            setIsSavingSettings(false);
+        }
+    };
 
     const fetchLanguages = async () => {
         try {
@@ -103,15 +167,58 @@ export default function SettingsPage() {
                         <CardTitle>Genel Ayarlar</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        <div className="space-y-2">
-                            <Label>Site Başlığı</Label>
-                            <Input defaultValue="360Cert Sertifika Sistemi" />
-                        </div>
-                        <div className="space-y-2">
-                            <Label>Destek E-posta</Label>
-                            <Input defaultValue="destek@360cert.com" />
-                        </div>
-                        <Button>Kaydet</Button>
+                        {isLoadingSettings ? (
+                            <p className="text-sm text-gray-500">Ayarlar yükleniyor...</p>
+                        ) : (
+                            <div className="space-y-4">
+                                <div className="space-y-2">
+                                    <Label>Sistem Logosu</Label>
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-20 h-20 bg-slate-100 rounded-lg border flex items-center justify-center overflow-hidden shrink-0">
+                                            {logoPreview ? (
+                                                <img src={logoPreview} alt="Logo" className="w-full h-full object-contain p-2" />
+                                            ) : (
+                                                <ImageIcon className="text-slate-400" size={24} />
+                                            )}
+                                        </div>
+                                        <div className="flex-1">
+                                            <Input
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={(e) => {
+                                                    const file = e.target.files[0];
+                                                    if (file) {
+                                                        setNewLogoFile(file);
+                                                        setLogoPreview(URL.createObjectURL(file));
+                                                    }
+                                                }}
+                                            />
+                                            <p className="text-xs text-muted-foreground mt-1">Önerilen boyut: Kare veya yatay logo. PNG, SVG formatları tavsiye edilir.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Site Başlığı</Label>
+                                    <Input
+                                        value={settings.site_title || ""}
+                                        onChange={(e) => setSettings({ ...settings, site_title: e.target.value })}
+                                        placeholder="360Cert Sertifika Sistemi"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Destek E-posta</Label>
+                                    <Input
+                                        value={settings.support_email || ""}
+                                        onChange={(e) => setSettings({ ...settings, support_email: e.target.value })}
+                                        placeholder="destek@360cert.com"
+                                    />
+                                </div>
+                                <Button onClick={handleSaveSettings} disabled={isSavingSettings}>
+                                    {isSavingSettings ? <Loader2 className="animate-spin mr-2" size={16} /> : null}
+                                    {isSavingSettings ? "Kaydediliyor..." : "Kaydet"}
+                                </Button>
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
 
@@ -120,15 +227,32 @@ export default function SettingsPage() {
                         <CardTitle>E-posta Sunucu (SMTP) Ayarları</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        <div className="space-y-2">
-                            <Label>SMTP Host</Label>
-                            <Input placeholder="smtp.example.com" />
-                        </div>
-                        <div className="space-y-2">
-                            <Label>SMTP Port</Label>
-                            <Input placeholder="587" />
-                        </div>
-                        <Button variant="outline">Bağlantıyı Test Et</Button>
+                        {isLoadingSettings ? (
+                            <p className="text-sm text-gray-500">Ayarlar yükleniyor...</p>
+                        ) : (
+                            <div className="space-y-4">
+                                <div className="space-y-2">
+                                    <Label>SMTP Host</Label>
+                                    <Input
+                                        value={settings.smtp_host || ""}
+                                        onChange={(e) => setSettings({ ...settings, smtp_host: e.target.value })}
+                                        placeholder="smtp.example.com"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>SMTP Port</Label>
+                                    <Input
+                                        value={settings.smtp_port || ""}
+                                        onChange={(e) => setSettings({ ...settings, smtp_port: e.target.value })}
+                                        placeholder="587"
+                                    />
+                                </div>
+                                <Button variant="outline" onClick={handleSaveSettings} disabled={isSavingSettings}>
+                                    {isSavingSettings ? <Loader2 className="animate-spin mr-2" size={16} /> : null}
+                                    Ayarları Kaydet
+                                </Button>
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
 
