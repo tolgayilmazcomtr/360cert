@@ -39,6 +39,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/training-programs/{id}', [\App\Http\Controllers\Api\TrainingProgramController::class, 'update']);
     Route::delete('/training-programs/{id}', [\App\Http\Controllers\Api\TrainingProgramController::class, 'destroy']);
 
+    // Certificate Types
+    Route::apiResource('certificate-types', \App\Http\Controllers\Api\CertificateTypeController::class);
+
     // Certificates
     Route::get('/certificates', [\App\Http\Controllers\Api\CertificateController::class, 'index']);
     Route::post('/certificates', [\App\Http\Controllers\Api\CertificateController::class, 'store']);

@@ -29,7 +29,7 @@ export default function Sidebar() {
         { name: "Genel Bakış", icon: Home, path: "/" },
         { name: "Bayi Yönetimi", icon: Building, path: "/dealers" },
         { name: "Sertifikalar", icon: FileText, path: "/certificates" },
-        { name: "Şablon Tasarımı", icon: Settings, path: "/templates" },
+        { name: "Sertifika Türleri", icon: FileText, path: "/certificate-types" },
         { name: "Eğitim Programları", icon: GraduationCap, path: "/programs" },
         { name: "Öğrenciler", icon: Users, path: "/students" },
         { name: "Finansal Raporlar", icon: CreditCard, path: "/finance" },

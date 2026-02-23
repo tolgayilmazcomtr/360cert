@@ -41,7 +41,7 @@
         }
         .element {
             position: absolute;
-            white-space: nowrap;
+            /* removed white-space: nowrap here to handle it dynamically */
         }
     </style>
 </head>
@@ -58,6 +58,9 @@
             if (preg_match('/^training_name_(.+)$/', $type, $matches)) {
                 $langCode = $matches[1];
                 $type = 'training_name_dynamic'; // Rewrite type for switch
+            } elseif (preg_match('/^certificate_type_(.+)$/', $type, $matches)) {
+                $langCode = $matches[1];
+                $type = 'certificate_type_dynamic';
             }
 
             switch($type) {
@@ -88,6 +91,16 @@
                     } else {
                         $content = $nameData; // Yedek
                     }
+                    break;
+                case 'certificate_type_dynamic':
+                    // Yeni sistem: certificate_type_tr, certificate_type_en vb.
+                    if ($certificate->certificateType) {
+                        $typeData = $certificate->certificateType->name;
+                        if (is_array($typeData)) {
+                            $content = $typeData[$langCode] ?? $typeData['tr'] ?? current($typeData) ?? '';
+                        }
+                    }
+                    if (!$content) $content = '';
                     break;
                 case 'start_date':
                     $content = $certificate->start_date ? \Carbon\Carbon::parse($certificate->start_date)->format('d.m.Y') : '';
@@ -126,6 +139,16 @@
             font-size: {{ $element['font_size'] ?? 14 }}px; 
             color: {{ $element['color'] ?? '#000000' }};
             font-family: '{{ $element['font_family'] ?? 'DejaVu Sans' }}', sans-serif;
+            @if(isset($element['max_width']) && $element['max_width'])
+                width: {{ $element['max_width'] }}px;
+                white-space: normal;
+                word-wrap: break-word;
+            @else
+                white-space: nowrap;
+            @endif
+            @if(isset($element['text_align']) && $element['text_align'])
+                text-align: {{ $element['text_align'] }};
+            @endif
         ">
             {!! $content !!}
         </div>

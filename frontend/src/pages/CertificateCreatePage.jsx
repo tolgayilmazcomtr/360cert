@@ -15,6 +15,7 @@ export default function CertificateCreatePage() {
     const navigate = useNavigate();
     const [templates, setTemplates] = useState([]);
     const [programs, setPrograms] = useState([]);
+    const [certificateTypes, setCertificateTypes] = useState([]);
     const [activeLanguages, setActiveLanguages] = useState([]);
     const [selectedTemplate, setSelectedTemplate] = useState(null);
     const [step, setStep] = useState(1);
@@ -26,6 +27,7 @@ export default function CertificateCreatePage() {
         tc_number: "",
         birth_year: "",
         training_program_id: "",
+        certificate_type_id: "",
         certificate_language: "tr",
         duration_hours: "",
         start_date: "",
@@ -40,13 +42,15 @@ export default function CertificateCreatePage() {
 
     const fetchData = async () => {
         try {
-            const [tplRes, prgRes, langRes] = await Promise.all([
+            const [tplRes, prgRes, typeRes, langRes] = await Promise.all([
                 api.get("/certificate-templates"),
                 api.get("/training-programs"),
+                api.get("/certificate-types"),
                 languageService.getAll()
             ]);
             setTemplates(tplRes.data);
             setPrograms(prgRes.data);
+            setCertificateTypes(typeRes.data);
             setActiveLanguages(langRes.filter(l => l.is_active));
         } catch (error) {
             console.error("Veri yükleme hatası", error);
@@ -70,6 +74,9 @@ export default function CertificateCreatePage() {
             data.append('birth_year', formData.birth_year);
 
             data.append('training_program_id', formData.training_program_id);
+            if (formData.certificate_type_id) {
+                data.append('certificate_type_id', formData.certificate_type_id);
+            }
             data.append('certificate_template_id', selectedTemplate.id);
             data.append('certificate_language', formData.certificate_language);
 
@@ -239,6 +246,26 @@ export default function CertificateCreatePage() {
                                         {activeLanguages.map(l => (
                                             <SelectItem key={l.code} value={l.code}>
                                                 {l.name} ({l.code.toUpperCase()})
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+
+                        {/* Row 3.5: Sertifika Türü (Opsiyonel) */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                                <Label className="text-base font-semibold">Sertifika Türü <span className="text-muted-foreground text-sm font-normal">(Opsiyonel)</span></Label>
+                                <Select onValueChange={(v) => setFormData({ ...formData, certificate_type_id: v === 'none' ? '' : v })} value={formData.certificate_type_id || 'none'}>
+                                    <SelectTrigger className="h-11">
+                                        <SelectValue placeholder="Sertifika Türü Seçiniz" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="none">Seçiniz (Opsiyonel)</SelectItem>
+                                        {certificateTypes.map(ct => (
+                                            <SelectItem key={ct.id} value={ct.id.toString()}>
+                                                {typeof ct.name === 'object' ? (ct.name.tr || Object.values(ct.name)[0]) : ct.name}
                                             </SelectItem>
                                         ))}
                                     </SelectContent>

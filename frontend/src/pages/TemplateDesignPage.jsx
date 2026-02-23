@@ -166,6 +166,10 @@ export default function TemplateDesignPage() {
             const code = newElementType.split('_').pop();
             const lang = activeLanguages.find(l => l.code === code);
             label = `Eğitim Adı (${lang ? lang.name : code.toUpperCase()})`;
+        } else if (newElementType.startsWith('certificate_type_')) {
+            const code = newElementType.split('_').pop();
+            const lang = activeLanguages.find(l => l.code === code);
+            label = `Sertifika Türü (${lang ? lang.name : code.toUpperCase()})`;
         } else if (newElementType === 'custom_text') {
             label = "Sabit Metin";
         }
@@ -346,6 +350,11 @@ export default function TemplateDesignPage() {
                                         Eğitim Adı ({lang.name})
                                     </option>
                                 ))}
+                                {activeLanguages.map(lang => (
+                                    <option key={`ct_${lang.id}`} value={`certificate_type_${lang.code}`}>
+                                        Sertifika Türü ({lang.name})
+                                    </option>
+                                ))}
                                 <option value="custom_text">Sabit/Serbest Metin</option>
                             </select>
                             <Button size="sm" onClick={handleAddElement}>Ekle</Button>
@@ -413,6 +422,32 @@ export default function TemplateDesignPage() {
                                                     />
                                                 </div>
                                             )}
+                                            {el.type !== 'qr_code' && el.type !== 'dealer_logo' && (
+                                                <>
+                                                    <div className="pt-2">
+                                                        <Label className="text-xs">Maks Genişlik (px)</Label>
+                                                        <Input
+                                                            type="number"
+                                                            placeholder="Örn: 200 (Boşsa tek satır)"
+                                                            value={el.max_width || ''}
+                                                            onChange={e => updateElement(index, 'max_width', e.target.value ? parseInt(e.target.value) : null)}
+                                                            className="h-7 text-xs"
+                                                        />
+                                                    </div>
+                                                    <div className="pt-2">
+                                                        <Label className="text-xs">Hizalama</Label>
+                                                        <select
+                                                            className="flex h-8 w-full items-center justify-between rounded-md border border-input bg-background px-2 py-1 text-xs"
+                                                            value={el.text_align || 'left'}
+                                                            onChange={e => updateElement(index, 'text_align', e.target.value)}
+                                                        >
+                                                            <option value="left">Sola Dayalı</option>
+                                                            <option value="center">Ortala</option>
+                                                            <option value="right">Sağa Dayalı</option>
+                                                        </select>
+                                                    </div>
+                                                </>
+                                            )}
                                             <div className="pt-2">
                                                 <Label className="text-xs">Yazı Tipi</Label>
                                                 <select
@@ -463,34 +498,41 @@ export default function TemplateDesignPage() {
                             </div>
 
                             {/* Elements Layer */}
-                            {config.elements.map((el, index) => (
-                                <div
-                                    key={index}
-                                    className={`absolute whitespace-nowrap select-none cursor-grab active:cursor-grabbing hover:ring-1 hover:ring-blue-300 ${selectedElementIndex === index ? 'ring-2 ring-blue-500 bg-blue-500/10' : ''}`}
-                                    style={{
-                                        left: `${el.x}px`,
-                                        top: `${el.y}px`,
-                                        fontSize: `${el.font_size || 14}px`,
-                                        color: el.color || '#000000',
-                                        fontFamily: el.font_family || 'Arial',
-                                    }}
-                                    onMouseDown={(e) => handleElementMouseDown(e, index)}
-                                >
-                                    {(el.type === 'qr_code' || el.type === 'dealer_logo') ? (
-                                        <div
-                                            className={`border border-dashed border-black inline-flex items-center justify-center text-xs bg-white/50 ${el.type === 'dealer_logo' ? 'rounded' : ''}`}
-                                            style={{
-                                                width: `${el.width || 100}px`,
-                                                height: `${el.height || 100}px`
-                                            }}
-                                        >
-                                            {el.type === 'qr_code' ? 'QR' : 'LOGO'}
-                                        </div>
-                                    ) : (
-                                        `[${el.label}]`
-                                    )}
-                                </div>
-                            ))}
+                            {config.elements.map((el, index) => {
+                                const isImage = el.type === 'qr_code' || el.type === 'dealer_logo';
+                                return (
+                                    <div
+                                        key={index}
+                                        className={`absolute select-none cursor-grab active:cursor-grabbing hover:ring-1 hover:ring-blue-300 ${selectedElementIndex === index ? 'ring-2 ring-blue-500 bg-blue-500/10' : ''}`}
+                                        style={{
+                                            left: `${el.x}px`,
+                                            top: `${el.y}px`,
+                                            fontSize: `${el.font_size || 14}px`,
+                                            color: el.color || '#000000',
+                                            fontFamily: el.font_family || 'Arial',
+                                            width: el.max_width ? `${el.max_width}px` : 'auto',
+                                            whiteSpace: el.max_width && !isImage ? 'normal' : 'nowrap',
+                                            wordWrap: el.max_width && !isImage ? 'break-word' : 'normal',
+                                            textAlign: el.text_align || 'left'
+                                        }}
+                                        onMouseDown={(e) => handleElementMouseDown(e, index)}
+                                    >
+                                        {(el.type === 'qr_code' || el.type === 'dealer_logo') ? (
+                                            <div
+                                                className={`border border-dashed border-black inline-flex items-center justify-center text-xs bg-white/50 ${el.type === 'dealer_logo' ? 'rounded' : ''}`}
+                                                style={{
+                                                    width: `${el.width || 100}px`,
+                                                    height: `${el.height || 100}px`
+                                                }}
+                                            >
+                                                {el.type === 'qr_code' ? 'QR' : 'LOGO'}
+                                            </div>
+                                        ) : (
+                                            `[${el.label}]`
+                                        )}
+                                    </div>
+                                )
+                            })}
                         </div>
                     </div>
                 </div>

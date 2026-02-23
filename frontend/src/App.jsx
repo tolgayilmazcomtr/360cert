@@ -7,6 +7,7 @@ import BalancePage from "./pages/BalancePage";
 import StudentsPage from "./pages/StudentsPage";
 import TrainingProgramsPage from "./pages/TrainingProgramsPage";
 import CertificatesPage from "./pages/CertificatesPage";
+import CertificateTypesPage from "./pages/CertificateTypesPage";
 import CertificateTemplatesPage from "./pages/CertificateTemplatesPage";
 import TemplateDesignPage from "./pages/TemplateDesignPage";
 import VerificationPage from "./pages/VerificationPage";
@@ -57,6 +58,7 @@ function AppRoutes() {
         <Route path="certificates/bulk" element={<BulkUploadPage />} />
         <Route path="templates" element={<CertificateTemplatesPage />} />
         <Route path="templates/:id/design" element={<TemplateDesignPage />} />
+        <Route path="certificate-types" element={<CertificateTypesPage />} />
         <Route path="dealers" element={<DealersPage />} />
         <Route path="finance" element={<FinancePage />} />
         <Route path="notifications" element={<NotificationsPage />} />
