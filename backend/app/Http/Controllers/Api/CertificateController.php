@@ -565,4 +565,49 @@ class CertificateController extends Controller
             return response()->json(['message' => 'Transkript PDF oluşturulurken hata oluştu: ' . $e->getMessage()], 500);
         }
     }
+    public function update(Request $request, $id)
+    {
+        $certificate = Certificate::findOrFail($id);
+        $user = $request->user();
+
+        // Check if user is admin or the dealer who owns the student
+        if ($user->role !== 'admin' && $certificate->student->user_id !== $user->id) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $validated = $request->validate([
+            'certificate_template_id' => 'sometimes|exists:certificate_templates,id',
+            // Can add more fields later if needed
+        ]);
+
+        if (isset($validated['certificate_template_id'])) {
+            $template = CertificateTemplate::findOrFail($validated['certificate_template_id']);
+            $certificate->certificate_template_id = $template->id;
+            $certificate->certificate_type_id = $template->certificate_type_id;
+        }
+
+        $certificate->save();
+
+        return response()->json($certificate);
+    }
+
+    public function destroy(Request $request, $id)
+    {
+        $certificate = Certificate::findOrFail($id);
+        $user = $request->user();
+
+        // Check if user is admin or the dealer who owns the student
+        if ($user->role !== 'admin' && $certificate->student->user_id !== $user->id) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        // Delete associated files if necessary (optional depending on retention policy)
+        if ($certificate->transcript_path) {
+            Storage::disk('public')->delete($certificate->transcript_path);
+        }
+
+        $certificate->delete();
+
+        return response()->json(['message' => 'Sertifika başarıyla silindi.']);
+    }
 }

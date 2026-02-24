@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Eye, FileText, Search, X, ExternalLink, Download, Plus, ChevronLeft, ChevronRight, MoreVertical, ShieldCheck, CheckCircle, XCircle, ScrollText } from "lucide-react";
+import { Eye, FileText, Search, X, ExternalLink, Download, Plus, ChevronLeft, ChevronRight, MoreVertical, ShieldCheck, CheckCircle, XCircle, ScrollText, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link } from "react-router-dom";
@@ -156,6 +156,20 @@ export default function CertificatesPage() {
         } catch (error) {
             console.error("Durum güncelleme hatası", error);
             alert("İşlem başarısız.");
+        }
+    };
+
+    const handleDeleteCertificate = async (id) => {
+        if (!window.confirm("Bu sertifikayı kalıcı olarak silmek istediğinize emin misiniz? Bu işlem geri alınamaz.")) return;
+
+        try {
+            await api.delete(`/certificates/${id}`);
+            setInspectionCert(null);
+            fetchCertificates();
+            fetchStats();
+        } catch (error) {
+            console.error("Sertifika silinemedi", error);
+            alert("Sertifika silinirken bir hata oluştu.");
         }
     };
 
@@ -747,6 +761,9 @@ export default function CertificatesPage() {
                                                 </Select>
                                             </div>
                                             <div className="flex gap-2 w-full sm:w-auto mt-4 sm:mt-0 items-center">
+                                                <Button variant="destructive" className="w-full sm:w-auto h-11 px-3" onClick={() => handleDeleteCertificate(inspectionCert.id)} title="Sertifikayı Sil">
+                                                    <Trash2 className="w-4 h-4" />
+                                                </Button>
                                                 {approvalMernisStatus !== inspectionCert.mernis_status && (
                                                     <Button
                                                         className="bg-indigo-600 hover:bg-indigo-700 text-white w-full sm:w-auto h-11 shadow-md font-bold"
@@ -767,13 +784,19 @@ export default function CertificatesPage() {
                                             <XCircle size={20} />
                                             <span className="text-sm font-bold uppercase tracking-wider">Yönetici Kontrol Paneli - Sertifika Reddedilmiş</span>
                                         </div>
-                                        <div className="flex w-full justify-end">
+                                        <div className="flex w-full justify-between items-center">
+                                            <Button variant="destructive" size="sm" onClick={() => handleDeleteCertificate(inspectionCert.id)}>
+                                                <Trash2 className="w-4 h-4 mr-2" /> Sil
+                                            </Button>
                                             <Button variant="outline" size="sm" onClick={() => setInspectionCert(null)}>Kapat</Button>
                                         </div>
                                     </div>
                                 )
                             ) : (
-                                <div className="flex w-full justify-end border-t border-slate-100 pt-3">
+                                <div className="flex w-full justify-between items-center border-t border-slate-100 pt-3">
+                                    <Button variant="destructive" size="sm" onClick={() => handleDeleteCertificate(inspectionCert.id)}>
+                                        <Trash2 className="w-4 h-4 mr-2" /> Sil
+                                    </Button>
                                     <Button variant="outline" onClick={() => setInspectionCert(null)}>
                                         Kapat
                                     </Button>
