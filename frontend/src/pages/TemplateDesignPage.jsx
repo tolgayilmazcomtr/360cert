@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Save, Type, GripVertical, Settings } from "lucide-react";
+import { ArrowLeft, Save, Type, GripVertical, Settings, Info } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { getStorageUrl } from "@/lib/utils";
 
@@ -382,9 +382,20 @@ export default function TemplateDesignPage() {
                                                         onChange={e => updateElement(index, 'label', e.target.value)}
                                                         className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-xs ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 min-h-[80px] mt-1"
                                                     />
-                                                    <p className="text-[10px] text-muted-foreground mt-1 leading-tight">
-                                                        Değişkenler: {`{dealer_name}`}, {`{student_name}`}, {`{training_name}`}, {`{training_name_en}`}, {`{duration_hours}`}. (Değişkenler otomatik kalın yazılır)
-                                                    </p>
+                                                    <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-md">
+                                                        <div className="flex items-center gap-1 mb-1 text-blue-700 font-semibold text-xs">
+                                                            <Info size={14} />
+                                                            <span>Kullanılabilir Değişkenler</span>
+                                                        </div>
+                                                        <ul className="text-[10px] text-blue-800 space-y-1 ml-4 list-disc">
+                                                            <li><code>{`{dealer_name}`}</code>: Yetkili Bayi Adı</li>
+                                                            <li><code>{`{student_name}`}</code>: Öğrenci Adı Soyadı</li>
+                                                            <li><code>{`{training_name}`}</code>: Eğitim Adı (Türkçe)</li>
+                                                            <li><code>{`{training_name_en}`}</code>: Eğitim Adı (İngilizce vb.)</li>
+                                                            <li><code>{`{duration_hours}`}</code>: Eğitim Süresi (Saat)</li>
+                                                        </ul>
+                                                        <p className="text-[9px] text-blue-600 mt-1 italic">* Değişkenler PDF'de otomatik olarak kalın (bold) yazdırılır.</p>
+                                                    </div>
                                                 </div>
                                             )}
                                             <div className="grid grid-cols-2 gap-2">
