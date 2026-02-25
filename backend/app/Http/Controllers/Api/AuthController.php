@@ -55,8 +55,8 @@ class AuthController extends Controller
             'password' => 'required|string|min:6|confirmed',
             'company_name' => 'required|string|max:255',
             'phone' => 'required|string|max:20',
-            'tax_number' => 'nullable|string',
-            'tax_office' => 'nullable|string',
+            'tax_number' => 'required|string',
+            'tax_office' => 'required|string',
         ]);
 
         $user = User::create([

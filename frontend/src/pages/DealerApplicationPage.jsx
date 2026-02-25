@@ -113,18 +113,20 @@ export default function DealerApplicationPage() {
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label>Vergi Dairesi</Label>
+                                <Label>Vergi Dairesi *</Label>
                                 <Input
                                     name="tax_office"
+                                    required
                                     value={formData.tax_office}
                                     onChange={handleChange}
                                     placeholder="Vergi Dairesi"
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label>Vergi Kimlik / TC No</Label>
+                                <Label>Vergi Kimlik / TC No *</Label>
                                 <Input
                                     name="tax_number"
+                                    required
                                     value={formData.tax_number}
                                     onChange={handleChange}
                                     placeholder="VKN / TCKN"
