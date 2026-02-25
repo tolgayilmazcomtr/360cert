@@ -124,7 +124,17 @@ export default function CertificateTemplatesPage() {
                 ))}
             </div>
 
-            <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+            <Dialog open={isModalOpen} onOpenChange={(open) => {
+                setIsModalOpen(open);
+                if (!open) {
+                    setFormData({
+                        name: "",
+                        type: "standard",
+                        certificate_type_id: "none",
+                        file: null
+                    });
+                }
+            }}>
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>Yeni Şablon Yükle</DialogTitle>
