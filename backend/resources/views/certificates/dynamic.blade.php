@@ -65,10 +65,10 @@
 
             switch($type) {
                 case 'student_name':
-                    $content = $certificate->student->first_name . ' ' . $certificate->student->last_name;
+                    $content = trim(($certificate->student?->first_name ?? '') . ' ' . ($certificate->student?->last_name ?? ''));
                     break;
                 case 'tc_number':
-                    $content = $certificate->student->tc_number ?? '';
+                    $content = $certificate->student?->tc_number ?? '';
                     break;
                 case 'certificate_no':
                     $content = $certificate->certificate_no;
@@ -133,7 +133,7 @@
                     $content = $certificate->duration_hours ? $certificate->duration_hours . ' Saat' : '';
                     break;
                 case 'birth_year':
-                    $content = $certificate->student->birth_year ?? '';
+                    $content = $certificate->student?->birth_year ?? '';
                     break;
                 case 'qr_code':
                     $w = $element['width'] ?? 100;

@@ -243,8 +243,10 @@ export default function CertificatesPage() {
                 reader.onload = () => {
                     try {
                         const result = JSON.parse(reader.result);
-                        alert("Hata: " + (result.message || msg));
+                        console.error("Sunucu Hatası Detayı:", result);
+                        alert("Hata: " + (result.message || msg) + "\n(Konsolda detaylı hata eklendi)");
                     } catch (e) {
+                        console.error("Sunucu metin/HTML döndü:", reader.result);
                         alert("Hata: " + msg);
                     }
                 };
