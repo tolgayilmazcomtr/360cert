@@ -213,6 +213,42 @@ export default function CertificatesPage() {
         }
     };
 
+    const downloadIdCardPdf = async (id, no) => {
+        setDownloadingId(id + '_idcard');
+        try {
+            const urlPath = `/certificates/${id}/id-card`;
+            const response = await api.get(urlPath, {
+                responseType: 'blob'
+            });
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `${no}_kimlik.pdf`);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+        } catch (error) {
+            console.error("Kimlik indirme hatası", error);
+            const msg = error.response?.data?.message || "Kimlik kartı indirilemedi. (Aktif kimlik şablonu bulunmuyor olabilir)";
+            if (error.response?.data instanceof Blob) {
+                const reader = new FileReader();
+                reader.onload = () => {
+                    try {
+                        const result = JSON.parse(reader.result);
+                        alert("Hata: " + (result.message || msg));
+                    } catch (e) {
+                        alert("Hata: " + msg);
+                    }
+                };
+                reader.readAsText(error.response.data);
+            } else {
+                alert("Hata: " + msg);
+            }
+        } finally {
+            setDownloadingId(null);
+        }
+    };
+
     const handleDownloadClick = (cert) => {
         setDownloadDialogCert(cert);
     };
@@ -483,46 +519,59 @@ export default function CertificatesPage() {
                                                 Transkript
                                             </Button>
 
-                                            {/* Certificate PDF Download */}
-                                            {cert.status === 'approved' && (
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    className="gap-1 min-w-[80px] h-8 text-xs border-slate-200 hover:bg-slate-50 hidden md:flex"
-                                                    onClick={() => handleDownloadClick(cert)}
-                                                >
-                                                    {downloadingId === cert.id ? (
-                                                        <span className="animate-pulse">İniyor...</span>
-                                                    ) : (
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button
+                                                        size="sm"
+                                                        variant={user?.role === 'admin' ? 'default' : 'outline'}
+                                                        className={`h-8 gap-1.5 px-3 font-medium text-xs ${user?.role === 'admin'
+                                                            ? (cert.status === 'pending' ? 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-md' : 'bg-slate-800 hover:bg-slate-900 text-white shadow-sm')
+                                                            : 'border-slate-200 text-slate-700 hover:bg-slate-50'}`}
+                                                        title={user?.role === 'admin' ? "Yönetici İşlemleri" : "İncele"}
+                                                    >
+                                                        {user?.role === 'admin' ? (
+                                                            <>
+                                                                <MoreVertical size={14} />
+                                                                {cert.status === 'pending' ? 'ONAYLA/YÖNET' : 'YÖNET'}
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <Eye size={14} className="opacity-70" />
+                                                                İncele
+                                                            </>
+                                                        )}
+                                                    </Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent align="end">
+                                                    <DropdownMenuLabel>İşlemler</DropdownMenuLabel>
+                                                    <DropdownMenuSeparator />
+                                                    <DropdownMenuItem onClick={() => handleInspect(cert.id)}>
+                                                        <Eye className="mr-2 h-4 w-4" /> Detayları Görüntüle
+                                                    </DropdownMenuItem>
+                                                    {cert.status === 'approved' && (
                                                         <>
-                                                            <Download size={12} />
-                                                            PDF
+                                                            <DropdownMenuItem onClick={() => handleDownloadClick(cert)}>
+                                                                <Download className="mr-2 h-4 w-4" /> Sertifika İndir / Önizle
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuItem
+                                                                onClick={() => downloadIdCardPdf(cert.id, cert.certificate_no)}
+                                                                disabled={downloadingId === cert.id + '_idcard'}
+                                                            >
+                                                                {downloadingId === cert.id + '_idcard' ? (
+                                                                    <div className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-current border-t-transparent"></div>
+                                                                ) : (
+                                                                    <Download className="mr-2 h-4 w-4" />
+                                                                )}
+                                                                Kimlik Kartı İndir
+                                                            </DropdownMenuItem>
                                                         </>
                                                     )}
-                                                </Button>
-                                            )}
-
-                                            <Button
-                                                size="sm"
-                                                variant={user?.role === 'admin' ? 'default' : 'outline'}
-                                                className={`h-8 gap-1.5 px-3 font-medium text-xs ${user?.role === 'admin'
-                                                    ? (cert.status === 'pending' ? 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-md' : 'bg-slate-800 hover:bg-slate-900 text-white shadow-sm')
-                                                    : 'border-slate-200 text-slate-700 hover:bg-slate-50'}`}
-                                                onClick={() => handleInspect(cert.id)}
-                                                title={user?.role === 'admin' ? "Yönetici İşlemleri" : "İncele"}
-                                            >
-                                                {user?.role === 'admin' ? (
-                                                    <>
-                                                        <MoreVertical size={14} />
-                                                        {cert.status === 'pending' ? 'ONAYLA/YÖNET' : 'YÖNET'}
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <Eye size={14} className="opacity-70" />
-                                                        İncele
-                                                    </>
-                                                )}
-                                            </Button>
+                                                    <DropdownMenuSeparator />
+                                                    <DropdownMenuItem onClick={() => handleDeleteCertificate(cert.id)} className="text-red-600 focus:text-red-600">
+                                                        <Trash2 className="mr-2 h-4 w-4" /> Sil
+                                                    </DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
                                         </div>
                                     </TableCell>
                                 </TableRow>
@@ -665,14 +714,28 @@ export default function CertificatesPage() {
                                         <FileText className="h-16 w-16 text-slate-400 mx-auto mb-2" />
                                         <p className="text-slate-500 font-medium">Sertifika Önizleme</p>
                                         {inspectionCert.status === 'approved' && (
-                                            <Button
-                                                className="mt-4"
-                                                variant="secondary"
-                                                onClick={() => handleDownloadClick(inspectionCert)}
-                                            >
-                                                <Download className="mr-2 h-4 w-4" />
-                                                PDF İndir / Önizle
-                                            </Button>
+                                            <div className="flex flex-col gap-2 mt-4">
+                                                <Button
+                                                    variant="secondary"
+                                                    onClick={() => handleDownloadClick(inspectionCert)}
+                                                >
+                                                    <Download className="mr-2 h-4 w-4" />
+                                                    Sertifika İndir / Önizle
+                                                </Button>
+                                                <Button
+                                                    variant="outline"
+                                                    className="bg-white/80 border-slate-300"
+                                                    onClick={() => downloadIdCardPdf(inspectionCert.id, inspectionCert.certificate_no)}
+                                                    disabled={downloadingId === inspectionCert.id + '_idcard'}
+                                                >
+                                                    {downloadingId === inspectionCert.id + '_idcard' ? (
+                                                        <div className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-slate-600 border-t-transparent"></div>
+                                                    ) : (
+                                                        <Download className="mr-2 h-4 w-4" />
+                                                    )}
+                                                    Kimlik Kartı İndir
+                                                </Button>
+                                            </div>
                                         )}
                                     </div>
                                 </div>

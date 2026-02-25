@@ -452,6 +452,94 @@ class CertificateController extends Controller
             return response()->json(['message' => 'PDF oluşturulurken hata oluştu: ' . $e->getMessage()], 500);
         }
     }
+
+    public function downloadIdCard($id)
+    {
+        $certificate = Certificate::with(['student.user', 'training_program', 'certificateType'])->findOrFail($id);
+        
+        // Find best ID card template
+        // 1. Try to find a card template specific to this Certificate's Type
+        $cardTemplate = \App\Models\CertificateTemplate::where('type', 'card')
+                        ->where('is_active', true)
+                        ->where('certificate_type_id', $certificate->certificate_type_id)
+                        ->first();
+                        
+        // 2. If no specific card template exists, grab the first fallback active card template
+        if (!$cardTemplate) {
+            $cardTemplate = \App\Models\CertificateTemplate::where('type', 'card')
+                            ->where('is_active', true)
+                            ->first();
+        }
+
+        if (!$cardTemplate) {
+            return response()->json(['message' => 'Sistemde aktif bir Kimlik Kartı şablonu bulunmamaktadır.'], 404);
+        }
+
+        // --- Standard PDF Generation Logic (adapted from download) ---
+        $qrUrl = env('FRONTEND_URL') . '/verify/' . $certificate->certificate_no;
+        $qrCode = base64_encode(\SimpleSoftwareIO\QrCode\Facades\QrCode::format('png')->size(200)->generate($qrUrl));
+        
+        $bgPath = storage_path('app/public/' . $cardTemplate->background_path);
+        if (!file_exists($bgPath)) {
+            return response()->json(['message' => 'Kimlik kartı arkaplan dosyası bulunamadı.'], 404);
+        }
+
+        $config = $cardTemplate->layout_config;
+        list($width, $height) = getimagesize($bgPath);
+        
+        if (!$width || !$height) {
+            $width = $config['canvasWidth'] ?? 842;
+            $height = $config['canvasHeight'] ?? 595;
+        }
+        
+        $customPaper = [0, 0, $width * 72 / 96, $height * 72 / 96];
+        $bgBase64 = 'data:image/' . pathinfo($bgPath, PATHINFO_EXTENSION) . ';base64,' . base64_encode(file_get_contents($bgPath));
+
+        $dealerLogoBase64 = null;
+        if ($certificate->student && $certificate->student->user && $certificate->student->user->logo_path) {
+            $logoPath = $certificate->student->user->logo_path;
+            if (Storage::disk('public')->exists($logoPath)) {
+                $ext = pathinfo($logoPath, PATHINFO_EXTENSION);
+                $content = Storage::disk('public')->get($logoPath);
+                $dealerLogoBase64 = 'data:image/' . $ext . ';base64,' . base64_encode($content);
+            }
+        }
+
+        $data = [
+            'certificate' => $certificate,
+            'qrCode' => $qrCode,
+            'bgImage' => $bgBase64,
+            'dealerLogo' => $dealerLogoBase64,
+            'config' => $config,
+            'width' => $width,
+            'height' => $height
+        ];
+
+        ini_set('memory_limit', '512M');
+        set_time_limit(300);
+
+        if (!file_exists(storage_path('fonts'))) {
+            mkdir(storage_path('fonts'), 0775, true);
+        }
+
+        try {
+            // We can reuse certificates.dynamic as it parses generic $config['elements'] via absolute positioning
+            $pdf = Pdf::loadView('certificates.dynamic', $data);
+            $pdf->setPaper($customPaper);
+            $pdf->setOptions([
+                'isRemoteEnabled' => true, 
+                'dpi' => 96, 
+                'defaultFont' => 'sans-serif',
+                'fontDir' => storage_path('fonts'),
+                'fontCache' => storage_path('fonts'),
+            ]);
+
+            return $pdf->download($certificate->certificate_no . '_kimlik.pdf');
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('ID Card PDF Generation Error: ' . $e->getMessage());
+            return response()->json(['message' => 'Kimlik Kartı oluşturulurken hata: ' . $e->getMessage()], 500);
+        }
+    }
     
     public function updateStatus(Request $request, $id)
     {

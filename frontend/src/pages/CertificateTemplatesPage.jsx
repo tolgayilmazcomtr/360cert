@@ -117,7 +117,9 @@ export default function CertificateTemplatesPage() {
                         <CardFooter className="p-4 border-t">
                             <div className="flex flex-col">
                                 <span className="font-semibold">{template.name}</span>
-                                <span className="text-xs text-muted-foreground capitalize">{template.type} Boyut</span>
+                                <span className="text-xs text-muted-foreground capitalize">
+                                    {template.type === 'card' ? 'Kimlik Kartı' : 'A4 Sertifika'}
+                                </span>
                             </div>
                         </CardFooter>
                     </Card>
@@ -150,6 +152,18 @@ export default function CertificateTemplatesPage() {
                                 onChange={e => setFormData({ ...formData, name: e.target.value })}
                                 required
                             />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Şablon Türü</Label>
+                            <Select onValueChange={(v) => setFormData({ ...formData, type: v })} value={formData.type}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Tür Seçiniz" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="standard">A4 Sertifika Şablonu</SelectItem>
+                                    <SelectItem value="card">Yaka Kimlik Kartı</SelectItem>
+                                </SelectContent>
+                            </Select>
                         </div>
                         <div className="space-y-2">
                             <Label>Sertifika Türü <span className="text-muted-foreground text-xs">(Opsiyonel)</span></Label>
