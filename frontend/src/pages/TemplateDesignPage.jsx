@@ -382,6 +382,18 @@ export default function TemplateDesignPage() {
                                                         onChange={e => updateElement(index, 'label', e.target.value)}
                                                         className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-xs ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 min-h-[80px] mt-1"
                                                     />
+
+                                                    {activeLanguages.filter(l => l.code !== 'tr').map(lang => (
+                                                        <div key={lang.code} className="mt-2">
+                                                            <Label className="text-xs">Metin ({lang.name})</Label>
+                                                            <textarea
+                                                                value={el[`label_${lang.code}`] || ''}
+                                                                onChange={e => updateElement(index, `label_${lang.code}`, e.target.value)}
+                                                                className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-xs ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 min-h-[60px] mt-1"
+                                                                placeholder={`${lang.name} dilinde eklenecek metin (opsiyonel)`}
+                                                            />
+                                                        </div>
+                                                    ))}
                                                     <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-md">
                                                         <div className="flex items-center gap-1 mb-1 text-blue-700 font-semibold text-xs">
                                                             <Info size={14} />

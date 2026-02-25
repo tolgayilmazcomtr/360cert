@@ -74,23 +74,24 @@
                     $content = \Carbon\Carbon::parse($certificate->issue_date)->format('d.m.Y');
                     break;
                 case 'training_name':
-                    // JSON ise 'certificate_language' key'ine bak, yoksa tr'ye bak, yoksa direkt bas
                     $nameData = $certificate->training_program->name;
                     $certLang = $certificate->certificate_language ?? 'tr';
-                    if (is_array($nameData)) {
-                        $content = $nameData[$certLang] ?? $nameData['tr'] ?? current($nameData) ?? '';
+                    $trContent = is_array($nameData) ? ($nameData['tr'] ?? current($nameData) ?? '') : $nameData;
+                    if ($certLang !== 'tr' && is_array($nameData) && !empty($nameData[$certLang])) {
+                        $content = $trContent . " / " . $nameData[$certLang];
                     } else {
-                        $content = $nameData;
+                        $content = $trContent;
                     }
                     break;
                 case 'certificate_type':
                     if ($certificate->certificateType) {
                         $typeData = $certificate->certificateType->name;
                         $certLang = $certificate->certificate_language ?? 'tr';
-                        if (is_array($typeData)) {
-                            $content = $typeData[$certLang] ?? $typeData['tr'] ?? current($typeData) ?? '';
+                        $trContent = is_array($typeData) ? ($typeData['tr'] ?? current($typeData) ?? '') : $typeData;
+                        if ($certLang !== 'tr' && is_array($typeData) && !empty($typeData[$certLang])) {
+                            $content = $trContent . " / " . $typeData[$certLang];
                         } else {
-                            $content = $typeData;
+                            $content = $trContent;
                         }
                     } else {
                         $content = '';
@@ -142,40 +143,50 @@
                     }
                     break;
                 default:
-                    $content = $element['label'] ?? '';
-                    if (str_contains($content, '{')) {
-                        // Dealer Name
+                    $trContent = $element['label'] ?? '';
+                    $certLang = $certificate->certificate_language ?? 'tr';
+                    $translatedContent = '';
+                    
+                    if ($certLang !== 'tr' && !empty($element['label_' . $certLang])) {
+                        $translatedContent = $element['label_' . $certLang];
+                    }
+
+                    // Helper function to replace variables with corresponding translations
+                    $replaceVars = function($text, $langToUse) use ($certificate) {
+                        if (!str_contains($text, '{')) return nl2br(htmlspecialchars($text));
+                        
                         $dealerName = '';
                         if (isset($certificate->student->user)) {
                             $dealerName = $certificate->student->user->company_name ?: $certificate->student->user->name;
                         }
-                        $content = str_replace('{dealer_name}', '<strong>' . htmlspecialchars($dealerName) . '</strong>', $content);
+                        $text = str_replace('{dealer_name}', '<strong>' . htmlspecialchars($dealerName) . '</strong>', $text);
                         
-                        // Student Name
                         $studentName = isset($certificate->student) ? ($certificate->student->first_name . ' ' . $certificate->student->last_name) : '';
-                        $content = str_replace('{student_name}', '<strong>' . htmlspecialchars($studentName) . '</strong>', $content);
+                        $text = str_replace('{student_name}', '<strong>' . htmlspecialchars($studentName) . '</strong>', $text);
                         
-                        // Duration
                         $duration = $certificate->duration_hours ?? '';
-                        $content = str_replace('{duration_hours}', '<strong>' . htmlspecialchars($duration) . '</strong>', $content);
+                        $text = str_replace('{duration_hours}', '<strong>' . htmlspecialchars($duration) . '</strong>', $text);
                         
-                        // Training Name
                         if (isset($certificate->training_program)) {
                             $nameData = $certificate->training_program->name;
                             if (is_array($nameData)) {
-                                foreach ($nameData as $lang => $val) {
-                                    $content = str_replace('{training_name_' . $lang . '}', '<strong>' . htmlspecialchars($val) . '</strong>', $content);
+                                foreach ($nameData as $l => $val) {
+                                    $text = str_replace('{training_name_' . $l . '}', '<strong>' . htmlspecialchars($val) . '</strong>', $text);
                                 }
-                                $fallback = $nameData['tr'] ?? current($nameData) ?? '';
-                                $content = str_replace('{training_name}', '<strong>' . htmlspecialchars($fallback) . '</strong>', $content);
+                                $fallback = $nameData[$langToUse] ?? $nameData['tr'] ?? current($nameData) ?? '';
+                                $text = str_replace('{training_name}', '<strong>' . htmlspecialchars($fallback) . '</strong>', $text);
                             } else {
-                                $content = str_replace('{training_name}', '<strong>' . htmlspecialchars($nameData) . '</strong>', $content);
+                                $text = str_replace('{training_name}', '<strong>' . htmlspecialchars($nameData) . '</strong>', $text);
                             }
                         }
-                        $content = nl2br($content);
-                    } else {
-                        $content = nl2br(htmlspecialchars($content));
+                        return nl2br($text);
+                    };
+
+                    $content = $replaceVars($trContent, 'tr');
+                    if ($translatedContent) {
+                        $content .= '<br><br>' . $replaceVars($translatedContent, $certLang);
                     }
+                    
                     break;
             }
         @endphp
