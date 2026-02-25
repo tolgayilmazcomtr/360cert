@@ -78,7 +78,9 @@
                     $certLang = $certificate->certificate_language ?? 'tr';
                     $trContent = is_array($nameData) ? ($nameData['tr'] ?? current($nameData) ?? '') : $nameData;
                     if ($certLang !== 'tr' && is_array($nameData) && !empty($nameData[$certLang])) {
-                        $content = $trContent . " / " . $nameData[$certLang];
+                        $translatedText = $nameData[$certLang];
+                        $transColor = isset($element['color_' . $certLang]) ? $element['color_' . $certLang] : ($element['color'] ?? '#000000');
+                        $content = $trContent . " / <span style=\"color: {$transColor};\">" . $translatedText . "</span>";
                     } else {
                         $content = $trContent;
                     }
@@ -89,7 +91,9 @@
                         $certLang = $certificate->certificate_language ?? 'tr';
                         $trContent = is_array($typeData) ? ($typeData['tr'] ?? current($typeData) ?? '') : $typeData;
                         if ($certLang !== 'tr' && is_array($typeData) && !empty($typeData[$certLang])) {
-                            $content = $trContent . " / " . $typeData[$certLang];
+                            $translatedText = $typeData[$certLang];
+                            $transColor = isset($element['color_' . $certLang]) ? $element['color_' . $certLang] : ($element['color'] ?? '#000000');
+                            $content = $trContent . " / <span style=\"color: {$transColor};\">" . $translatedText . "</span>";
                         } else {
                             $content = $trContent;
                         }
@@ -184,7 +188,8 @@
 
                     $content = $replaceVars($trContent, 'tr');
                     if ($translatedContent) {
-                        $content .= '<br><br>' . $replaceVars($translatedContent, $certLang);
+                        $transColor = isset($element['color_' . $certLang]) ? $element['color_' . $certLang] : ($element['color'] ?? '#000000');
+                        $content .= '<br><br><span style="color: ' . $transColor . ';">' . $replaceVars($translatedContent, $certLang) . '</span>';
                     }
                     
                     break;

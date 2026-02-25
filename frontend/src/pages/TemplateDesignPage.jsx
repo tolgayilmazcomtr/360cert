@@ -385,11 +385,23 @@ export default function TemplateDesignPage() {
 
                                                     {activeLanguages.filter(l => l.code !== 'tr').map(lang => (
                                                         <div key={lang.code} className="mt-2">
-                                                            <Label className="text-xs">Metin ({lang.name})</Label>
+                                                            <div className="flex items-center justify-between mb-1">
+                                                                <Label className="text-xs">Metin ({lang.name})</Label>
+                                                                <div className="flex items-center gap-2">
+                                                                    <Label className="text-[10px] text-muted-foreground">Renk:</Label>
+                                                                    <Input
+                                                                        type="color"
+                                                                        value={el[`color_${lang.code}`] || el.color || '#000000'}
+                                                                        onChange={e => updateElement(index, `color_${lang.code}`, e.target.value)}
+                                                                        className="h-6 w-8 p-0 cursor-pointer border-0"
+                                                                        title={`${lang.name} Metin Rengi`}
+                                                                    />
+                                                                </div>
+                                                            </div>
                                                             <textarea
                                                                 value={el[`label_${lang.code}`] || ''}
                                                                 onChange={e => updateElement(index, `label_${lang.code}`, e.target.value)}
-                                                                className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-xs ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 min-h-[60px] mt-1"
+                                                                className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-xs ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 min-h-[60px]"
                                                                 placeholder={`${lang.name} dilinde eklenecek metin (opsiyonel)`}
                                                             />
                                                         </div>
@@ -414,10 +426,25 @@ export default function TemplateDesignPage() {
                                                 <div><Label className="text-xs">X</Label><Input type="number" value={el.x} onChange={e => updateElement(index, 'x', parseInt(e.target.value))} className="h-7 text-xs" /></div>
                                                 <div><Label className="text-xs">Y</Label><Input type="number" value={el.y} onChange={e => updateElement(index, 'y', parseInt(e.target.value))} className="h-7 text-xs" /></div>
                                             </div>
-                                            <div className="grid grid-cols-2 gap-2">
+                                            <div className="grid grid-cols-2 gap-2 mt-2">
                                                 <div><Label className="text-xs">Font B.</Label><Input type="number" value={el.font_size || 14} onChange={e => updateElement(index, 'font_size', parseInt(e.target.value))} className="h-7 text-xs" /></div>
-                                                <div><Label className="text-xs">Renk</Label><Input type="color" value={el.color || '#000000'} onChange={e => updateElement(index, 'color', e.target.value)} className="h-7 w-full p-1" /></div>
+                                                <div><Label className="text-xs">Renk (TR)</Label><Input type="color" value={el.color || '#000000'} onChange={e => updateElement(index, 'color', e.target.value)} className="h-7 w-full p-1" /></div>
                                             </div>
+                                            {(el.type === 'training_name' || el.type === 'certificate_type') && activeLanguages.filter(l => l.code !== 'tr').length > 0 && (
+                                                <div className="grid grid-cols-2 gap-2 mt-2">
+                                                    {activeLanguages.filter(l => l.code !== 'tr').map((lang) => (
+                                                        <div key={lang.code}>
+                                                            <Label className="text-xs">Renk ({lang.name})</Label>
+                                                            <Input
+                                                                type="color"
+                                                                value={el[`color_${lang.code}`] || el.color || '#000000'}
+                                                                onChange={e => updateElement(index, `color_${lang.code}`, e.target.value)}
+                                                                className="h-7 w-full p-1"
+                                                            />
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
                                             {(el.type === 'qr_code' || el.type === 'dealer_logo') && (
                                                 <div className="pt-2">
                                                     <Label className="text-xs">Boyut (px)</Label>
