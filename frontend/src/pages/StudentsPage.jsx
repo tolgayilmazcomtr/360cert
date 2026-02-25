@@ -21,7 +21,8 @@ export default function StudentsPage() {
         last_name: "",
         email: "",
         phone: "",
-        city: ""
+        city: "",
+        photo: null
     });
 
     useEffect(() => {
@@ -46,7 +47,8 @@ export default function StudentsPage() {
             last_name: "",
             email: "",
             phone: "",
-            city: ""
+            city: "",
+            photo: null
         });
         setEditingStudent(null);
     };
@@ -60,7 +62,8 @@ export default function StudentsPage() {
                 last_name: student.last_name,
                 email: student.email || "",
                 phone: student.phone || "",
-                city: student.city || ""
+                city: student.city || "",
+                photo: null
             });
         } else {
             resetForm();
@@ -71,10 +74,27 @@ export default function StudentsPage() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
+            const formDataToSend = new FormData();
+            formDataToSend.append("tc_number", formData.tc_number);
+            formDataToSend.append("first_name", formData.first_name);
+            formDataToSend.append("last_name", formData.last_name);
+            formDataToSend.append("email", formData.email);
+            formDataToSend.append("phone", formData.phone);
+            formDataToSend.append("city", formData.city);
+
+            if (formData.photo) {
+                formDataToSend.append("photo", formData.photo);
+            }
+
             if (editingStudent) {
-                await api.put(`/students/${editingStudent.id}`, formData);
+                formDataToSend.append("_method", "PUT");
+                await api.post(`/students/${editingStudent.id}`, formDataToSend, {
+                    headers: { "Content-Type": "multipart/form-data" }
+                });
             } else {
-                await api.post("/students", formData);
+                await api.post("/students", formDataToSend, {
+                    headers: { "Content-Type": "multipart/form-data" }
+                });
             }
             setIsModalOpen(false);
             fetchStudents();
@@ -183,9 +203,17 @@ export default function StudentsPage() {
                                     <TableCell className="font-medium">{student.tc_number}</TableCell>
                                     <TableCell>
                                         <div className="flex items-center gap-2">
-                                            <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500">
-                                                <User size={14} />
-                                            </div>
+                                            {student.photo_path ? (
+                                                <img
+                                                    src={`${import.meta.env.VITE_API_BASE_URL.replace('/api', '')}/storage/${student.photo_path}`}
+                                                    alt="Photo"
+                                                    className="h-8 w-8 rounded-full object-cover border border-slate-200"
+                                                />
+                                            ) : (
+                                                <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500">
+                                                    <User size={14} />
+                                                </div>
+                                            )}
                                             {student.first_name} {student.last_name}
                                         </div>
                                     </TableCell>
@@ -246,6 +274,24 @@ export default function StudentsPage() {
                             <div className="space-y-2">
                                 <Label htmlFor="city">Şehir</Label>
                                 <Input id="city" value={formData.city} onChange={e => setFormData({ ...formData, city: e.target.value })} />
+                            </div>
+                        </div>
+                        <div className="space-y-2 pt-2">
+                            <Label className="text-base font-semibold">Öğrenci Resmi</Label>
+                            <div className="border border-slate-200 dark:border-slate-800 rounded-md p-1 pl-3 h-11 flex items-center bg-white dark:bg-slate-950">
+                                <Input
+                                    type="file"
+                                    accept=".jpg,.jpeg,.png"
+                                    className="hidden"
+                                    id="student-photo-upload"
+                                    onChange={(e) => setFormData({ ...formData, photo: e.target.files[0] })}
+                                />
+                                <Label htmlFor="student-photo-upload" className="cursor-pointer bg-slate-100 hover:bg-slate-200 text-slate-700 py-1.5 px-3 rounded text-sm font-medium mr-3">
+                                    Dosya Seç
+                                </Label>
+                                <span className="text-slate-500 text-sm truncate">
+                                    {formData.photo ? formData.photo.name : (editingStudent?.photo_path ? "Mevcut resim yüklü (Değiştirmek için seçin)" : "Dosya seçilmedi")}
+                                </span>
                             </div>
                         </div>
                         <DialogFooter>

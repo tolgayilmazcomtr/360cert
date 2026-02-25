@@ -31,6 +31,7 @@ class StudentController extends Controller
             'email' => 'nullable|email',
             'phone' => 'nullable|string',
             'city' => 'nullable|string',
+            'photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
         
         $user = $request->user();
@@ -43,6 +44,11 @@ class StudentController extends Controller
             }
         }
 
+        $photoPath = null;
+        if ($request->hasFile('photo')) {
+            $photoPath = $request->file('photo')->store('students', 'public');
+        }
+
         $student = Student::create([
             'user_id' => $user->id,
             'tc_number' => $request->tc_number,
@@ -51,6 +57,7 @@ class StudentController extends Controller
             'email' => $request->email,
             'phone' => $request->phone,
             'city' => $request->city,
+            'photo_path' => $photoPath,
         ]);
 
         return response()->json($student, 201);
@@ -139,7 +146,16 @@ class StudentController extends Controller
             'email' => 'nullable|email',
             'phone' => 'nullable|string',
             'city' => 'nullable|string',
+            'photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
+
+        if ($request->hasFile('photo')) {
+            // Delete old photo if exists
+            if ($student->photo_path && \Illuminate\Support\Facades\Storage::disk('public')->exists($student->photo_path)) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($student->photo_path);
+            }
+            $validated['photo_path'] = $request->file('photo')->store('students', 'public');
+        }
 
         $student->update($validated);
 
