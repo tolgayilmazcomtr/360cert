@@ -267,7 +267,7 @@ export default function CertificatesPage() {
                     <p className="text-slate-500">Tüm sertifikaları yönetin, filtreleyin ve işlem yapın.</p>
                 </div>
                 <Button asChild className="gap-2 shadow-lg shadow-blue-500/20">
-                    <Link to="/certificates/new">
+                    <Link to="/dashboard/certificates/new">
                         <Plus size={16} />
                         Yeni Sertifika
                     </Link>

@@ -115,19 +115,19 @@ export default function DashboardPage() {
     );
 
     const dealerActions = [
-        { title: "Sertifika Oluştur", desc: "Tekil sertifika oluşturun.", icon: FileText, to: "/certificates/new", color: "blue" },
-        { title: "Toplu Yükleme", desc: "Excel ile çoklu sertifika.", icon: UploadCloud, to: "/certificates/bulk", color: "indigo", badge: "Hızlı" },
-        { title: "Bakiye Yükle", desc: "Kredi kartı ile ödeme.", icon: CreditCard, to: "/balance", color: "emerald" },
-        { title: "Paket Satın Al", desc: "Avantajlı sertifika paketleri.", icon: Package, to: "/packages", color: "orange", badge: "Fırsat" },
-        { title: "Öğrenci Listesi", desc: "Kayıtlı öğrencilerinizi yönetin.", icon: Users, to: "/students", color: "purple" },
-        { title: "Ödeme Geçmişi", desc: "Faturalar ve ödemeler.", icon: History, to: "/payment-history", color: "rose" },
+        { title: "Sertifika Oluştur", desc: "Tekil sertifika oluşturun.", icon: FileText, to: "/dashboard/certificates/new", color: "blue" },
+        { title: "Toplu Yükleme", desc: "Excel ile çoklu sertifika.", icon: UploadCloud, to: "/dashboard/certificates/bulk", color: "indigo", badge: "Hızlı" },
+        { title: "Bakiye Yükle", desc: "Kredi kartı ile ödeme.", icon: CreditCard, to: "/dashboard/balance", color: "emerald" },
+        { title: "Paket Satın Al", desc: "Avantajlı sertifika paketleri.", icon: Package, to: "/dashboard/packages", color: "orange", badge: "Fırsat" },
+        { title: "Öğrenci Listesi", desc: "Kayıtlı öğrencilerinizi yönetin.", icon: Users, to: "/dashboard/students", color: "purple" },
+        { title: "Ödeme Geçmişi", desc: "Faturalar ve ödemeler.", icon: History, to: "/dashboard/payment-history", color: "rose" },
     ];
 
     const adminActions = [
-        { title: "Bayi Yönetimi", desc: "Bayileri ve bakiyeleri yönetin.", icon: Building, to: "/dealers", color: "blue" },
-        { title: "Sertifika Şablonları", desc: "Yeni tasarım oluşturun.", icon: Settings, to: "/templates", color: "purple" },
-        { title: "Eğitim Programları", desc: "Program ve fiyatları düzenleyin.", icon: GraduationCap, to: "/programs", color: "emerald" },
-        { title: "Finansal Raporlar", desc: "Sistem gelirlerini inceleyin.", icon: Activity, to: "/finance", color: "orange" },
+        { title: "Bayi Yönetimi", desc: "Bayileri ve bakiyeleri yönetin.", icon: Building, to: "/dashboard/dealers", color: "blue" },
+        { title: "Sertifika Şablonları", desc: "Yeni tasarım oluşturun.", icon: Settings, to: "/dashboard/templates", color: "purple" },
+        { title: "Eğitim Programları", desc: "Program ve fiyatları düzenleyin.", icon: GraduationCap, to: "/dashboard/programs", color: "emerald" },
+        { title: "Finansal Raporlar", desc: "Sistem gelirlerini inceleyin.", icon: Activity, to: "/dashboard/finance", color: "orange" },
     ];
 
     const actions = user?.role === 'admin' ? adminActions : dealerActions;
@@ -147,7 +147,7 @@ export default function DashboardPage() {
                         </Link>
                     </Button>
                     <Button asChild className="shadow-glow-primary bg-primary hover:bg-primary/90">
-                        <Link to="/certificates/new">
+                        <Link to="/dashboard/certificates/new">
                             <FileText className="mr-2 h-4 w-4" /> Sertifika Oluştur
                         </Link>
                     </Button>
