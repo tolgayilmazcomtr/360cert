@@ -482,7 +482,7 @@ class CertificateController extends Controller
 
         // --- Standard PDF Generation Logic ---
         $qrUrl = env('FRONTEND_URL') . '/verify/' . $certificate->certificate_no;
-        $qrCode = base64_encode(\SimpleSoftwareIO\QrCode\Facades\QrCode::format('png')->size(200)->generate($qrUrl));
+        $qrCode = base64_encode(\SimpleSoftwareIO\QrCode\Facades\QrCode::format('svg')->size(200)->generate($qrUrl));
         
         $bgPath = storage_path('app/public/' . $cardTemplate->background_path);
         
