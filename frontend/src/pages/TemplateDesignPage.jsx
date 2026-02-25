@@ -158,10 +158,12 @@ export default function TemplateDesignPage() {
         // Find label
         let label = "Yeni Alan";
         if (newElementType === 'student_name') label = "Öğrenci Adı Soyadı";
+        else if (newElementType === 'tc_number') label = "TC Kimlik No";
         else if (newElementType === 'certificate_no') label = "Sertifika No";
         else if (newElementType === 'issue_date') label = "Veriliş Tarihi";
         else if (newElementType === 'qr_code') label = "QR Kod";
         else if (newElementType === 'dealer_logo') label = "Yetkili Logosu";
+        else if (newElementType === 'student_photo') label = "Öğrenci Resmi";
         else if (newElementType === 'training_name') {
             label = "Eğitim Adı";
         } else if (newElementType === 'certificate_type') {
@@ -180,7 +182,7 @@ export default function TemplateDesignPage() {
             font_family: 'Arial'
         };
 
-        if (newElementType === 'qr_code' || newElementType === 'dealer_logo') {
+        if (newElementType === 'qr_code' || newElementType === 'dealer_logo' || newElementType === 'student_photo') {
             newEl.width = 100;
             newEl.height = 100;
         }
@@ -337,10 +339,12 @@ export default function TemplateDesignPage() {
                                 onChange={e => setNewElementType(e.target.value)}
                             >
                                 <option value="student_name">Öğrenci Adı Soyadı</option>
+                                <option value="tc_number">TC Kimlik No</option>
                                 <option value="certificate_no">Sertifika No</option>
                                 <option value="issue_date">Veriliş Tarihi</option>
                                 <option value="qr_code">QR Kod</option>
                                 <option value="dealer_logo">Yetkili Logosu</option>
+                                <option value="student_photo">Öğrenci Resmi</option>
                                 <option value="training_name">Eğitim Adı</option>
                                 <option value="certificate_type">Sertifika Türü</option>
                                 <option value="custom_text">Sabit/Serbest Metin</option>
@@ -445,7 +449,7 @@ export default function TemplateDesignPage() {
                                                     ))}
                                                 </div>
                                             )}
-                                            {(el.type === 'qr_code' || el.type === 'dealer_logo') && (
+                                            {(el.type === 'qr_code' || el.type === 'dealer_logo' || el.type === 'student_photo') && (
                                                 <div className="pt-2">
                                                     <Label className="text-xs">Boyut (px)</Label>
                                                     <Input
@@ -467,7 +471,7 @@ export default function TemplateDesignPage() {
                                                     />
                                                 </div>
                                             )}
-                                            {el.type !== 'qr_code' && el.type !== 'dealer_logo' && (
+                                            {el.type !== 'qr_code' && el.type !== 'dealer_logo' && el.type !== 'student_photo' && (
                                                 <>
                                                     <div className="pt-2">
                                                         <Label className="text-xs">Maks Genişlik (px)</Label>
@@ -568,7 +572,7 @@ export default function TemplateDesignPage() {
 
                             {/* Elements Layer */}
                             {config.elements.map((el, index) => {
-                                const isImage = el.type === 'qr_code' || el.type === 'dealer_logo';
+                                const isImage = el.type === 'qr_code' || el.type === 'dealer_logo' || el.type === 'student_photo';
                                 return (
                                     <div
                                         key={index}
@@ -588,15 +592,15 @@ export default function TemplateDesignPage() {
                                         }}
                                         onMouseDown={(e) => handleElementMouseDown(e, index)}
                                     >
-                                        {(el.type === 'qr_code' || el.type === 'dealer_logo') ? (
+                                        {(el.type === 'qr_code' || el.type === 'dealer_logo' || el.type === 'student_photo') ? (
                                             <div
-                                                className={`border border-dashed border-black inline-flex items-center justify-center text-xs bg-white/50 ${el.type === 'dealer_logo' ? 'rounded' : ''}`}
+                                                className={`border border-dashed border-black inline-flex items-center justify-center text-xs bg-white/50 ${el.type === 'dealer_logo' || el.type === 'student_photo' ? 'rounded' : ''}`}
                                                 style={{
                                                     width: `${el.width || 100}px`,
                                                     height: `${el.height || 100}px`
                                                 }}
                                             >
-                                                {el.type === 'qr_code' ? 'QR' : 'LOGO'}
+                                                {el.type === 'qr_code' ? 'QR' : el.type === 'dealer_logo' ? 'LOGO' : 'RESİM'}
                                             </div>
                                         ) : (
                                             `[${el.label}]`

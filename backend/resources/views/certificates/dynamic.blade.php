@@ -67,6 +67,9 @@
                 case 'student_name':
                     $content = $certificate->student->first_name . ' ' . $certificate->student->last_name;
                     break;
+                case 'tc_number':
+                    $content = $certificate->student->tc_number ?? '';
+                    break;
                 case 'certificate_no':
                     $content = $certificate->certificate_no;
                     break;
@@ -142,6 +145,15 @@
                     $h = $element['height'] ?? 100;
                     if (isset($dealerLogo) && $dealerLogo) {
                         $content = '<img src="'.$dealerLogo.'" style="width: '.$w.'px; height: '.$h.'px; display: block; object-fit: contain;">';
+                    } else {
+                        $content = '';
+                    }
+                    break;
+                case 'student_photo':
+                    $w = $element['width'] ?? 100;
+                    $h = $element['height'] ?? 100;
+                    if (isset($studentPhoto) && $studentPhoto) {
+                        $content = '<img src="'.$studentPhoto.'" style="width: '.$w.'px; height: '.$h.'px; display: block; object-fit: contain;">';
                     } else {
                         $content = '';
                     }

@@ -383,46 +383,6 @@ class CertificateController extends Controller
         // Get Layout Config
         $config = $certificate->template->layout_config;
         
-        // Determine PDF Dimensions
-        // ALWAYS use the actual background image dimensions to prevent white space.
-        // Config canvas dimensions might be different from actual image if user uploaded a new one.
-        list($width, $height) = getimagesize($bgPath);
-        
-        // If getting dimensions failed, fallback to defaults or config (safety check)
-        if (!$width || !$height) {
-             if (!empty($config['canvasWidth']) && !empty($config['canvasHeight'])) {
-                $width = $config['canvasWidth'];
-                $height = $config['canvasHeight'];
-            } else {
-                $width = 842; // Fallback A4 Landscape
-                $height = 595;
-            }
-        }
-        
-        $customPaper = [0, 0, $width * 72 / 96, $height * 72 / 96];
-
-        $bgBase64 = 'data:image/' . pathinfo($bgPath, PATHINFO_EXTENSION) . ';base64,' . base64_encode(file_get_contents($bgPath));
-
-        $dealerLogoBase64 = null;
-        if ($certificate->student && $certificate->student->user && $certificate->student->user->logo_path) {
-            $logoPath = $certificate->student->user->logo_path;
-            if (Storage::disk('public')->exists($logoPath)) {
-                $ext = pathinfo($logoPath, PATHINFO_EXTENSION);
-                $content = Storage::disk('public')->get($logoPath);
-                $dealerLogoBase64 = 'data:image/' . $ext . ';base64,' . base64_encode($content);
-            }
-        }
-
-        $data = [
-            'certificate' => $certificate,
-            'qrCode' => $qrCode,
-            'bgImage' => $bgBase64,
-            'dealerLogo' => $dealerLogoBase64,
-            'config' => $config,
-            'width' => $width,
-            'height' => $height
-        ];
-
         // Increase memory limit for PDF generation
         ini_set('memory_limit', '512M');
         set_time_limit(300);
@@ -433,6 +393,51 @@ class CertificateController extends Controller
         }
 
         try {
+            $imgSize = @getimagesize($bgPath);
+            if ($imgSize) {
+                list($width, $height) = $imgSize;
+            } else {
+                if (!empty($config['canvasWidth']) && !empty($config['canvasHeight'])) {
+                    $width = $config['canvasWidth'];
+                    $height = $config['canvasHeight'];
+                } else {
+                    $width = 842; // Fallback A4 Landscape
+                    $height = 595;
+                }
+            }
+            $customPaper = [0, 0, $width * 72 / 96, $height * 72 / 96];
+
+            $dealerLogoBase64 = null;
+            if ($certificate->student && $certificate->student->user && $certificate->student->user->logo_path) {
+                $logoPath = $certificate->student->user->logo_path;
+                if (Storage::disk('public')->exists($logoPath)) {
+                    $ext = pathinfo($logoPath, PATHINFO_EXTENSION);
+                    $content = Storage::disk('public')->get($logoPath);
+                    $dealerLogoBase64 = 'data:image/' . $ext . ';base64,' . base64_encode($content);
+                }
+            }
+
+            $studentPhotoBase64 = null;
+            if ($certificate->student && $certificate->student->photo_path) {
+                $photoPath = $certificate->student->photo_path;
+                if (Storage::disk('public')->exists($photoPath)) {
+                    $ext = pathinfo($photoPath, PATHINFO_EXTENSION);
+                    $content = Storage::disk('public')->get($photoPath);
+                    $studentPhotoBase64 = 'data:image/' . $ext . ';base64,' . base64_encode($content);
+                }
+            }
+
+            $data = [
+                'certificate' => $certificate,
+                'qrCode' => $qrCode,
+                'bgImage' => $bgBase64,
+                'dealerLogo' => $dealerLogoBase64,
+                'studentPhoto' => $studentPhotoBase64,
+                'config' => $config,
+                'width' => $width,
+                'height' => $height
+            ];
+
             $pdf = Pdf::loadView('certificates.dynamic', $data);
             
             $pdf->setPaper($customPaper);
@@ -475,54 +480,72 @@ class CertificateController extends Controller
             return response()->json(['message' => 'Sistemde aktif bir Kimlik Kartı şablonu bulunmamaktadır.'], 404);
         }
 
-        // --- Standard PDF Generation Logic (adapted from download) ---
+        // --- Standard PDF Generation Logic ---
         $qrUrl = env('FRONTEND_URL') . '/verify/' . $certificate->certificate_no;
         $qrCode = base64_encode(\SimpleSoftwareIO\QrCode\Facades\QrCode::format('png')->size(200)->generate($qrUrl));
         
         $bgPath = storage_path('app/public/' . $cardTemplate->background_path);
-        if (!file_exists($bgPath)) {
-            return response()->json(['message' => 'Kimlik kartı arkaplan dosyası bulunamadı.'], 404);
-        }
-
-        $config = $cardTemplate->layout_config;
-        list($width, $height) = getimagesize($bgPath);
         
-        if (!$width || !$height) {
-            $width = $config['canvasWidth'] ?? 842;
-            $height = $config['canvasHeight'] ?? 595;
-        }
-        
-        $customPaper = [0, 0, $width * 72 / 96, $height * 72 / 96];
-        $bgBase64 = 'data:image/' . pathinfo($bgPath, PATHINFO_EXTENSION) . ';base64,' . base64_encode(file_get_contents($bgPath));
-
-        $dealerLogoBase64 = null;
-        if ($certificate->student && $certificate->student->user && $certificate->student->user->logo_path) {
-            $logoPath = $certificate->student->user->logo_path;
-            if (Storage::disk('public')->exists($logoPath)) {
-                $ext = pathinfo($logoPath, PATHINFO_EXTENSION);
-                $content = Storage::disk('public')->get($logoPath);
-                $dealerLogoBase64 = 'data:image/' . $ext . ';base64,' . base64_encode($content);
-            }
-        }
-
-        $data = [
-            'certificate' => $certificate,
-            'qrCode' => $qrCode,
-            'bgImage' => $bgBase64,
-            'dealerLogo' => $dealerLogoBase64,
-            'config' => $config,
-            'width' => $width,
-            'height' => $height
-        ];
-
-        ini_set('memory_limit', '512M');
-        set_time_limit(300);
-
-        if (!file_exists(storage_path('fonts'))) {
-            mkdir(storage_path('fonts'), 0775, true);
-        }
-
         try {
+            if (!file_exists($bgPath)) {
+                return response()->json(['message' => 'Kimlik kartı arkaplan dosyası bulunamadı.'], 404);
+            }
+
+            $config = $cardTemplate->layout_config;
+            $width = 0;
+            $height = 0;
+            
+            $imgSize = @getimagesize($bgPath);
+            if ($imgSize) {
+                list($width, $height) = $imgSize;
+            }
+            
+            if (!$width || !$height) {
+                $width = $config['canvasWidth'] ?? 842;
+                $height = $config['canvasHeight'] ?? 595;
+            }
+            
+            $customPaper = [0, 0, $width * 72 / 96, $height * 72 / 96];
+            $bgBase64 = 'data:image/' . pathinfo($bgPath, PATHINFO_EXTENSION) . ';base64,' . base64_encode(file_get_contents($bgPath));
+
+            $dealerLogoBase64 = null;
+            if ($certificate->student && $certificate->student->user && $certificate->student->user->logo_path) {
+                $logoPath = $certificate->student->user->logo_path;
+                if (Storage::disk('public')->exists($logoPath)) {
+                    $ext = pathinfo($logoPath, PATHINFO_EXTENSION);
+                    $content = Storage::disk('public')->get($logoPath);
+                    $dealerLogoBase64 = 'data:image/' . $ext . ';base64,' . base64_encode($content);
+                }
+            }
+
+            $studentPhotoBase64 = null;
+            if ($certificate->student && $certificate->student->photo_path) {
+                $photoPath = $certificate->student->photo_path;
+                if (Storage::disk('public')->exists($photoPath)) {
+                    $ext = pathinfo($photoPath, PATHINFO_EXTENSION);
+                    $content = Storage::disk('public')->get($photoPath);
+                    $studentPhotoBase64 = 'data:image/' . $ext . ';base64,' . base64_encode($content);
+                }
+            }
+
+            $data = [
+                'certificate' => $certificate,
+                'qrCode' => $qrCode,
+                'bgImage' => $bgBase64,
+                'dealerLogo' => $dealerLogoBase64,
+                'studentPhoto' => $studentPhotoBase64,
+                'config' => $config,
+                'width' => $width,
+                'height' => $height
+            ];
+
+            ini_set('memory_limit', '512M');
+            set_time_limit(300);
+
+            if (!file_exists(storage_path('fonts'))) {
+                mkdir(storage_path('fonts'), 0775, true);
+            }
+
             // We can reuse certificates.dynamic as it parses generic $config['elements'] via absolute positioning
             $pdf = Pdf::loadView('certificates.dynamic', $data);
             $pdf->setPaper($customPaper);
