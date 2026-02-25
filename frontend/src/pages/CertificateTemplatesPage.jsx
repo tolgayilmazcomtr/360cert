@@ -20,7 +20,7 @@ export default function CertificateTemplatesPage() {
     const [formData, setFormData] = useState({
         name: "",
         type: "standard",
-        certificate_type_id: "",
+        certificate_type_id: "none",
         file: null
     });
 
@@ -151,7 +151,7 @@ export default function CertificateTemplatesPage() {
                                     <SelectItem value="none">Seçiniz (Opsiyonel)</SelectItem>
                                     {certificateTypes.map(ct => (
                                         <SelectItem key={ct.id} value={ct.id.toString()}>
-                                            {typeof ct.name === 'object' ? (ct.name.tr || Object.values(ct.name)[0]) : ct.name}
+                                            <span>{typeof ct.name === 'object' ? (ct.name.tr || Object.values(ct.name)[0]) : ct.name}</span>
                                         </SelectItem>
                                     ))}
                                 </SelectContent>
