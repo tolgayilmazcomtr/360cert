@@ -70,7 +70,6 @@ export default function PublicLayout() {
                                 {settings.site_title.charAt(0)}
                             </div>
                         )}
-                        <h1 className="text-xl font-bold text-slate-800 hidden sm:block">{settings.site_title}</h1>
                     </Link>
 
                     {/* Dynamic Header Menu */}
