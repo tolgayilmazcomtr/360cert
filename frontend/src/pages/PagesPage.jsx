@@ -79,6 +79,9 @@ export default function PagesPage() {
                 show_in_footer: page.show_in_footer,
                 order: page.order || 0,
             });
+            const content = page.content || "";
+            const isCustomHtml = content.includes('<div') || content.includes('class=') || content.includes('<section') || content.includes('<style') || content.includes('<script');
+            setIsHtmlMode(isCustomHtml);
         } else {
             setEditingPage(null);
             setFormData({
@@ -94,9 +97,21 @@ export default function PagesPage() {
                 show_in_footer: false,
                 order: 0,
             });
+            setIsHtmlMode(false);
         }
-        setIsHtmlMode(false); // Reset to rich text initially
         setIsModalOpen(true);
+    };
+
+    const handleToggleHtmlMode = () => {
+        if (isHtmlMode) {
+            const isCustomHtml = formData.content.includes('<div') || formData.content.includes('class=') || formData.content.includes('<section');
+            if (isCustomHtml) {
+                if (!window.confirm("Görsel editöre geçmek, özel HTML etiketlerinizi (div, class, vb.) silebilir ve tasarımı bozabilir. Devam etmek istediğinize emin misiniz?")) {
+                    return;
+                }
+            }
+        }
+        setIsHtmlMode(!isHtmlMode);
     };
 
     const handleChange = (e) => {
@@ -284,7 +299,7 @@ export default function PagesPage() {
                             <div className="space-y-2">
                                 <div className="flex items-center justify-between">
                                     <Label>Sayfa İçeriği</Label>
-                                    <Button type="button" variant="ghost" size="sm" onClick={() => setIsHtmlMode(!isHtmlMode)} className="h-8 text-xs text-muted-foreground hover:text-foreground">
+                                    <Button type="button" variant="ghost" size="sm" onClick={handleToggleHtmlMode} className="h-8 text-xs text-muted-foreground hover:text-foreground">
                                         {isHtmlMode ? "Zengin Metin (Görsel) Editörüne Geç" : "</> HTML Kaynak Kodunu Düzenle"}
                                     </Button>
                                 </div>
