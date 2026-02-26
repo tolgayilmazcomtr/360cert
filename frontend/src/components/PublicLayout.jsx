@@ -2,8 +2,9 @@ import { useState, useEffect } from "react";
 import { Outlet, Link } from "react-router-dom";
 import api from "@/api/axios";
 import { Button } from "@/components/ui/button";
-import { LogIn, Building, ShieldCheck, Mail, Phone, MapPin, Facebook, Instagram, Linkedin, Twitter, LayoutDashboard } from "lucide-react";
+import { LogIn, Building, ShieldCheck, Mail, Phone, MapPin, Facebook, Instagram, Linkedin, Twitter, LayoutDashboard, Menu } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 
 export default function PublicLayout() {
     const { user, isLoading } = useAuth();
@@ -97,14 +98,56 @@ export default function PublicLayout() {
                         </Link>
                     )}
                     {!user && (
-                        <Link to="/apply-dealer">
+                        <Link to="/apply-dealer" className="hidden sm:block">
                             <Button className="flex items-center gap-2">
                                 <Building size={18} />
-                                <span className="hidden sm:inline">Bayi Başvurusu</span>
-                                <span className="sm:hidden">Başvur</span>
+                                <span>Bayi Başvurusu</span>
                             </Button>
                         </Link>
                     )}
+
+                    {/* Mobile Navigation Toggle */}
+                    <Sheet>
+                        <SheetTrigger asChild>
+                            <Button variant="ghost" size="icon" className="md:hidden">
+                                <Menu className="h-6 w-6" />
+                            </Button>
+                        </SheetTrigger>
+                        <SheetContent side="left" className="w-[300px] sm:w-[400px]">
+                            <SheetTitle className="sr-only">Navigasyon Menüsü</SheetTitle>
+                            <SheetDescription className="sr-only">Mobil navigasyon bağlantıları</SheetDescription>
+
+                            <div className="flex flex-col gap-8 h-full">
+                                <div className="flex items-center gap-3 pt-6">
+                                    {settings.site_logo ? (
+                                        <img src={settings.site_logo} alt="Logo" className="h-8 w-auto object-contain" />
+                                    ) : (
+                                        <div className="flex items-center justify-center bg-primary text-white font-bold h-8 w-8 flex-shrink-0 rounded-lg text-lg">
+                                            {settings.site_title.charAt(0)}
+                                        </div>
+                                    )}
+                                    <h1 className="text-lg font-bold text-slate-800">{settings.site_title}</h1>
+                                </div>
+
+                                <nav className="flex flex-col gap-4">
+                                    <Link to="/" className="text-base font-medium text-slate-600 hover:text-blue-600 transition-colors">Ana Sayfa</Link>
+                                    {headerPages.map(renderMenuLink)}
+                                    <Link to="/contact" className="text-base font-medium text-slate-600 hover:text-blue-600 transition-colors">İletişim</Link>
+                                </nav>
+
+                                {!user && (
+                                    <div className="mt-4 pt-6 border-t border-slate-100 flex flex-col gap-3">
+                                        <Button asChild className="w-full flex justify-start items-center gap-2">
+                                            <Link to="/apply-dealer">
+                                                <Building size={18} />
+                                                Bayi Başvurusu
+                                            </Link>
+                                        </Button>
+                                    </div>
+                                )}
+                            </div>
+                        </SheetContent>
+                    </Sheet>
                 </div>
             </header>
 
