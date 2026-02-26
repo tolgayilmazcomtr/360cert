@@ -257,6 +257,55 @@ export default function SettingsPage() {
                 </Card>
 
                 <Card>
+                    <CardHeader>
+                        <CardTitle>İletişim & Sosyal Medya</CardTitle>
+                        <CardDescription>Site alt kısmında ve iletişim sayfasında görünecek bilgiler.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        {isLoadingSettings ? (
+                            <p className="text-sm text-gray-500">Ayarlar yükleniyor...</p>
+                        ) : (
+                            <div className="space-y-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label>Telefon Numarası</Label>
+                                        <Input value={settings.contact_phone || ""} onChange={(e) => setSettings({ ...settings, contact_phone: e.target.value })} placeholder="+90 555 555 55 55" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label>İletişim E-posta</Label>
+                                        <Input value={settings.contact_email || ""} onChange={(e) => setSettings({ ...settings, contact_email: e.target.value })} placeholder="info@example.com" />
+                                    </div>
+                                    <div className="space-y-2 md:col-span-2">
+                                        <Label>Açık Adres</Label>
+                                        <Input value={settings.contact_address || ""} onChange={(e) => setSettings({ ...settings, contact_address: e.target.value })} placeholder="İstanbul, Türkiye" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label>Facebook URL</Label>
+                                        <Input value={settings.social_facebook || ""} onChange={(e) => setSettings({ ...settings, social_facebook: e.target.value })} placeholder="https://facebook.com/..." />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label>Instagram URL</Label>
+                                        <Input value={settings.social_instagram || ""} onChange={(e) => setSettings({ ...settings, social_instagram: e.target.value })} placeholder="https://instagram.com/..." />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label>LinkedIn URL</Label>
+                                        <Input value={settings.social_linkedin || ""} onChange={(e) => setSettings({ ...settings, social_linkedin: e.target.value })} placeholder="https://linkedin.com/in/..." />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label>Twitter (X) URL</Label>
+                                        <Input value={settings.social_twitter || ""} onChange={(e) => setSettings({ ...settings, social_twitter: e.target.value })} placeholder="https://twitter.com/..." />
+                                    </div>
+                                </div>
+                                <Button variant="outline" onClick={handleSaveSettings} disabled={isSavingSettings}>
+                                    {isSavingSettings ? <Loader2 className="animate-spin mr-2" size={16} /> : null}
+                                    Ayarları Kaydet
+                                </Button>
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
+
+                <Card>
                     <CardHeader className="flex flex-row items-center justify-between pb-2">
                         <div className="space-y-1">
                             <CardTitle>Sistem Dilleri</CardTitle>

@@ -14,6 +14,10 @@ import VerificationPage from "./pages/VerificationPage";
 import LandingPage from "./pages/LandingPage";
 import DealerApplicationPage from "./pages/DealerApplicationPage";
 import Register from "./pages/Register";
+import PublicLayout from "./components/PublicLayout";
+import DynamicPage from "./pages/DynamicPage";
+import ContactPage from "./pages/ContactPage";
+import PublicTrainingsPage from "./pages/PublicTrainingsPage";
 import DealersPage from "./pages/DealersPage";
 import FinancePage from "./pages/FinancePage";
 import TransactionsPage from "./pages/TransactionsPage";
@@ -26,6 +30,7 @@ import PaymentHistoryPage from "./pages/PaymentHistoryPage";
 import ProfilePage from "./pages/ProfilePage";
 import AdminProfilePage from "./pages/AdminProfilePage";
 import AdminUsersPage from "./pages/AdminUsersPage";
+import PagesPage from "./pages/PagesPage";
 
 const ProtectedRoute = ({ children }) => {
   const { user, isLoading } = useAuth();
@@ -44,8 +49,16 @@ const ProtectedRoute = ({ children }) => {
 function AppRoutes() {
   return (
     <Routes>
-      <Route path="/" element={<LandingPage />} />
-      <Route path="/apply-dealer" element={<DealerApplicationPage />} />
+      {/* Public Routes */}
+      <Route element={<PublicLayout />}>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/apply-dealer" element={<DealerApplicationPage />} />
+        <Route path="/contact" element={<ContactPage />} />
+        <Route path="/programs" element={<PublicTrainingsPage />} />
+        <Route path="/:slug" element={<DynamicPage />} />
+      </Route>
+
+      {/* Standalone Auth / Verification Routes */}
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/verify/:hash" element={<VerificationPage />} />
@@ -76,6 +89,7 @@ function AppRoutes() {
         <Route path="profile" element={<ProfilePage />} />
         <Route path="admin/profile" element={<AdminProfilePage />} />
         <Route path="admin/users" element={<AdminUsersPage />} />
+        <Route path="pages" element={<PagesPage />} />
         {/* Diğer alt sayfalar buraya eklenecek */}
       </Route>
 

@@ -17,7 +17,8 @@ import {
     ChevronRight,
     ChevronDown,
     Shield,
-    UserCog
+    UserCog,
+    Globe
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -50,6 +51,7 @@ export default function Sidebar() {
         },
         { name: "Duyurular", icon: Bell, path: "/dashboard/notifications" },
         { name: "Sistem Ayarı", icon: Settings, path: "/dashboard/settings" },
+        { name: "Sayfa Yönetimi", icon: Globe, path: "/dashboard/pages" },
         { name: "Yönetici Profilim", icon: UserCog, path: "/dashboard/admin/profile" },
         { name: "Yönetici Hesapları", icon: Shield, path: "/dashboard/admin/users" },
     ];

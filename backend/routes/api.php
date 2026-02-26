@@ -11,6 +11,9 @@ Route::post('/login', [AuthController::class, 'login']);
 // Public API Routes
 Route::get('/public/settings', [SystemSettingController::class, 'index']);
 Route::get('/public/certificates/search', [\App\Http\Controllers\Api\CertificateController::class, 'searchByNo']);
+Route::get('/public/pages', [\App\Http\Controllers\Api\PageController::class, 'publicIndex']);
+Route::get('/public/pages/{slug}', [\App\Http\Controllers\Api\PageController::class, 'publicShow']);
+Route::get('/public/training-programs', [\App\Http\Controllers\Api\TrainingProgramController::class, 'index']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
@@ -51,6 +54,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Certificate Types
     Route::apiResource('certificate-types', \App\Http\Controllers\Api\CertificateTypeController::class);
+
+    // CMS Pages
+    Route::apiResource('pages', \App\Http\Controllers\Api\PageController::class);
 
     // Certificates
     Route::get('/certificates', [\App\Http\Controllers\Api\CertificateController::class, 'index']);
