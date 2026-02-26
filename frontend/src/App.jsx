@@ -14,7 +14,9 @@ import VerificationPage from "./pages/VerificationPage";
 import LandingPage from "./pages/LandingPage";
 import DealerApplicationPage from "./pages/DealerApplicationPage";
 import Register from "./pages/Register";
+import Register from "./pages/Register";
 import PublicLayout from "./components/PublicLayout";
+import CertificateVerificationPage from "./pages/CertificateVerificationPage";
 import DynamicPage from "./pages/DynamicPage";
 import ContactPage from "./pages/ContactPage";
 import PublicTrainingsPage from "./pages/PublicTrainingsPage";
@@ -54,6 +56,7 @@ function AppRoutes() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/apply-dealer" element={<DealerApplicationPage />} />
         <Route path="/contact" element={<ContactPage />} />
+        <Route path="/sertifika-dogrula" element={<CertificateVerificationPage />} />
         <Route path="/programs" element={<PublicTrainingsPage />} />
         <Route path="/:slug" element={<DynamicPage />} />
       </Route>

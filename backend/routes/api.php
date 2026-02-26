@@ -11,6 +11,7 @@ Route::post('/login', [AuthController::class, 'login']);
 // Public API Routes
 Route::get('/public/settings', [SystemSettingController::class, 'index']);
 Route::get('/public/certificates/search', [\App\Http\Controllers\Api\CertificateController::class, 'searchByNo']);
+Route::get('/public/certificates/search-tc', [\App\Http\Controllers\Api\CertificateController::class, 'searchByTc']);
 Route::get('/public/pages', [\App\Http\Controllers\Api\PageController::class, 'publicIndex']);
 Route::get('/public/pages/{slug}', [\App\Http\Controllers\Api\PageController::class, 'publicShow']);
 Route::get('/public/training-programs', [\App\Http\Controllers\Api\TrainingProgramController::class, 'index']);

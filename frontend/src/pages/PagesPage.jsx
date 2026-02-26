@@ -27,6 +27,7 @@ export default function PagesPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingPage, setEditingPage] = useState(null);
+    const [isHtmlMode, setIsHtmlMode] = useState(false);
 
     const [formData, setFormData] = useState({
         title: "",
@@ -94,6 +95,7 @@ export default function PagesPage() {
                 order: 0,
             });
         }
+        setIsHtmlMode(false); // Reset to rich text initially
         setIsModalOpen(true);
     };
 
@@ -280,15 +282,29 @@ export default function PagesPage() {
                             </div>
                         ) : (
                             <div className="space-y-2">
-                                <Label>Sayfa İçeriği</Label>
-                                <div className="border border-border rounded-md overflow-hidden h-[300px]">
-                                    <ReactQuill
-                                        theme="snow"
-                                        value={formData.content}
-                                        onChange={handleContentChange}
-                                        modules={modules}
-                                        className="h-[258px]"
-                                    />
+                                <div className="flex items-center justify-between">
+                                    <Label>Sayfa İçeriği</Label>
+                                    <Button type="button" variant="ghost" size="sm" onClick={() => setIsHtmlMode(!isHtmlMode)} className="h-8 text-xs text-muted-foreground hover:text-foreground">
+                                        {isHtmlMode ? "Zengin Metin (Görsel) Editörüne Geç" : "</> HTML Kaynak Kodunu Düzenle"}
+                                    </Button>
+                                </div>
+                                <div className="border border-border rounded-md overflow-hidden h-[300px] bg-white">
+                                    {isHtmlMode ? (
+                                        <textarea
+                                            value={formData.content}
+                                            onChange={(e) => handleContentChange(e.target.value)}
+                                            className="w-full h-full p-4 font-mono text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            placeholder="<p>HTML kodunuzu buraya yazın...</p>"
+                                        />
+                                    ) : (
+                                        <ReactQuill
+                                            theme="snow"
+                                            value={formData.content}
+                                            onChange={handleContentChange}
+                                            modules={modules}
+                                            className="h-[258px]"
+                                        />
+                                    )}
                                 </div>
                             </div>
                         )}

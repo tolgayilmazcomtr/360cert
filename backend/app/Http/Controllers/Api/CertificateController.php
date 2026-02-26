@@ -13,6 +13,7 @@ use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use App\Helpers\StringMasker;
 
 class CertificateController extends Controller
 {
@@ -85,6 +86,42 @@ class CertificateController extends Controller
         return response()->json([
             'hash' => $certificate->qr_code_hash
         ]);
+    }
+
+    public function searchByTc(Request $request)
+    {
+        $request->validate([
+            'tc_number' => 'required|string|max:11'
+        ]);
+
+        $certificates = Certificate::with(['training_program'])
+            ->whereHas('student', function ($query) use ($request) {
+                $query->where('tc_number', $request->tc_number);
+            })
+            ->where('status', 'approved')
+            ->orderBy('issue_date', 'desc')
+            ->get();
+
+        if ($certificates->isEmpty()) {
+            return response()->json(['message' => 'Bu TC Kimlik numarasına ait onaylı sertifika bulunamadı.'], 404);
+        }
+
+        // Return a masked/summary version of the certificates
+        $results = $certificates->map(function ($cert) {
+            $studentName = $cert->student ? ($cert->student->first_name . ' ' . StringMasker::maskLastName($cert->student->last_name)) : 'Bilinmiyor';
+            $programName = $cert->training_program ? (is_array($cert->training_program->name) ? ($cert->training_program->name[$cert->certificate_language ?? 'tr'] ?? current($cert->training_program->name)) : $cert->training_program->name) : 'Bilinmeyen Program';
+            
+            return [
+                'id' => $cert->id,
+                'certificate_no' => $cert->certificate_no,
+                'program_name' => $programName,
+                'issue_date' => $cert->issue_date,
+                'student_name_masked' => $studentName,
+                'hash' => $cert->qr_code_hash,
+            ];
+        });
+
+        return response()->json($results);
     }
 
     public function show(Request $request, $id)
