@@ -2,9 +2,11 @@ import { useState, useEffect } from "react";
 import { Outlet, Link } from "react-router-dom";
 import api from "@/api/axios";
 import { Button } from "@/components/ui/button";
-import { LogIn, Building, ShieldCheck, Mail, Phone, MapPin, Facebook, Instagram, Linkedin, Twitter } from "lucide-react";
+import { LogIn, Building, ShieldCheck, Mail, Phone, MapPin, Facebook, Instagram, Linkedin, Twitter, LayoutDashboard } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 
 export default function PublicLayout() {
+    const { user, isLoading } = useAuth();
     const [settings, setSettings] = useState({
         site_title: "360Cert",
         site_logo: null,
@@ -80,19 +82,30 @@ export default function PublicLayout() {
                 </div>
 
                 <div className="flex items-center gap-3">
-                    <Link to="/login">
-                        <Button variant="ghost" className="hidden sm:flex items-center gap-2">
-                            <LogIn size={18} />
-                            <span>Giriş Yap</span>
-                        </Button>
-                    </Link>
-                    <Link to="/apply-dealer">
-                        <Button className="flex items-center gap-2">
-                            <Building size={18} />
-                            <span className="hidden sm:inline">Bayi Başvurusu</span>
-                            <span className="sm:hidden">Başvur</span>
-                        </Button>
-                    </Link>
+                    {isLoading ? null : user ? (
+                        <Link to="/dashboard">
+                            <Button variant="ghost" className="hidden sm:flex items-center gap-2">
+                                <LayoutDashboard size={18} />
+                                <span className="font-semibold text-primary">{user.name}</span>
+                            </Button>
+                        </Link>
+                    ) : (
+                        <Link to="/login">
+                            <Button variant="ghost" className="hidden sm:flex items-center gap-2">
+                                <LogIn size={18} />
+                                <span>Giriş Yap</span>
+                            </Button>
+                        </Link>
+                    )}
+                    {!user && (
+                        <Link to="/apply-dealer">
+                            <Button className="flex items-center gap-2">
+                                <Building size={18} />
+                                <span className="hidden sm:inline">Bayi Başvurusu</span>
+                                <span className="sm:hidden">Başvur</span>
+                            </Button>
+                        </Link>
+                    )}
                 </div>
             </header>
 
@@ -108,7 +121,7 @@ export default function PublicLayout() {
                     <div className="space-y-4">
                         <div className="flex items-center gap-3">
                             {settings.site_logo ? (
-                                <img src={settings.site_logo} alt="Logo" className="h-10 w-auto object-contain brightness-0 invert" />
+                                <img src={settings.site_logo} alt="Logo" className="h-10 w-auto object-contain bg-white p-1 rounded" />
                             ) : (
                                 <div className="flex items-center justify-center bg-primary text-white font-bold h-10 w-10 flex-shrink-0 rounded-lg text-xl border border-slate-700">
                                     {settings.site_title.charAt(0)}
@@ -192,7 +205,9 @@ export default function PublicLayout() {
                 </div>
 
                 <div className="max-w-7xl mx-auto mt-12 pt-8 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-4">
-                    <p>&copy; {new Date().getFullYear()} {settings.site_title}. Tüm hakları saklıdır.</p>
+                    <p>
+                        &copy; {new Date().getFullYear()} {settings.site_title}. Tüm hakları saklıdır. | Yazılım: <a href="https://www.urartisdijital.com" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Urartis Dijital</a>
+                    </p>
                     <div className="flex items-center gap-2">
                         <ShieldCheck size={14} /> Resmi Onaylı Altyapı
                     </div>
