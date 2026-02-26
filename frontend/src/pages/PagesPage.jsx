@@ -12,10 +12,11 @@ import {
     DialogContent,
     DialogHeader,
     DialogTitle,
+    DialogDescription,
     DialogFooter,
 } from "@/components/ui/dialog";
-import ReactQuill from "react-quill";
-import "react-quill/dist/quill.snow.css";
+import ReactQuill from "react-quill-new";
+import "react-quill-new/dist/quill.snow.css";
 import { cn } from "@/lib/utils";
 
 export default function PagesPage() {
@@ -244,6 +245,9 @@ export default function PagesPage() {
                 <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
                         <DialogTitle>{editingPage ? "Sayfayı Düzenle" : "Yeni Sayfa Ekle"}</DialogTitle>
+                        <DialogDescription className="sr-only">
+                            Sayfa ekleme veya düzenleme formu alanları.
+                        </DialogDescription>
                     </DialogHeader>
                     <form onSubmit={handleSubmit} className="space-y-6">
 

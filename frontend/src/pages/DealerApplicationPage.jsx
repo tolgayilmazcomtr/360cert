@@ -141,6 +141,7 @@ export default function DealerApplicationPage() {
                                     value={formData.password}
                                     onChange={handleChange}
                                     placeholder="••••••••"
+                                    autoComplete="new-password"
                                 />
                             </div>
                             <div className="space-y-2">
@@ -152,6 +153,7 @@ export default function DealerApplicationPage() {
                                     value={formData.password_confirmation}
                                     onChange={handleChange}
                                     placeholder="••••••••"
+                                    autoComplete="new-password"
                                 />
                             </div>
                         </div>
