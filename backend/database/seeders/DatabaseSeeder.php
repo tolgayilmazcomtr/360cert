@@ -27,6 +27,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             CertificateTemplateSeeder::class,
             SystemSettingSeeder::class,
+            HomePageSeeder::class,
         ]);
     }
 }

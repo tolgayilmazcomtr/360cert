@@ -1,8 +1,43 @@
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import api from "../api/axios";
 import { Button } from "@/components/ui/button";
-import { ShieldCheck, ArrowRight, Award, BookOpen, Users } from "lucide-react";
+import { ShieldCheck, ArrowRight, Award, BookOpen, Users, Loader2 } from "lucide-react";
 
 export default function LandingPage() {
+    const [pageContent, setPageContent] = useState(null);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchHomePage = async () => {
+            try {
+                const res = await api.get('/public/pages/anasayfa');
+                if (res.data && res.data.content) {
+                    setPageContent(res.data.content);
+                }
+            } catch (error) {
+                setPageContent(null);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchHomePage();
+    }, []);
+
+    if (isLoading) {
+        return <div className="flex-1 flex justify-center items-center min-h-[60vh]"><Loader2 className="w-10 h-10 animate-spin text-blue-600" /></div>;
+    }
+
+    if (pageContent) {
+        return (
+            <div
+                className="w-full flex-1 animate-in fade-in duration-500"
+                dangerouslySetInnerHTML={{ __html: pageContent }}
+            />
+        );
+    }
+
     return (
         <div className="flex-1 flex flex-col w-full animate-in fade-in duration-500">
             {/* Hero Section */}
