@@ -14,7 +14,6 @@ import VerificationPage from "./pages/VerificationPage";
 import LandingPage from "./pages/LandingPage";
 import DealerApplicationPage from "./pages/DealerApplicationPage";
 import Register from "./pages/Register";
-import Register from "./pages/Register";
 import PublicLayout from "./components/PublicLayout";
 import CertificateVerificationPage from "./pages/CertificateVerificationPage";
 import DynamicPage from "./pages/DynamicPage";
