@@ -15,6 +15,7 @@ Route::get('/public/certificates/search-tc', [\App\Http\Controllers\Api\Certific
 Route::get('/public/pages', [\App\Http\Controllers\Api\PageController::class, 'publicIndex']);
 Route::get('/public/pages/{slug}', [\App\Http\Controllers\Api\PageController::class, 'publicShow']);
 Route::get('/public/training-programs', [\App\Http\Controllers\Api\TrainingProgramController::class, 'index']);
+Route::get('/public/accreditations', [\App\Http\Controllers\Api\AccreditationController::class, 'publicIndex']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
@@ -58,6 +59,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // CMS Pages
     Route::apiResource('pages', \App\Http\Controllers\Api\PageController::class);
+
+    // Accreditations
+    Route::apiResource('accreditations', \App\Http\Controllers\Api\AccreditationController::class);
 
     // Certificates
     Route::get('/certificates', [\App\Http\Controllers\Api\CertificateController::class, 'index']);

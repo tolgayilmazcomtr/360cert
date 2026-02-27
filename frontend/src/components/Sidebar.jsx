@@ -18,7 +18,8 @@ import {
     ChevronDown,
     Shield,
     UserCog,
-    Globe
+    Globe,
+    Award
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -38,6 +39,7 @@ export default function Sidebar() {
                 { name: "Şablon Tasarımları", path: "/dashboard/templates" },
                 { name: "Sertifika Türleri", path: "/dashboard/certificate-types" },
                 { name: "Eğitim Programları", path: "/dashboard/programs" },
+                { name: "Akreditasyonlar", path: "/dashboard/accreditations" },
             ]
         },
         { name: "Öğrenciler", icon: Users, path: "/dashboard/students" },

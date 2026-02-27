@@ -4,6 +4,7 @@ import api from "../api/axios";
 import { Button } from "@/components/ui/button";
 import { ShieldCheck, ArrowRight, Award, BookOpen, Users, Loader2 } from "lucide-react";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import AccreditationSlider from "@/components/AccreditationSlider";
 
 const GlobeHero = React.lazy(() => import("@/components/GlobeHero"));
 
@@ -154,6 +155,8 @@ export default function LandingPage() {
                     </div>
                 </section>
 
+                {/* Accreditation Logos Slider */}
+                <AccreditationSlider />
             </div>
         </div>
     );

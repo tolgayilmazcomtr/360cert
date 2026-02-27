@@ -32,6 +32,7 @@ import ProfilePage from "./pages/ProfilePage";
 import AdminProfilePage from "./pages/AdminProfilePage";
 import AdminUsersPage from "./pages/AdminUsersPage";
 import PagesPage from "./pages/PagesPage";
+import AccreditationsPage from "./pages/AccreditationsPage";
 
 const ProtectedRoute = ({ children }) => {
   const { user, isLoading } = useAuth();
@@ -92,6 +93,7 @@ function AppRoutes() {
         <Route path="admin/profile" element={<AdminProfilePage />} />
         <Route path="admin/users" element={<AdminUsersPage />} />
         <Route path="pages" element={<PagesPage />} />
+        <Route path="accreditations" element={<AccreditationsPage />} />
         {/* Diğer alt sayfalar buraya eklenecek */}
       </Route>
 
