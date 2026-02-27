@@ -14,17 +14,26 @@ export default function FloatingSearchButton() {
             >
                 <Link to="/sertifika-dogrula" className="group flex items-center">
                     {/* The sliding text part */}
-                    <div className="overflow-hidden w-0 group-hover:w-48 transition-all duration-300 ease-in-out flex justify-end">
-                        <div className="bg-slate-900/90 backdrop-blur-md text-white font-medium py-3 px-6 h-14 flex items-center whitespace-nowrap border-y border-l border-white/10 rounded-l-2xl shadow-xl">
-                            Sertifika Sorgula
+                    <div className="overflow-hidden w-0 group-hover:w-56 transition-all duration-300 ease-in-out flex justify-end">
+                        <div className="bg-slate-900/90 backdrop-blur-md text-white font-medium py-3 px-6 h-24 flex items-center whitespace-nowrap border-y border-l border-white/10 rounded-l-2xl shadow-xl">
+                            Hemen Sorgulama Yapın
                         </div>
                     </div>
 
                     {/* The main icon button */}
-                    <div className="h-14 w-14 bg-gradient-to-br from-blue-600 to-indigo-600 text-white rounded-l-2xl flex items-center justify-center shadow-lg shadow-blue-500/30 border border-white/20 group-hover:rounded-none group-hover:rounded-r-2xl relative overflow-hidden transition-all">
+                    <div className="h-24 w-20 bg-gradient-to-br from-[#1E88E5] to-[#0D47A1] text-white rounded-l-xl flex flex-col items-center justify-center shadow-[0_0_20px_rgba(30,136,229,0.4)] border border-white/20 group-hover:rounded-none group-hover:rounded-r-xl relative overflow-hidden transition-all gap-1">
                         {/* Shimmer Effect */}
-                        <div className="absolute inset-0 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12"></div>
-                        <Award className="w-6 h-6 z-10" />
+                        <div className="absolute inset-0 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-12"></div>
+
+                        {/* Icon Container with subtle glow */}
+                        <div className="bg-white/20 p-1.5 rounded-lg backdrop-blur-sm shadow-inner z-10 mb-0.5">
+                            <Award className="w-5 h-5 drop-shadow-md" />
+                        </div>
+
+                        <div className="flex flex-col items-center z-10">
+                            <span className="text-[9px] font-extrabold tracking-wider leading-none">SERTİFİKA</span>
+                            <span className="text-[9px] font-extrabold tracking-wider leading-none mt-0.5">SORGULA</span>
+                        </div>
                     </div>
                 </Link>
             </motion.div>
