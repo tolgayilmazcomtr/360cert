@@ -11,6 +11,7 @@ import FloatingSearchButton from "./FloatingSearchButton";
 
 export default function PublicLayout() {
     const { user, isLoading } = useAuth();
+    const [isScrolled, setIsScrolled] = useState(false);
     const [settings, setSettings] = useState({
         site_title: "360Cert",
         site_logo: null,
@@ -42,8 +43,15 @@ export default function PublicLayout() {
             } catch (err) { }
         };
 
+        const handleScroll = () => {
+            setIsScrolled(window.scrollY > 20);
+        };
+        window.addEventListener("scroll", handleScroll);
+
         fetchSettings();
         fetchPages();
+
+        return () => window.removeEventListener("scroll", handleScroll);
     }, []);
 
     const headerPages = pages.filter(p => p.show_in_header).sort((a, b) => a.order - b.order);
@@ -71,13 +79,13 @@ export default function PublicLayout() {
             <FloatingSearchButton />
 
             {/* Header */}
-            <header className="bg-white border-b sticky top-0 z-50 px-6 py-4 flex items-center justify-between">
+            <header className={`bg-white/95 backdrop-blur-md border-b sticky top-0 z-50 transition-all duration-300 px-6 flex items-center justify-between ${isScrolled ? 'py-2 shadow-md' : 'py-4 shadow-sm'}`}>
                 <div className="flex items-center gap-6">
                     <Link to="/" className="flex items-center gap-3">
                         {settings.site_logo ? (
-                            <img src={settings.site_logo} alt="Logo" className="h-10 w-auto object-contain" />
+                            <img src={settings.site_logo} alt="Logo" className={`object-cover rounded-full shadow-sm border border-slate-100 transition-all duration-300 ${isScrolled ? 'h-12 w-12' : 'h-20 w-20'}`} />
                         ) : (
-                            <div className="flex items-center justify-center bg-primary text-white font-bold h-10 w-10 flex-shrink-0 rounded-lg text-xl">
+                            <div className={`flex items-center justify-center bg-gradient-to-br from-blue-600 to-indigo-600 text-white font-bold flex-shrink-0 rounded-full shadow-sm transition-all duration-300 ${isScrolled ? 'h-12 w-12 text-xl' : 'h-20 w-20 text-3xl'}`}>
                                 {settings.site_title.charAt(0)}
                             </div>
                         )}
