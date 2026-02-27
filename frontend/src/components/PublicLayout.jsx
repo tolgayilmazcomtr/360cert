@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, Outlet } from "react-router-dom";
 import api from "@/api/axios";
 import { Button } from "@/components/ui/button";
-import { LogIn, Building, Menu, Facebook, Twitter, Instagram, Linkedin, Youtube, ShieldCheck } from "lucide-react";
+import { LogIn, Building, Menu, Facebook, Twitter, Instagram, Linkedin, Youtube, ShieldCheck, Mail, Phone, MapPin } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { LayoutDashboard } from "lucide-react";
