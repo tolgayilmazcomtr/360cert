@@ -49,21 +49,33 @@ export default function DynamicPage() {
         );
     }
 
+    const isCustomLayout = page && page.content && (page.content.includes('class="bg-') || page.content.includes("class='bg-"));
+
     return (
-        <div className="w-full">
+        <div className="w-full bg-slate-50 min-h-screen pb-16">
             {/* Minimalist Page Header */}
             <div className="bg-slate-900 border-b border-slate-800 text-white py-16 px-6">
-                <div className="max-w-4xl mx-auto space-y-4 text-center">
+                <div className="max-w-5xl mx-auto space-y-4 text-center">
                     <h1 className="text-3xl md:text-5xl font-bold tracking-tight">
                         {page.title}
                     </h1>
                 </div>
             </div>
 
-            {/* Content Area uses tailwind typography prose ideally, but we'll simulate generic HTML styles */}
-            <div className="max-w-4xl mx-auto px-6 py-16 text-slate-700">
+            {/* Content Area with smart formatting */}
+            <div className={`w-full ${isCustomLayout ? 'mt-8' : 'max-w-5xl mx-auto px-6 py-16'}`}>
                 <div
-                    className="prose prose-slate max-w-none prose-headings:text-slate-900 prose-a:text-blue-600 hover:prose-a:text-blue-500"
+                    className={`w-full
+                        [&_p:not([class])]:mb-4 [&_p:not([class])]:text-slate-600 [&_p:not([class])]:leading-relaxed [&_p:not([class])]:text-lg
+                        [&_h1:not([class])]:text-4xl [&_h1:not([class])]:font-bold [&_h1:not([class])]:text-slate-900 [&_h1:not([class])]:mb-6
+                        [&_h2:not([class])]:text-3xl [&_h2:not([class])]:font-bold [&_h2:not([class])]:text-slate-900 [&_h2:not([class])]:mb-4 [&_h2:not([class])]:mt-8
+                        [&_h3:not([class])]:text-2xl [&_h3:not([class])]:font-bold [&_h3:not([class])]:text-slate-900 [&_h3:not([class])]:mb-3 [&_h3:not([class])]:mt-6
+                        [&_ul:not([class])]:list-disc [&_ul:not([class])]:pl-6 [&_ul:not([class])]:mb-4 [&_ul:not([class])]:text-slate-700
+                        [&_ol:not([class])]:list-decimal [&_ol:not([class])]:pl-6 [&_ol:not([class])]:mb-4 [&_ol:not([class])]:text-slate-700
+                        [&_li:not([class])]:mb-2
+                        [&_a:not([class])]:text-blue-600 [&_a:not([class])]:underline
+                        [&_strong:not([class])]:font-bold [&_strong:not([class])]:text-slate-900
+                    `}
                     dangerouslySetInnerHTML={{ __html: page.content }}
                 />
             </div>
