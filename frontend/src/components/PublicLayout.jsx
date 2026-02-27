@@ -311,10 +311,10 @@ export default function PublicLayout() {
 
                 <div className="max-w-7xl mx-auto mt-12 pt-8 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-4">
                     <p>
-                        &copy; {new Date().getFullYear()} {settings.site_title}. Tüm hakları saklıdır. | Yazılım: <a href="https://www.urartisdijital.com" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Urartis Dijital</a>
+                        &copy; {new Date().getFullYear()} {settings.site_title}. Tüm hakları saklıdır.
                     </p>
                     <div className="flex items-center gap-2">
-                        <ShieldCheck size={14} /> Resmi Onaylı Altyapı
+                        Yazılım: <a href="https://www.urartisdijital.com" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Urartis Dijital</a>
                     </div>
                 </div>
             </footer>

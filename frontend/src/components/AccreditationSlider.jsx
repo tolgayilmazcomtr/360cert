@@ -74,7 +74,7 @@ export default function AccreditationSlider() {
                         return (
                             <div key={`${acc.id}-${index}`} className="flex-shrink-0 flex items-center justify-center p-4 bg-white/5 rounded-2xl border border-white/10 hover:bg-white/10 hover:scale-105 transition-all w-40 h-24 sm:w-48 sm:h-28 cursor-pointer">
                                 {hasLink ? (
-                                    <a href={linkUrl} target="_blank" rel="noopener noreferrer" className="w-full h-full flex items-center justify-center">
+                                    <a href={linkUrl} className="w-full h-full flex items-center justify-center">
                                         {acc.logo_path ? (
                                             <img
                                                 src={`${apiBase}${acc.logo_path}`}
