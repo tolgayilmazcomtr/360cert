@@ -39,7 +39,6 @@ export default function Sidebar() {
                 { name: "Şablon Tasarımları", path: "/dashboard/templates" },
                 { name: "Sertifika Türleri", path: "/dashboard/certificate-types" },
                 { name: "Eğitim Programları", path: "/dashboard/programs" },
-                { name: "Akreditasyonlar", path: "/dashboard/accreditations" },
             ]
         },
         { name: "Öğrenciler", icon: Users, path: "/dashboard/students" },
@@ -52,10 +51,23 @@ export default function Sidebar() {
             ]
         },
         { name: "Duyurular", icon: Bell, path: "/dashboard/notifications" },
-        { name: "Sistem Ayarı", icon: Settings, path: "/dashboard/settings" },
-        { name: "Sayfa Yönetimi", icon: Globe, path: "/dashboard/pages" },
-        { name: "Yönetici Profilim", icon: UserCog, path: "/dashboard/admin/profile" },
-        { name: "Yönetici Hesapları", icon: Shield, path: "/dashboard/admin/users" },
+        {
+            name: "İçerik Yönetimi",
+            icon: Globe,
+            subItems: [
+                { name: "Sayfalar (CMS)", path: "/dashboard/pages" },
+                { name: "Akreditasyonlar", path: "/dashboard/accreditations" },
+            ]
+        },
+        {
+            name: "Sistem Ayarları",
+            icon: Settings,
+            subItems: [
+                { name: "Genel Ayarlar", path: "/dashboard/settings" },
+                { name: "Yönetici Hesapları", path: "/dashboard/admin/users" },
+                { name: "Profilim", path: "/dashboard/admin/profile" },
+            ]
+        },
     ];
 
     const dealerMenu = [

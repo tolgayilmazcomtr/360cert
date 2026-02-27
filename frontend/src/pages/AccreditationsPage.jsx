@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle, Plus, Trash2, Edit2, Loader2, Save, X, Image as ImageIcon } from "lucide-react";
 
 export default function AccreditationsPage() {
-    const [accreditations, setAccreditations] = current => useState([]);
+    const [accreditations, setAccreditations] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
 
