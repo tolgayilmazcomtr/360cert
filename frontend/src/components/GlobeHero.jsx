@@ -81,6 +81,43 @@ export default function GlobeHero() {
                 />
             </div>
 
+            {/* Holographic Logo Projection Overlay */}
+            <div className="absolute inset-0 flex items-center justify-center md:justify-end md:pr-[15%] pointer-events-none z-20 overflow-hidden mix-blend-screen perspective-[1000px]">
+                <div className="relative flex flex-col items-center justify-center transform-gpu mt-20 md:mt-0" style={{ animation: 'floatHolo 6s ease-in-out infinite' }}>
+                    {/* The Logo itself with 3D rotation and glow */}
+                    <img
+                        src="/sqlogo.png"
+                        alt="IAC Logo"
+                        className="w-48 h-48 md:w-64 md:h-64 object-contain relative z-10"
+                        style={{
+                            filter: 'drop-shadow(0px 0px 30px rgba(59, 130, 246, 0.8)) brightness(1.2) contrast(1.1)',
+                            animation: 'spinHolo 15s linear infinite'
+                        }}
+                    />
+                    {/* Hologram Base Glow Platform */}
+                    <div className="w-64 h-16 md:w-80 md:h-20 bg-blue-500/20 rounded-[100%] absolute -bottom-8 md:-bottom-10 blur-xl opacity-80" />
+
+                    {/* Hologram Light Beams */}
+                    <div className="absolute -bottom-16 w-32 md:w-48 h-[60vh] bg-gradient-to-t from-blue-600/30 via-cyan-400/10 to-transparent blur-md rounded-[100%] opacity-60" style={{ transform: 'rotateX(75deg)', animation: 'pulseHoloBeam 3s ease-in-out infinite alternate' }} />
+                </div>
+            </div>
+
+            {/* Custom Animations defined for the hologram */}
+            <style>{`
+                @keyframes floatHolo {
+                    0%, 100% { transform: translateY(0) rotateX(10deg); }
+                    50% { transform: translateY(-20px) rotateX(15deg); }
+                }
+                @keyframes spinHolo {
+                    from { transform: rotateY(0deg); }
+                    to { transform: rotateY(360deg); }
+                }
+                @keyframes pulseHoloBeam {
+                    0% { opacity: 0.4; filter: blur(10px); }
+                    100% { opacity: 0.8; filter: blur(15px); }
+                }
+            `}</style>
+
             {/* Overlay to create a dark gradient masking effect so globe blends into the dark background */}
             <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/80 to-transparent pointer-events-none z-10 hidden md:block"></div>
             <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent pointer-events-none z-10"></div>

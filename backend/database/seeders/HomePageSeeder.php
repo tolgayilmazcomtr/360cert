@@ -12,41 +12,50 @@ class HomePageSeeder extends Seeder
         $html = '<div class="flex-1 flex flex-col w-full h-full text-white">
     <section class="relative min-h-[85vh] flex items-center py-20 bg-transparent overflow-hidden">
         <div class="max-w-7xl mx-auto px-6 relative z-10 flex flex-col md:flex-row items-center justify-between gap-12 w-full">
-            <div class="flex-1 space-y-8 text-center md:text-left pt-12 md:pt-0">
-                <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-blue-400/30 bg-blue-900/40 backdrop-blur-md shadow-[0_0_15px_rgba(59,130,246,0.2)]">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2-1 4-2 7-2 2.89 0 4.93 1 7 2a1 1 0 0 1 1 1z"></path><path d="m9 12 2 2 4-4"></path></svg>
-                    <span class="text-sm font-semibold text-blue-200 tracking-wide uppercase">Küresel Akredite Sertifikasyon</span>
+            <div class="flex-1 space-y-2 text-center md:text-left pt-12 md:pt-0 relative z-30">
+                <style>
+                    @keyframes slideUpFade {
+                        0% { opacity: 0; transform: translateY(40px); }
+                        100% { opacity: 1; transform: translateY(0); }
+                    }
+                    .anim-1 { animation: slideUpFade 1s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
+                    .anim-2 { animation: slideUpFade 1s cubic-bezier(0.16, 1, 0.3, 1) 0.15s forwards; opacity: 0; }
+                    .anim-3 { animation: slideUpFade 1s cubic-bezier(0.16, 1, 0.3, 1) 0.3s forwards; opacity: 0; }
+                    .anim-4 { animation: slideUpFade 1s cubic-bezier(0.16, 1, 0.3, 1) 0.45s forwards; opacity: 0; }
+                </style>
+                
+                <div class="anim-1 inline-flex items-center gap-3 px-5 py-2.5 rounded-full border border-blue-400/30 bg-blue-900/40 backdrop-blur-md shadow-[0_0_20px_rgba(59,130,246,0.25)] mb-6">
+                    <span class="relative flex h-3 w-3">
+                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                      <span class="relative inline-flex rounded-full h-3 w-3 bg-blue-500"></span>
+                    </span>
+                    <span class="text-sm font-bold text-blue-200 tracking-[0.2em] uppercase">Uluslararası Akreditasyon</span>
                 </div>
                 
-                <h1 class="text-5xl md:text-7xl font-extrabold tracking-tight leading-tight drop-shadow-2xl">
-                    Dünya Çapında <br/>
-                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400 drop-shadow-[0_0_15px_rgba(129,140,248,0.5)]">Sınırları Aşın</span>
+                <h1 class="anim-2 text-6xl md:text-8xl font-black tracking-tighter leading-[1.05] drop-shadow-2xl">
+                    Global <br/>
+                    <span class="relative inline-block mt-1">
+                        <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-300 to-purple-400 drop-shadow-[0_0_30px_rgba(129,140,248,0.7)]">Güvence</span>
+                        <div class="absolute -bottom-2 left-0 w-full h-3 bg-gradient-to-r from-blue-500 to-purple-500 blur-md opacity-60"></div>
+                    </span>
                 </h1>
                 
-                <p class="text-lg md:text-xl text-slate-300 max-w-2xl mx-auto md:mx-0 leading-relaxed font-light drop-shadow-md">
-                    Uluslararası standartlarda onaylı ve güvenilir eğitim sertifikalarınızla kariyerinizde bir adım öne çıkın. Geleceğiniz parmaklarınızın ucunda.
+                <p class="anim-3 text-xl md:text-2xl text-slate-300 max-w-xl mx-auto md:mx-0 leading-relaxed font-light drop-shadow-md border-l-4 border-blue-500 pl-6 my-10">
+                    Sertifikasyon standartlarını yeniden yazıyoruz. Onaylı ve uluslararası geçerli belgelerle 
+                    <strong class="text-white font-medium">sınır tanımayın.</strong>
                 </p>
                 
-                <div class="flex flex-col sm:flex-row items-center gap-5 justify-center md:justify-start mt-8">
-                    <a href="/sertifika-dogrula" class="group relative inline-flex items-center justify-center overflow-hidden rounded-xl bg-blue-600 p-4 px-8 font-bold text-white shadow-[0_0_20px_rgba(37,99,235,0.4)] transition-all hover:scale-[1.02] hover:shadow-[0_0_30px_rgba(37,99,235,0.6)] w-full sm:w-auto">
-                        <span class="absolute inset-x-0 bottom-0 h-[2px] bg-gradient-to-r from-transparent via-white to-transparent opacity-50 group-hover:opacity-100 transition-opacity"></span>
-                        <span class="relative flex items-center">
-                            Sertifika Sorgula 
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-3 h-5 w-5 transform group-hover:translate-x-1 transition-transform"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+                <div class="anim-4 flex flex-col sm:flex-row items-center gap-5 justify-center md:justify-start mt-10">
+                    <a href="/sertifika-dogrula" class="group relative inline-flex items-center justify-center overflow-hidden rounded-2xl bg-blue-600 p-5 px-10 font-bold text-lg text-white shadow-[0_0_30px_rgba(37,99,235,0.5)] transition-all hover:scale-[1.03] hover:shadow-[0_0_50px_rgba(37,99,235,0.8)] w-full sm:w-auto">
+                        <span class="absolute inset-x-0 bottom-0 h-[3px] bg-gradient-to-r from-transparent via-white to-transparent opacity-50 group-hover:opacity-100 transition-opacity"></span>
+                        <span class="relative flex items-center tracking-wide">
+                            Sertifika Doğrula 
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="ml-3 h-6 w-6 transform group-hover:translate-x-2 transition-transform"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
                         </span>
                     </a>
-                    <a href="/programs" class="inline-flex items-center justify-center rounded-xl p-4 px-8 font-bold text-white backdrop-blur-md bg-white/10 border border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.1)] transition-all hover:bg-white/20 hover:border-white/40 w-full sm:w-auto">
+                    <a href="/programs" class="inline-flex items-center justify-center rounded-2xl p-5 px-10 font-bold text-lg text-white backdrop-blur-md bg-white/5 border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.2)] transition-all hover:bg-white/10 hover:border-white/30 w-full sm:w-auto tracking-wide">
                         Eğitim Programları
                     </a>
-                </div>
-                
-                <div class="flex items-center justify-center md:justify-start gap-4 pt-10 opacity-70">
-                    <div class="flex -space-x-3">
-                        <div class="w-10 h-10 rounded-full bg-slate-800 border-2 border-slate-950 flex items-center justify-center text-xs font-bold text-white shadow-lg">ISO</div>
-                        <div class="w-10 h-10 rounded-full bg-slate-800 border-2 border-slate-950 flex items-center justify-center text-xs font-bold text-blue-400 shadow-lg" style="letter-spacing: -1px">100%</div>
-                        <div class="w-10 h-10 rounded-full bg-slate-800 border-2 border-slate-950 flex items-center justify-center text-[10px] font-bold text-purple-400 shadow-lg">SAFE</div>
-                    </div>
-                    <div class="text-sm font-medium">Uluslararası standartlara tam uyum</div>
                 </div>
             </div>
             
