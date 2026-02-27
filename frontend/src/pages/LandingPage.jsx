@@ -45,6 +45,11 @@ export default function LandingPage() {
                     className="w-full relative z-10 animate-in fade-in duration-500"
                     dangerouslySetInnerHTML={{ __html: pageContent }}
                 />
+
+                {/* Accreditation Logos Slider for CMS Content */}
+                <div className="relative z-10 w-full">
+                    <AccreditationSlider />
+                </div>
             </div>
         );
     }
