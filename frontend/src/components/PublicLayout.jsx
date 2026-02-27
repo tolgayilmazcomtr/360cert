@@ -89,6 +89,25 @@ export default function PublicLayout() {
                         {headerPages.map(renderMenuLink)}
                         <Link to="/contact" className="text-sm font-medium text-slate-600 hover:text-blue-600 transition-colors">İletişim</Link>
                     </nav>
+
+                    {/* Header Social Icons */}
+                    <div className="hidden lg:flex items-center gap-3 ml-2 pl-4 border-l border-slate-200">
+                        {settings.social_instagram && settings.social_instagram !== '#' && (
+                            <a href={settings.social_instagram} target="_blank" rel="noreferrer" className="text-slate-400 hover:text-pink-600 transition-colors"><Instagram size={18} /></a>
+                        )}
+                        {settings.social_facebook && settings.social_facebook !== '#' && (
+                            <a href={settings.social_facebook} target="_blank" rel="noreferrer" className="text-slate-400 hover:text-blue-600 transition-colors"><Facebook size={18} /></a>
+                        )}
+                        {settings.social_twitter && settings.social_twitter !== '#' && (
+                            <a href={settings.social_twitter} target="_blank" rel="noreferrer" className="text-slate-400 hover:text-blue-400 transition-colors"><Twitter size={18} /></a>
+                        )}
+                        {settings.social_linkedin && settings.social_linkedin !== '#' && (
+                            <a href={settings.social_linkedin} target="_blank" rel="noreferrer" className="text-slate-400 hover:text-blue-700 transition-colors"><Linkedin size={18} /></a>
+                        )}
+                        {settings.social_youtube && settings.social_youtube !== '#' && (
+                            <a href={settings.social_youtube} target="_blank" rel="noreferrer" className="text-slate-400 hover:text-red-600 transition-colors"><Youtube size={18} /></a>
+                        )}
+                    </div>
                 </div>
 
                 <div className="flex items-center gap-3">
@@ -155,6 +174,25 @@ export default function PublicLayout() {
                                         </Button>
                                     </div>
                                 )}
+
+                                {/* Mobile Social Icons */}
+                                <div className="mt-auto pt-6 border-t border-slate-100 flex items-center justify-center gap-6 pb-6">
+                                    {settings.social_instagram && settings.social_instagram !== '#' && (
+                                        <a href={settings.social_instagram} target="_blank" rel="noreferrer" className="text-slate-400 hover:text-pink-600"><Instagram size={24} /></a>
+                                    )}
+                                    {settings.social_facebook && settings.social_facebook !== '#' && (
+                                        <a href={settings.social_facebook} target="_blank" rel="noreferrer" className="text-slate-400 hover:text-blue-600"><Facebook size={24} /></a>
+                                    )}
+                                    {settings.social_twitter && settings.social_twitter !== '#' && (
+                                        <a href={settings.social_twitter} target="_blank" rel="noreferrer" className="text-slate-400 hover:text-blue-400"><Twitter size={24} /></a>
+                                    )}
+                                    {settings.social_linkedin && settings.social_linkedin !== '#' && (
+                                        <a href={settings.social_linkedin} target="_blank" rel="noreferrer" className="text-slate-400 hover:text-blue-700"><Linkedin size={24} /></a>
+                                    )}
+                                    {settings.social_youtube && settings.social_youtube !== '#' && (
+                                        <a href={settings.social_youtube} target="_blank" rel="noreferrer" className="text-slate-400 hover:text-red-600"><Youtube size={24} /></a>
+                                    )}
+                                </div>
                             </div>
                         </SheetContent>
                     </Sheet>

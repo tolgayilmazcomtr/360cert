@@ -38,7 +38,7 @@ class SystemSettingController extends Controller
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
-        $settingsData = $request->except(['logo', '_method']);
+        $settingsData = $request->except(['logo', '_method', 'site_logo']);
 
         foreach ($settingsData as $key => $value) {
             SystemSetting::updateOrCreate(

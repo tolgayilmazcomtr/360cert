@@ -5,7 +5,8 @@ export default function FloatingWhatsApp({ number, message }) {
     if (!number) return null;
 
     // Clean number for WA link
-    const cleanNumber = number.replace(/[^0-9]/g, '');
+    const stringNumber = String(number);
+    const cleanNumber = stringNumber.replace(/[^0-9]/g, '');
     const encodedMessage = encodeURIComponent(message || 'Merhaba, bilgi almak istiyorum.');
     const waLink = `https://wa.me/${cleanNumber}?text=${encodedMessage}`;
 
