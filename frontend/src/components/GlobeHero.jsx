@@ -32,32 +32,12 @@ export default function GlobeHero() {
         }
     }, []);
 
-    // Generate glowing tech-like points scattered on the globe
-    const N = 400;
-    const gData = useMemo(() => [...Array(N).keys()].map(() => ({
-        lat: (Math.random() - 0.5) * 180,
-        lng: (Math.random() - 0.5) * 360,
-        size: Math.random() / 3,
-        color: ['#3b82f6', '#818cf8', '#2dd4bf', '#ffffff', '#a855f7'][Math.round(Math.random() * 4)]
-    })), []);
-
-    // Create beautiful data-transfer arcs flying around the globe
-    const ARC_N = 30;
-    const arcsData = useMemo(() => [...Array(ARC_N).keys()].map(() => ({
-        startLat: (Math.random() - 0.5) * 180,
-        startLng: (Math.random() - 0.5) * 360,
-        endLat: (Math.random() - 0.5) * 180,
-        endLng: (Math.random() - 0.5) * 360,
-        color: [
-            ['#3b82f6', '#818cf8', '#ffffff'][Math.round(Math.random() * 2)],
-            ['#6366f1', '#a855f7', '#38bdf8'][Math.round(Math.random() * 2)]
-        ]
-    })), []);
+    // Completely removed points and arcs to ensure a clean, smooth globe appearance
 
     return (
-        <div className="absolute top-0 right-0 z-0 h-full w-full flex justify-end items-center overflow-hidden pointer-events-none md:pointer-events-auto mix-blend-screen opacity-90">
+        <div className="absolute -top-[10%] md:-top-[20%] right-0 z-0 h-full w-full flex justify-end items-center overflow-hidden pointer-events-none md:pointer-events-auto mix-blend-screen opacity-[0.85]">
             {/* Container aligned to right half on desktop */}
-            <div className="transform md:translate-x-[10%] translate-x-0 transition-transform duration-1000 mt-[10vh] md:mt-0">
+            <div className="transform md:translate-x-[5%] translate-x-0 w-[120%] md:w-auto flex justify-center mt-[-15vh] md:mt-[-10vh]">
                 <Globe
                     ref={globeRef}
                     width={dimensions.width}
@@ -65,25 +45,14 @@ export default function GlobeHero() {
                     globeImageUrl="//unpkg.com/three-globe/example/img/earth-night.jpg"
                     bumpImageUrl="//unpkg.com/three-globe/example/img/earth-topology.png"
                     backgroundColor="rgba(0,0,0,0)" // Fully transparent background
-
-                    pointsData={gData}
-                    pointAltitude="size"
-                    pointColor="color"
-
-                    arcsData={arcsData}
-                    arcColor="color"
-                    arcDashLength={0.5}
-                    arcDashGap={0.2}
-                    arcDashAnimateTime={3000}
-
                     atmosphereColor="#3b82f6"
-                    atmosphereAltitude={0.2}
+                    atmosphereAltitude={0.25}
                 />
             </div>
 
             {/* Holographic Logo Projection Overlay */}
-            <div className="absolute inset-0 flex items-center justify-center md:justify-end md:pr-[15%] pointer-events-none z-20 overflow-hidden mix-blend-screen perspective-[1000px]">
-                <div className="relative flex flex-col items-center justify-center transform-gpu mt-20 md:mt-0" style={{ animation: 'floatHolo 6s ease-in-out infinite' }}>
+            <div className="absolute inset-0 flex items-center justify-center md:justify-end md:pr-[15%] pointer-events-none z-20 overflow-hidden mix-blend-screen perspective-[1000px] mt-[-15vh] md:mt-[-10vh]">
+                <div className="relative flex flex-col items-center justify-center transform-gpu" style={{ animation: 'floatHolo 6s ease-in-out infinite' }}>
                     {/* The Logo itself with 3D rotation and glow */}
                     <img
                         src="/sqlogo.png"
