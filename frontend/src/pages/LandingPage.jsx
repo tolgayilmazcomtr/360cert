@@ -72,15 +72,32 @@ export default function LandingPage() {
                                 <span>Resmi Onaylı Sertifikasyon Sistemi</span>
                             </div>
 
-                            <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight leading-tight">
-                                Geleceğinize <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400">Sertifika Katın</span>
+                            <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.2]">
+                                Uluslararası Sertifikalandırma ve <br className="hidden md:block" />
+                                <span className="relative inline-block mt-2">
+                                    <span className="relative z-10 text-white">Akreditasyon Merkezi</span>
+                                    {/* Animated Highlight Underline */}
+                                    <span className="absolute bottom-1 left-0 w-full h-[30%] bg-blue-600/60 -z-10 -rotate-2 transform origin-left animate-[highlight_2s_ease-in-out_forwards]"></span>
+                                </span>
                             </h1>
 
-                            <p className="text-lg md:text-xl text-slate-300 max-w-2xl mx-auto md:mx-0 leading-relaxed">
+                            <p className="text-lg md:text-xl text-slate-300 max-w-2xl mx-auto md:mx-0 leading-relaxed font-light mt-6">
                                 Kariyerinizde bir adım öne geçmek için uluslararası geçerliliğe sahip onaylı eğitim sertifikalarına hemen ulaşın ve sorgulayın.
                             </p>
 
-                            <div className="flex flex-col sm:flex-row items-center gap-4 justify-center md:justify-start pt-4">
+                            <style dangerouslySetInnerHTML={{
+                                __html: `
+                                @keyframes highlight {
+                                    0% { width: 0; opacity: 0; }
+                                    50% { opacity: 1; }
+                                    100% { width: 100%; opacity: 1; }
+                                }
+                                @keyframes shimmer {
+                                    100% { transform: translateX(100%); }
+                                }
+                            `}} />
+
+                            <div className="flex flex-col sm:flex-row items-center gap-4 justify-center md:justify-start pt-8">
                                 <Button asChild size="lg" className="h-14 px-8 text-base font-bold rounded-xl shadow-lg shadow-blue-500/25 bg-blue-600 hover:bg-blue-700 w-full sm:w-auto">
                                     <Link to="/sertifika-dogrula">
                                         Sertifika Doğrula <ArrowRight className="ml-2 h-5 w-5" />
@@ -112,12 +129,12 @@ export default function LandingPage() {
 
                             {/* Floating Badges */}
                             <div className="absolute -bottom-6 -left-6 bg-white text-slate-900 px-6 py-4 rounded-2xl shadow-xl flex items-center gap-4 animate-bounce" style={{ animationDuration: '3s' }}>
-                                <div className="bg-green-100 p-3 rounded-full text-green-600">
-                                    <ShieldCheck size={24} />
+                                <div className="bg-blue-100 p-3 rounded-full text-blue-600">
+                                    <Award size={24} />
                                 </div>
                                 <div>
-                                    <div className="text-sm text-slate-500 font-medium">Güvenilir</div>
-                                    <div className="font-bold">100% Onaylı</div>
+                                    <div className="text-sm text-slate-500 font-medium">Uluslararası</div>
+                                    <div className="font-bold">Akredite Sertifika</div>
                                 </div>
                             </div>
                         </div>

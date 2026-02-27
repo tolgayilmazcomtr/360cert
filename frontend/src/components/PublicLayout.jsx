@@ -1,10 +1,13 @@
 import { useState, useEffect } from "react";
-import { Outlet, Link } from "react-router-dom";
+import { Link, Outlet } from "react-router-dom";
 import api from "@/api/axios";
 import { Button } from "@/components/ui/button";
-import { LogIn, Building, ShieldCheck, Mail, Phone, MapPin, Facebook, Instagram, Linkedin, Twitter, LayoutDashboard, Menu } from "lucide-react";
+import { LogIn, Building, Menu, Facebook, Twitter, Instagram, Linkedin, Youtube } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription } from "@/components/ui/sheet";
+import { LayoutDashboard } from "lucide-react";
+import FloatingWhatsApp from "./FloatingWhatsApp";
+import FloatingSearchButton from "./FloatingSearchButton";
 
 export default function PublicLayout() {
     const { user, isLoading } = useAuth();
@@ -18,6 +21,9 @@ export default function PublicLayout() {
         social_instagram: "",
         social_linkedin: "",
         social_twitter: "",
+        social_youtube: "",
+        whatsapp_number: "",
+        whatsapp_message: ""
     });
     const [pages, setPages] = useState([]);
 
@@ -59,7 +65,11 @@ export default function PublicLayout() {
     };
 
     return (
-        <div className="min-h-screen bg-slate-50 flex flex-col">
+        <div className="min-h-screen bg-slate-50 flex flex-col relative">
+            {/* Floating Actions */}
+            <FloatingWhatsApp number={settings.whatsapp_number} message={settings.whatsapp_message} />
+            <FloatingSearchButton />
+
             {/* Header */}
             <header className="bg-white border-b sticky top-0 z-50 px-6 py-4 flex items-center justify-between">
                 <div className="flex items-center gap-6">
@@ -176,16 +186,19 @@ export default function PublicLayout() {
                         </p>
                         <div className="flex items-center gap-4 pt-2">
                             {settings.social_facebook && settings.social_facebook !== '#' && (
-                                <a href={settings.social_facebook} target="_blank" rel="noreferrer" className="text-slate-400 hover:text-white"><Facebook size={20} /></a>
+                                <a href={settings.social_facebook} target="_blank" rel="noreferrer" className="text-slate-400 hover:text-white transition-colors"><Facebook size={20} /></a>
                             )}
                             {settings.social_twitter && settings.social_twitter !== '#' && (
-                                <a href={settings.social_twitter} target="_blank" rel="noreferrer" className="text-slate-400 hover:text-white"><Twitter size={20} /></a>
+                                <a href={settings.social_twitter} target="_blank" rel="noreferrer" className="text-slate-400 hover:text-white transition-colors"><Twitter size={20} /></a>
                             )}
                             {settings.social_instagram && settings.social_instagram !== '#' && (
-                                <a href={settings.social_instagram} target="_blank" rel="noreferrer" className="text-slate-400 hover:text-white"><Instagram size={20} /></a>
+                                <a href={settings.social_instagram} target="_blank" rel="noreferrer" className="text-slate-400 hover:text-white transition-colors"><Instagram size={20} /></a>
                             )}
                             {settings.social_linkedin && settings.social_linkedin !== '#' && (
-                                <a href={settings.social_linkedin} target="_blank" rel="noreferrer" className="text-slate-400 hover:text-white"><Linkedin size={20} /></a>
+                                <a href={settings.social_linkedin} target="_blank" rel="noreferrer" className="text-slate-400 hover:text-white transition-colors"><Linkedin size={20} /></a>
+                            )}
+                            {settings.social_youtube && settings.social_youtube !== '#' && (
+                                <a href={settings.social_youtube} target="_blank" rel="noreferrer" className="text-slate-400 hover:text-white transition-colors"><Youtube size={20} /></a>
                             )}
                         </div>
                     </div>

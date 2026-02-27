@@ -20,7 +20,14 @@ export default function SettingsPage() {
         site_title: "",
         support_email: "",
         smtp_host: "",
-        smtp_port: ""
+        smtp_port: "",
+        whatsapp_number: "",
+        whatsapp_message: "Merhaba, sistem hakkında bilgi almak istiyorum.",
+        social_facebook: "",
+        social_instagram: "",
+        social_twitter: "",
+        social_linkedin: "",
+        social_youtube: ""
     });
     const [logoPreview, setLogoPreview] = useState(null);
     const [newLogoFile, setNewLogoFile] = useState(null);
