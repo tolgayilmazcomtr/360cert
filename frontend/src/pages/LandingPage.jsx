@@ -1,9 +1,11 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { Link } from "react-router-dom";
 import api from "../api/axios";
 import { Button } from "@/components/ui/button";
 import { ShieldCheck, ArrowRight, Award, BookOpen, Users, Loader2 } from "lucide-react";
-import GlobeHero from "@/components/GlobeHero";
+import ErrorBoundary from "@/components/ErrorBoundary";
+
+const GlobeHero = React.lazy(() => import("@/components/GlobeHero"));
 
 export default function LandingPage() {
     const [pageContent, setPageContent] = useState(null);
@@ -33,7 +35,11 @@ export default function LandingPage() {
     if (pageContent) {
         return (
             <div className="w-full flex-1 relative bg-slate-950 overflow-hidden min-h-screen">
-                <GlobeHero />
+                <ErrorBoundary fallback={<div className="absolute inset-0 z-0 bg-slate-950" />}>
+                    <Suspense fallback={null}>
+                        <GlobeHero />
+                    </Suspense>
+                </ErrorBoundary>
                 <div
                     className="w-full relative z-10 animate-in fade-in duration-500"
                     dangerouslySetInnerHTML={{ __html: pageContent }}
@@ -44,7 +50,11 @@ export default function LandingPage() {
 
     return (
         <div className="flex-1 flex flex-col w-full animate-in fade-in duration-500 bg-slate-950 relative overflow-hidden">
-            <GlobeHero />
+            <ErrorBoundary fallback={<div className="absolute inset-0 z-0 bg-slate-950" />}>
+                <Suspense fallback={null}>
+                    <GlobeHero />
+                </Suspense>
+            </ErrorBoundary>
 
             <div className="relative z-10 w-full">
                 {/* Fallback Hero Section */}
