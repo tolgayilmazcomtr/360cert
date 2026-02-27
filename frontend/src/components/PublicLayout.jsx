@@ -44,7 +44,7 @@ export default function PublicLayout() {
         };
 
         const handleScroll = () => {
-            setIsScrolled(window.scrollY > 20);
+            setIsScrolled(window.scrollY > 80);
         };
         window.addEventListener("scroll", handleScroll);
 
@@ -79,27 +79,30 @@ export default function PublicLayout() {
             <FloatingSearchButton />
 
             {/* Header */}
-            <header className={`bg-white/95 backdrop-blur-md border-b sticky top-0 z-50 transition-all duration-300 px-6 flex items-center justify-between ${isScrolled ? 'py-2 shadow-md' : 'py-4 shadow-sm'}`}>
-                <div className="flex items-center gap-6">
-                    <Link to="/" className="flex items-center gap-3">
+            <header className={`bg-white/95 backdrop-blur-md border-b sticky top-0 z-50 transition-all duration-300 flex items-center justify-between px-6 ${isScrolled ? 'py-1 shadow-md' : 'py-3 shadow-sm'}`}>
+                {/* 1. Left: Logo */}
+                <div className="flex-1 flex items-center">
+                    <Link to="/" className="inline-flex items-center gap-3">
                         {settings.site_logo ? (
-                            <img src={settings.site_logo} alt="Logo" className={`object-cover rounded-full shadow-sm border border-slate-100 transition-all duration-300 ${isScrolled ? 'h-12 w-12' : 'h-20 w-20'}`} />
+                            <img src={settings.site_logo} alt="Logo" className={`object-cover rounded-full shadow-sm border border-slate-100 transition-all duration-300 ${isScrolled ? 'h-10 w-10' : 'h-16 w-16'}`} />
                         ) : (
-                            <div className={`flex items-center justify-center bg-gradient-to-br from-blue-600 to-indigo-600 text-white font-bold flex-shrink-0 rounded-full shadow-sm transition-all duration-300 ${isScrolled ? 'h-12 w-12 text-xl' : 'h-20 w-20 text-3xl'}`}>
+                            <div className={`flex items-center justify-center bg-gradient-to-br from-blue-600 to-indigo-600 text-white font-bold flex-shrink-0 rounded-full shadow-sm transition-all duration-300 ${isScrolled ? 'h-10 w-10 text-lg' : 'h-16 w-16 text-2xl'}`}>
                                 {settings.site_title.charAt(0)}
                             </div>
                         )}
                     </Link>
+                </div>
 
-                    {/* Dynamic Header Menu */}
-                    <nav className="hidden md:flex items-center gap-6 ml-6">
-                        <Link to="/" className="text-sm font-medium text-slate-600 hover:text-blue-600 transition-colors">Ana Sayfa</Link>
+                {/* 2. Center: Dynamic Header Menu & Social Icons */}
+                <div className="hidden lg:flex flex-none items-center gap-6 justify-center">
+                    <nav className="flex items-center gap-6">
+                        <Link to="/" className="text-sm font-bold text-slate-700 hover:text-blue-600 transition-colors">Ana Sayfa</Link>
                         {headerPages.map(renderMenuLink)}
-                        <Link to="/contact" className="text-sm font-medium text-slate-600 hover:text-blue-600 transition-colors">İletişim</Link>
+                        <Link to="/contact" className="text-sm font-bold text-slate-700 hover:text-blue-600 transition-colors">İletişim</Link>
                     </nav>
 
                     {/* Header Social Icons */}
-                    <div className="hidden lg:flex items-center gap-3 ml-2 pl-4 border-l border-slate-200">
+                    <div className="flex items-center gap-3 pl-6 border-l border-slate-200">
                         {settings.social_instagram && settings.social_instagram !== '#' && (
                             <a href={settings.social_instagram} target="_blank" rel="noreferrer" className="text-slate-400 hover:text-pink-600 transition-colors"><Instagram size={18} /></a>
                         )}
@@ -118,17 +121,18 @@ export default function PublicLayout() {
                     </div>
                 </div>
 
-                <div className="flex items-center gap-3">
+                {/* 3. Right: Auth Actions */}
+                <div className="flex-1 flex items-center justify-end gap-3">
                     {isLoading ? null : user ? (
                         <Link to="/dashboard">
-                            <Button variant="ghost" className="hidden sm:flex items-center gap-2">
+                            <Button variant="ghost" className="hidden sm:flex items-center gap-2 text-sm font-medium">
                                 <LayoutDashboard size={18} />
-                                <span className="font-semibold text-primary">{user.name}</span>
+                                <span className="text-primary">{user.name}</span>
                             </Button>
                         </Link>
                     ) : (
                         <Link to="/login">
-                            <Button variant="ghost" className="hidden sm:flex items-center gap-2">
+                            <Button variant="ghost" className="hidden sm:flex items-center gap-2 text-sm font-medium">
                                 <LogIn size={18} />
                                 <span>Giriş Yap</span>
                             </Button>

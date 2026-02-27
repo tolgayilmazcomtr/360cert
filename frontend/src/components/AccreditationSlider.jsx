@@ -27,8 +27,14 @@ export default function AccreditationSlider() {
         return null;
     }
 
-    // Duplicate the array to create a seamless infinite loop
-    const duplicatedLogos = [...accreditations, ...accreditations];
+    // Ensure we have a sufficient number of items (at least 15) to cover wide screens seamlessly
+    let baseArray = [...accreditations];
+    while (baseArray.length < 15) {
+        baseArray = [...baseArray, ...accreditations];
+    }
+
+    // Duplicate the array once more to create a seamless infinite loop from 0% to -50%
+    const duplicatedLogos = [...baseArray, ...baseArray];
     const apiBase = import.meta.env.VITE_API_BASE_URL ? import.meta.env.VITE_API_BASE_URL.replace('/api', '') : 'http://127.0.0.1:8000';
 
     return (
