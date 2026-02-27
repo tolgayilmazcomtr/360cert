@@ -72,17 +72,17 @@ export default function LandingPage() {
                                 <span>Resmi Onaylı Sertifikasyon Sistemi</span>
                             </div>
 
-                            <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.2]">
-                                Uluslararası Sertifikalandırma ve <br className="hidden md:block" />
+                            <h1 className="text-4xl md:text-5xl lg:text-5xl xl:text-6xl font-extrabold tracking-tight leading-[1.2] uppercase">
+                                International <br className="hidden lg:block" />
                                 <span className="relative inline-block mt-2">
-                                    <span className="relative z-10 text-white">Akreditasyon Merkezi</span>
+                                    <span className="relative z-10 text-white">Accreditation</span>
                                     {/* Animated Highlight Underline */}
-                                    <span className="absolute bottom-1 left-0 w-full h-[30%] bg-blue-600/60 -z-10 -rotate-2 transform origin-left animate-[highlight_2s_ease-in-out_forwards]"></span>
-                                </span>
+                                    <span className="absolute bottom-1 left-0 w-full h-[35%] bg-blue-600/60 -z-10 -rotate-2 transform origin-left animate-[highlight_2s_ease-in-out_forwards]"></span>
+                                </span> Certification
                             </h1>
 
                             <p className="text-lg md:text-xl text-slate-300 max-w-2xl mx-auto md:mx-0 leading-relaxed font-light mt-6">
-                                Kariyerinizde bir adım öne geçmek için uluslararası geçerliliğe sahip onaylı eğitim sertifikalarına hemen ulaşın ve sorgulayın.
+                                International Accreditation Certification, kurumların eğitim, yönetim ve hizmet süreçlerinde uluslararası kalite standartlarına uygunluğunu belgeleyen <strong className="text-white font-semibold">prestijli bir kalite güvence belgesidir.</strong>
                             </p>
 
                             <style dangerouslySetInnerHTML={{

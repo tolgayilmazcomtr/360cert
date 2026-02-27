@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
 import api from '../api/axios';
 
 export default function AccreditationSlider() {
@@ -47,37 +46,68 @@ export default function AccreditationSlider() {
 
             <div className="flex w-[200%] sm:w-[150%] md:w-full overflow-hidden relative group">
                 {/* Left Fade */}
-                <div className="absolute top-0 left-0 w-24 h-full bg-gradient-to-r from-slate-900 to-transparent z-10"></div>
+                <div className="absolute top-0 left-0 w-24 h-full bg-gradient-to-r from-slate-900 to-transparent z-10 pointer-events-none"></div>
 
                 {/* Right Fade */}
-                <div className="absolute top-0 right-0 w-24 h-full bg-gradient-to-l from-slate-900 to-transparent z-10"></div>
+                <div className="absolute top-0 right-0 w-24 h-full bg-gradient-to-l from-slate-900 to-transparent z-10 pointer-events-none"></div>
 
-                <motion.div
-                    className="flex items-center gap-12 sm:gap-20 whitespace-nowrap px-4"
-                    animate={{ x: ["0%", "-50%"] }}
-                    transition={{
-                        ease: "linear",
-                        duration: 20, // Adjust speed as needed
-                        repeat: Infinity,
-                    }}
-                >
-                    {duplicatedLogos.map((acc, index) => (
-                        <div key={`${acc.id}-${index}`} className="flex-shrink-0 flex items-center justify-center p-4 bg-white/5 rounded-2xl border border-white/10 hover:bg-white/10 transition-colors w-40 h-24 sm:w-48 sm:h-28">
-                            {acc.logo_path ? (
-                                <img
-                                    src={`${apiBase}${acc.logo_path}`}
-                                    alt={acc.name}
-                                    className="max-w-full max-h-full object-contain filter grayscale hover:grayscale-0 transition-all duration-300 opacity-70 hover:opacity-100"
-                                    title={acc.name}
-                                />
-                            ) : (
-                                <span className="text-slate-300 font-semibold text-center whitespace-normal leading-tight text-sm">
-                                    {acc.name}
-                                </span>
-                            )}
-                        </div>
-                    ))}
-                </motion.div>
+                <style dangerouslySetInnerHTML={{
+                    __html: `
+                        @keyframes slide-infinite {
+                            0% { transform: translateX(0%); }
+                            100% { transform: translateX(-50%); }
+                        }
+                        .animate-slider {
+                            animation: slide-infinite 40s linear infinite;
+                        }
+                        .animate-slider:hover {
+                            animation-play-state: paused;
+                        }
+                    `
+                }} />
+
+                <div className="flex items-center gap-12 sm:gap-20 whitespace-nowrap px-4 w-max animate-slider">
+                    {duplicatedLogos.map((acc, index) => {
+                        const hasLink = acc.website && acc.website.trim() !== '' && acc.website !== '#';
+                        const linkUrl = hasLink ? (acc.website.startsWith('http') ? acc.website : `https://${acc.website}`) : undefined;
+
+                        return (
+                            <div key={`${acc.id}-${index}`} className="flex-shrink-0 flex items-center justify-center p-4 bg-white/5 rounded-2xl border border-white/10 hover:bg-white/10 hover:scale-105 transition-all w-40 h-24 sm:w-48 sm:h-28 cursor-pointer">
+                                {hasLink ? (
+                                    <a href={linkUrl} target="_blank" rel="noopener noreferrer" className="w-full h-full flex items-center justify-center">
+                                        {acc.logo_path ? (
+                                            <img
+                                                src={`${apiBase}${acc.logo_path}`}
+                                                alt={acc.name}
+                                                className="max-w-full max-h-full object-contain filter grayscale hover:grayscale-0 transition-all duration-300 opacity-70 hover:opacity-100"
+                                                title={`${acc.name} - Sayfasına Git`}
+                                            />
+                                        ) : (
+                                            <span className="text-slate-300 font-semibold text-center whitespace-normal leading-tight text-sm hover:text-white transition-colors" title={`${acc.name} - Sayfasına Git`}>
+                                                {acc.name}
+                                            </span>
+                                        )}
+                                    </a>
+                                ) : (
+                                    <div className="w-full h-full flex items-center justify-center">
+                                        {acc.logo_path ? (
+                                            <img
+                                                src={`${apiBase}${acc.logo_path}`}
+                                                alt={acc.name}
+                                                className="max-w-full max-h-full object-contain filter grayscale hover:grayscale-0 transition-all duration-300 opacity-70 hover:opacity-100"
+                                                title={acc.name}
+                                            />
+                                        ) : (
+                                            <span className="text-slate-300 font-semibold text-center whitespace-normal leading-tight text-sm">
+                                                {acc.name}
+                                            </span>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })}
+                </div>
             </div>
         </div>
     );
