@@ -21,6 +21,7 @@ class CertificateTypeController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|array', // JSON localized names
+            'name.*' => 'nullable|string', // Retain all other language translations
             'name.tr' => 'required|string', // At least TR is required
             'is_active' => 'boolean',
         ]);
@@ -41,6 +42,7 @@ class CertificateTypeController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|array',
+            'name.*' => 'nullable|string', // Retain all other language translations
             'name.tr' => 'required|string',
             'is_active' => 'boolean',
         ]);

@@ -8,6 +8,11 @@ use Illuminate\Support\Facades\Route;
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
+// Temporary route for debugging cert types
+Route::get('/test-cert-types', function() {
+    return response()->json(\App\Models\CertificateType::all());
+});
+
 // Public API Routes
 Route::get('/public/settings', [SystemSettingController::class, 'index']);
 Route::get('/public/certificates/search', [\App\Http\Controllers\Api\CertificateController::class, 'searchByNo']);
