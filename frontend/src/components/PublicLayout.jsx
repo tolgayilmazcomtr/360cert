@@ -150,11 +150,27 @@ export default function PublicLayout() {
                         </Link>
                     )}
 
+                    {/* Mobile Quick Auth Icons */}
+                    {!user && (
+                        <div className="flex md:hidden items-center gap-1 mr-1">
+                            <Button variant="ghost" size="icon" asChild className="h-9 w-9 text-slate-600">
+                                <Link to="/login">
+                                    <LogIn size={20} />
+                                </Link>
+                            </Button>
+                            <Button variant="ghost" size="icon" asChild className="h-9 w-9 text-blue-600 bg-blue-50 hover:bg-blue-100">
+                                <Link to="/apply-dealer">
+                                    <Building size={20} />
+                                </Link>
+                            </Button>
+                        </div>
+                    )}
+
                     {/* Mobile Navigation Toggle */}
                     <Sheet>
                         <SheetTrigger asChild>
                             <Button variant="ghost" size="icon" className="md:hidden">
-                                <Menu className="h-6 w-6" />
+                                <Menu className="h-7 w-7" />
                             </Button>
                         </SheetTrigger>
                         <SheetContent side="left" className="w-[300px] sm:w-[400px]">
@@ -312,13 +328,10 @@ export default function PublicLayout() {
                     </div>
                 </div>
 
-                <div className="max-w-7xl mx-auto mt-12 pt-8 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-4">
-                    <p>
+                <div className="max-w-7xl mx-auto mt-12 pt-8 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-center text-xs text-slate-500 gap-4">
+                    <p className="text-center w-full">
                         &copy; {new Date().getFullYear()} {settings.site_title}. Tüm hakları saklıdır.
                     </p>
-                    <div className="flex items-center gap-2">
-                        Yazılım: <a href="https://www.urartisdijital.com" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Urartis Dijital</a>
-                    </div>
                 </div>
             </footer>
         </div>

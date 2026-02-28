@@ -150,7 +150,7 @@ export default function LandingPage() {
                             <div className="h-1 w-20 bg-blue-500 rounded-full mx-auto"></div>
                             <p className="text-slate-400 max-w-2xl mx-auto mt-4 text-lg">Kurumsal ihtiyaçlarınıza en hızlı, en güvenilir ve en yenilikçi çözümleri sunuyoruz.</p>
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        <div className="grid grid-cols-1 md:grid-cols-2 max-w-4xl mx-auto gap-8">
                             <div className="p-10 rounded-3xl bg-slate-900/50 backdrop-blur-xl border border-white/10 transition-all hover:bg-slate-800/80 hover:-translate-y-2 text-center group">
                                 <div className="w-20 h-20 mx-auto bg-blue-500/10 text-blue-400 rounded-2xl flex items-center justify-center mb-8 border border-blue-500/20 shadow-[0_0_30px_rgba(59,130,246,0.1)] group-hover:scale-110 transition-transform duration-500">
                                     <BookOpen size={36} />
@@ -158,14 +158,7 @@ export default function LandingPage() {
                                 <h3 className="text-2xl font-bold mb-4 text-white">Alanında Uzmanlaşın</h3>
                                 <p className="text-slate-400 leading-relaxed font-light text-lg">Geniş yelpazede sunulan sertifika programları ile uzmanlık alanınızı genişletin ve rakiplerinize fark atın.</p>
                             </div>
-                            <div className="p-10 rounded-3xl bg-slate-900/50 backdrop-blur-xl border border-white/10 transition-all hover:bg-slate-800/80 hover:-translate-y-2 text-center group relative overflow-hidden">
-                                <div className="absolute inset-0 bg-gradient-to-b from-blue-500/5 to-transparent pointer-events-none"></div>
-                                <div className="w-20 h-20 mx-auto bg-indigo-500/10 text-indigo-400 rounded-2xl flex items-center justify-center mb-8 border border-indigo-500/20 shadow-[0_0_30px_rgba(99,102,241,0.1)] group-hover:scale-110 transition-transform duration-500 relative z-10">
-                                    <Award size={36} />
-                                </div>
-                                <h3 className="text-2xl font-bold mb-4 text-white relative z-10">Küresel Geçerlilik</h3>
-                                <p className="text-slate-400 leading-relaxed font-light text-lg relative z-10">Aldığınız belgeler e-Devlet ve uluslararası akreditasyon standartlarına %100 uyumludur.</p>
-                            </div>
+
                             <div className="p-10 rounded-3xl bg-slate-900/50 backdrop-blur-xl border border-white/10 transition-all hover:bg-slate-800/80 hover:-translate-y-2 text-center group">
                                 <div className="w-20 h-20 mx-auto bg-purple-500/10 text-purple-400 rounded-2xl flex items-center justify-center mb-8 border border-purple-500/20 shadow-[0_0_30px_rgba(168,85,247,0.1)] group-hover:scale-110 transition-transform duration-500">
                                     <Users size={36} />

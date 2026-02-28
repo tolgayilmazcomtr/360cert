@@ -10,7 +10,7 @@ export default function FloatingSearchButton() {
                 initial={{ x: 100, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
                 transition={{ delay: 1, type: "spring", stiffness: 100 }}
-                className="fixed right-0 top-1/2 -translate-y-1/2 z-[90] hidden md:flex"
+                className="fixed right-0 top-1/2 -translate-y-1/2 z-[90] flex scale-75 md:scale-100 origin-right transition-transform"
             >
                 <Link to="/sertifika-dogrula" className="group flex items-center">
                     {/* The sliding text part */}
