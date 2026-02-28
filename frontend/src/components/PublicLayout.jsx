@@ -39,7 +39,9 @@ export default function PublicLayout() {
         const fetchPages = async () => {
             try {
                 const res = await api.get('/public/pages');
-                if (res.data) setPages(res.data);
+                if (Array.isArray(res.data)) {
+                    setPages(res.data);
+                }
             } catch (err) { }
         };
 
@@ -54,8 +56,9 @@ export default function PublicLayout() {
         return () => window.removeEventListener("scroll", handleScroll);
     }, []);
 
-    const headerPages = pages.filter(p => p.show_in_header).sort((a, b) => a.order - b.order);
-    const footerPages = pages.filter(p => p.show_in_footer).sort((a, b) => a.order - b.order);
+    const safePages = Array.isArray(pages) ? pages : [];
+    const headerPages = safePages.filter(p => p.show_in_header).sort((a, b) => a.order - b.order);
+    const footerPages = safePages.filter(p => p.show_in_footer).sort((a, b) => a.order - b.order);
 
     const renderMenuLink = (page) => {
         if (page.is_external) {
