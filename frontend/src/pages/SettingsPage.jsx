@@ -287,6 +287,14 @@ export default function SettingsPage() {
                                         <Input value={settings.contact_address || ""} onChange={(e) => setSettings({ ...settings, contact_address: e.target.value })} placeholder="İstanbul, Türkiye" />
                                     </div>
                                     <div className="space-y-2">
+                                        <Label>WhatsApp Numarası</Label>
+                                        <Input value={settings.whatsapp_number || ""} onChange={(e) => setSettings({ ...settings, whatsapp_number: e.target.value })} placeholder="905551234567" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label>WhatsApp Mesajı</Label>
+                                        <Input value={settings.whatsapp_message || ""} onChange={(e) => setSettings({ ...settings, whatsapp_message: e.target.value })} placeholder="Merhaba, bilgi almak istiyorum." />
+                                    </div>
+                                    <div className="space-y-2">
                                         <Label>Facebook URL</Label>
                                         <Input value={settings.social_facebook || ""} onChange={(e) => setSettings({ ...settings, social_facebook: e.target.value })} placeholder="https://facebook.com/..." />
                                     </div>
