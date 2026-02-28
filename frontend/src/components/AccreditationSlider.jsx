@@ -34,7 +34,7 @@ export default function AccreditationSlider() {
 
     // Duplicate the array once more to create a seamless infinite loop from 0% to -50%
     const duplicatedLogos = [...baseArray, ...baseArray];
-    const apiBase = import.meta.env.VITE_API_BASE_URL ? import.meta.env.VITE_API_BASE_URL.replace('/api', '') : 'http://127.0.0.1:8000';
+    const apiBase = import.meta.env.VITE_API_BASE_URL ? import.meta.env.VITE_API_BASE_URL.replace(/\/api\/?$/, '') : 'http://127.0.0.1:8000';
 
     return (
         <div className="w-full bg-slate-900 border-t border-b border-slate-800 py-12 overflow-hidden relative">
