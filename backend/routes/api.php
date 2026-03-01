@@ -81,6 +81,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/certificates/{id}/transcript/pdf', [\App\Http\Controllers\Api\CertificateController::class, 'downloadTranscriptData']);
     Route::get('/certificate-templates', [\App\Http\Controllers\Api\CertificateTemplateController::class, 'index']);
     Route::post('/certificate-templates', [\App\Http\Controllers\Api\CertificateTemplateController::class, 'store']);
+    Route::post('/certificate-templates/{id}/copy', [\App\Http\Controllers\Api\CertificateTemplateController::class, 'copy']);
+    Route::post('/certificate-templates/{id}/background', [\App\Http\Controllers\Api\CertificateTemplateController::class, 'updateBackground']);
     Route::put('/certificate-templates/{id}', [\App\Http\Controllers\Api\CertificateTemplateController::class, 'update']);
     Route::delete('/certificate-templates/{id}', [\App\Http\Controllers\Api\CertificateTemplateController::class, 'destroy']);
 

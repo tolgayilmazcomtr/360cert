@@ -6,15 +6,26 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, Trash2, Settings, Image as ImageIcon } from "lucide-react";
+import { Plus, Trash2, Settings, Image as ImageIcon, Copy, Edit2, UploadCloud } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { getStorageUrl } from "@/lib/utils";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { MoreVertical } from "lucide-react";
 
 export default function CertificateTemplatesPage() {
     const [templates, setTemplates] = useState([]);
     const [certificateTypes, setCertificateTypes] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
+
+    // Feature Modals State
+    const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
+    const [isCopyModalOpen, setIsCopyModalOpen] = useState(false);
+    const [isBgModalOpen, setIsBgModalOpen] = useState(false);
+    const [selectedTemplate, setSelectedTemplate] = useState(null);
+    const [actionValue, setActionValue] = useState("");
+    const [actionFile, setActionFile] = useState(null);
+
     const navigate = useNavigate();
 
     const [formData, setFormData] = useState({
@@ -66,7 +77,7 @@ export default function CertificateTemplatesPage() {
     };
 
     const handleDelete = async (e, id) => {
-        e.stopPropagation(); // Stop clicking on the card
+        e.stopPropagation();
         if (!window.confirm("Şablonu silmek istediğinize emin misiniz?")) return;
         try {
             await api.delete(`/certificate-templates/${id}`);
@@ -75,6 +86,59 @@ export default function CertificateTemplatesPage() {
         } catch (error) {
             console.error("Silme hatası", error);
             alert(error.response?.data?.message || "Silme işlemi başarısız oldu.");
+        }
+    };
+
+    const handleRename = async (e) => {
+        e.preventDefault();
+        try {
+            await api.put(`/certificate-templates/${selectedTemplate.id}`, { name: actionValue });
+            setIsRenameModalOpen(false);
+            fetchTemplates();
+        } catch (error) {
+            alert("İsim değiştirilemedi.");
+        }
+    };
+
+    const handleCopy = async (e) => {
+        e.preventDefault();
+        try {
+            await api.post(`/certificate-templates/${selectedTemplate.id}/copy`, { name: actionValue });
+            setIsCopyModalOpen(false);
+            fetchTemplates();
+        } catch (error) {
+            alert("Kopyalama başarısız oldu.");
+        }
+    };
+
+    const handleUpdateBg = async (e) => {
+        e.preventDefault();
+        if (!actionFile) return;
+        const data = new FormData();
+        data.append("background_image", actionFile);
+
+        try {
+            await api.post(`/certificate-templates/${selectedTemplate.id}/background`, data, {
+                headers: { "Content-Type": "multipart/form-data" }
+            });
+            setIsBgModalOpen(false);
+            fetchTemplates();
+        } catch (error) {
+            alert("Arka plan görseli değiştirilemedi.");
+        }
+    };
+
+    const openActionModal = (template, type) => {
+        setSelectedTemplate(template);
+        if (type === 'rename') {
+            setActionValue(template.name);
+            setIsRenameModalOpen(true);
+        } else if (type === 'copy') {
+            setActionValue(template.name + " (Kopya)");
+            setIsCopyModalOpen(true);
+        } else if (type === 'bg') {
+            setActionFile(null);
+            setIsBgModalOpen(true);
         }
     };
 
@@ -104,14 +168,36 @@ export default function CertificateTemplatesPage() {
                                 </div>
                             )}
 
-                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                                <Button variant="secondary" onClick={() => navigate(`/dashboard/templates/${template.id}/design`)}>
+                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-3">
+                                <Button variant="secondary" className="w-32" onClick={() => navigate(`/dashboard/templates/${template.id}/design`)}>
                                     <Settings size={16} className="mr-2" />
                                     Tasarla
                                 </Button>
-                                <Button variant="destructive" size="icon" onClick={(e) => handleDelete(e, template.id)}>
-                                    <Trash2 size={16} />
-                                </Button>
+
+                                <div className="flex items-center gap-2">
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button variant="outline" size="icon" className="bg-white/10 border-white/20 text-white hover:bg-white/20">
+                                                <MoreVertical size={16} />
+                                            </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent>
+                                            <DropdownMenuItem onClick={() => openActionModal(template, 'rename')}>
+                                                <Edit2 size={14} className="mr-2" /> Adını Değiştir
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem onClick={() => openActionModal(template, 'bg')}>
+                                                <UploadCloud size={14} className="mr-2" /> Arkaplanı Değiştir
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem onClick={() => openActionModal(template, 'copy')}>
+                                                <Copy size={14} className="mr-2" /> Şablonu Çoğalt (Kopyala)
+                                            </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+
+                                    <Button variant="destructive" size="icon" onClick={(e) => handleDelete(e, template.id)}>
+                                        <Trash2 size={16} />
+                                    </Button>
+                                </div>
                             </div>
                         </div>
                         <CardFooter className="p-4 border-t">
@@ -126,6 +212,7 @@ export default function CertificateTemplatesPage() {
                 ))}
             </div>
 
+            {/* Upload Modal */}
             <Dialog open={isModalOpen} onOpenChange={(open) => {
                 setIsModalOpen(open);
                 if (!open) {
@@ -192,6 +279,74 @@ export default function CertificateTemplatesPage() {
                         </div>
                         <DialogFooter>
                             <Button type="submit">Yükle</Button>
+                        </DialogFooter>
+                    </form>
+                </DialogContent>
+            </Dialog>
+
+            {/* Rename Modal */}
+            <Dialog open={isRenameModalOpen} onOpenChange={setIsRenameModalOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Şablon Adını Değiştir</DialogTitle>
+                    </DialogHeader>
+                    <form onSubmit={handleRename} className="space-y-4">
+                        <div className="space-y-2">
+                            <Label>Yeni Şablon Adı</Label>
+                            <Input value={actionValue} onChange={e => setActionValue(e.target.value)} required />
+                        </div>
+                        <DialogFooter>
+                            <Button type="button" variant="outline" onClick={() => setIsRenameModalOpen(false)}>İptal</Button>
+                            <Button type="submit">Kaydet</Button>
+                        </DialogFooter>
+                    </form>
+                </DialogContent>
+            </Dialog>
+
+            {/* Copy Modal */}
+            <Dialog open={isCopyModalOpen} onOpenChange={setIsCopyModalOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Şablonu Çoğalt (Kopyala)</DialogTitle>
+                        <DialogDescription>
+                            Tüm tasarımlar ve arkaplan bu yeni isimle kopyalanacaktır.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <form onSubmit={handleCopy} className="space-y-4">
+                        <div className="space-y-2">
+                            <Label>Kopya Şablon Adı</Label>
+                            <Input value={actionValue} onChange={e => setActionValue(e.target.value)} required />
+                        </div>
+                        <DialogFooter>
+                            <Button type="button" variant="outline" onClick={() => setIsCopyModalOpen(false)}>İptal</Button>
+                            <Button type="submit">Kopyala</Button>
+                        </DialogFooter>
+                    </form>
+                </DialogContent>
+            </Dialog>
+
+            {/* Change Background Modal */}
+            <Dialog open={isBgModalOpen} onOpenChange={setIsBgModalOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Arkaplan Görselini Değiştir</DialogTitle>
+                        <DialogDescription>
+                            Tasarım kodları (X, Y koordinatları) aynı kalacak, sadece arkaplan resmi güncellenecektir.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <form onSubmit={handleUpdateBg} className="space-y-4">
+                        <div className="space-y-2">
+                            <Label>Yeni Görsel Dosyası</Label>
+                            <Input
+                                type="file"
+                                accept="image/*"
+                                onChange={e => setActionFile(e.target.files[0])}
+                                required
+                            />
+                        </div>
+                        <DialogFooter>
+                            <Button type="button" variant="outline" onClick={() => setIsBgModalOpen(false)}>İptal</Button>
+                            <Button type="submit">Görseli Güncelle</Button>
                         </DialogFooter>
                     </form>
                 </DialogContent>

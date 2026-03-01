@@ -113,6 +113,67 @@ class CertificateTemplateController extends Controller
         return response()->json($template);
     }
 
+    public function copy(Request $request, $id)
+    {
+        if ($request->user()->role !== 'admin') {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $request->validate([
+            'name' => 'required|string|max:255',
+        ]);
+
+        $original = CertificateTemplate::findOrFail($id);
+        
+        // Copy the background image
+        $newPath = null;
+        if ($original->background_path && Storage::disk('public')->exists($original->background_path)) {
+            $extension = pathinfo($original->background_path, PATHINFO_EXTENSION);
+            $newPath = 'templates/' . \Illuminate\Support\Str::random(40) . '.' . $extension;
+            Storage::disk('public')->copy($original->background_path, $newPath);
+        }
+
+        $clone = CertificateTemplate::create([
+            'name' => $request->name,
+            'background_path' => $newPath,
+            'type' => $original->type,
+            'layout_config' => $original->layout_config,
+            'is_active' => $original->is_active,
+            'certificate_type_id' => $original->certificate_type_id,
+        ]);
+
+        return response()->json($clone, 201);
+    }
+
+    public function updateBackground(Request $request, $id)
+    {
+        if ($request->user()->role !== 'admin') {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $template = CertificateTemplate::findOrFail($id);
+
+        $request->validate([
+            'background_image' => 'required|image|mimes:jpeg,png,jpg|max:2048',
+        ]);
+
+        if ($request->hasFile('background_image')) {
+            // Optionally delete old image
+            if ($template->background_path && Storage::disk('public')->exists($template->background_path)) {
+                Storage::disk('public')->delete($template->background_path);
+            }
+
+            $file = $request->file('background_image');
+            $path = $file->store('templates', 'public');
+
+            $template->update(['background_path' => $path]);
+
+            return response()->json($template);
+        }
+
+        return response()->json(['message' => 'Dosya yükleme hatası.'], 400);
+    }
+
     public function destroy(Request $request, $id)
     {
         if ($request->user()->role !== 'admin') {
