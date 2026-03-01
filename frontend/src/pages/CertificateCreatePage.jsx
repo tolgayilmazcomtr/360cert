@@ -12,7 +12,7 @@ import { CheckCircle, ArrowRight, FileText, UploadCloud, ChevronLeft, Search, Ch
 import { getStorageUrl } from "@/lib/utils";
 
 export default function CertificateCreatePage() {
-    const { refreshUser } = useAuth();
+    const { user, refreshUser } = useAuth();
     const navigate = useNavigate();
     const [templates, setTemplates] = useState([]);
     const [programs, setPrograms] = useState([]);
