@@ -289,6 +289,9 @@ export default function CertificateTemplatesPage() {
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>Şablon Adını Değiştir</DialogTitle>
+                        <DialogDescription className="sr-only">
+                            Şablon adını bu alandan güncelleyebilirsiniz.
+                        </DialogDescription>
                     </DialogHeader>
                     <form onSubmit={handleRename} className="space-y-4">
                         <div className="space-y-2">
