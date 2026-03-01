@@ -21,4 +21,9 @@ class TrainingProgram extends Model
         'name' => 'array',
         'is_active' => 'boolean',
     ];
+
+    public function certificates()
+    {
+        return $this->hasMany(Certificate::class);
+    }
 }
