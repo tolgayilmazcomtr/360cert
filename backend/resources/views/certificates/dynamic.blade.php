@@ -169,13 +169,14 @@
                         if (isset($certificate->student->user)) {
                             $dealerName = $certificate->student->user->company_name ?: $certificate->student->user->name;
                         }
-                        $text = str_replace('{dealer_name}', '<strong>' . htmlspecialchars($dealerName) . '</strong>', $text);
+                        // Handle {dealer_name} and {dealer_name_en} etc.
+                        $text = preg_replace('/\{dealer_name(?:_[a-z]{2})?\}/', '<strong>' . htmlspecialchars($dealerName) . '</strong>', $text);
                         
                         $studentName = isset($certificate->student) ? ($certificate->student->first_name . ' ' . $certificate->student->last_name) : '';
-                        $text = str_replace('{student_name}', '<strong>' . htmlspecialchars($studentName) . '</strong>', $text);
+                        $text = preg_replace('/\{student_name(?:_[a-z]{2})?\}/', '<strong>' . htmlspecialchars($studentName) . '</strong>', $text);
                         
                         $duration = $certificate->duration_hours ?? '';
-                        $text = str_replace('{duration_hours}', '<strong>' . htmlspecialchars($duration) . '</strong>', $text);
+                        $text = preg_replace('/\{duration_hours(?:_[a-z]{2})?\}/', '<strong>' . htmlspecialchars($duration) . '</strong>', $text);
                         
                         if (isset($certificate->training_program)) {
                             $nameData = $certificate->training_program->name;
@@ -184,9 +185,9 @@
                                     $text = str_replace('{training_name_' . $l . '}', '<strong>' . htmlspecialchars($val) . '</strong>', $text);
                                 }
                                 $fallback = $nameData[$langToUse] ?? $nameData['tr'] ?? current($nameData) ?? '';
-                                $text = str_replace('{training_name}', '<strong>' . htmlspecialchars($fallback) . '</strong>', $text);
+                                $text = preg_replace('/\{training_name(?:_[a-z]{2})?\}/', '<strong>' . htmlspecialchars($fallback) . '</strong>', $text);
                             } else {
-                                $text = str_replace('{training_name}', '<strong>' . htmlspecialchars($nameData) . '</strong>', $text);
+                                $text = preg_replace('/\{training_name(?:_[a-z]{2})?\}/', '<strong>' . htmlspecialchars($nameData) . '</strong>', $text);
                             }
                         }
                         return nl2br($text);
