@@ -28,7 +28,7 @@ class CertificateTemplateController extends Controller
 
         $request->validate([
             'name' => 'required|string|max:255',
-            'background_image' => 'required|image|mimes:jpeg,png,jpg|max:2048',
+            'background_image' => 'required|image|mimes:jpeg,png,jpg|max:5120',
             'type' => 'required|in:standard,card',
             'certificate_type_id' => 'nullable|exists:certificate_types,id',
         ]);
@@ -154,7 +154,7 @@ class CertificateTemplateController extends Controller
         $template = CertificateTemplate::findOrFail($id);
 
         $request->validate([
-            'background_image' => 'required|image|mimes:jpeg,png,jpg|max:2048',
+            'background_image' => 'required|image|mimes:jpeg,png,jpg|max:5120',
         ]);
 
         if ($request->hasFile('background_image')) {
