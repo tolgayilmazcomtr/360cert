@@ -9,6 +9,8 @@ import { Label } from "@/components/ui/label";
 import { ArrowLeft, Save, Type, GripVertical, Settings, Info } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { getStorageUrl } from "@/lib/utils";
+import { useAuth } from "@/context/AuthContext";
+import { Navigate } from "react-router-dom";
 
 const FONTS = [
     "Arial",
@@ -31,6 +33,7 @@ export default function TemplateDesignPage() {
     const [selectedElementIndex, setSelectedElementIndex] = useState(null);
     const [activeLanguages, setActiveLanguages] = useState([]);
     const [newElementType, setNewElementType] = useState("student_name");
+    const { user } = useAuth();
 
     // Zoom state
     const [scale, setScale] = useState(1);
@@ -247,6 +250,10 @@ export default function TemplateDesignPage() {
 
     if (loading) return <div>Yükleniyor...</div>;
     if (!template) return <div>Şablon bulunamadı.</div>;
+
+    if (user?.role !== 'admin') {
+        return <Navigate to="/dashboard" replace />;
+    }
 
     return (
         <div className="h-[calc(100vh-100px)] flex flex-col">

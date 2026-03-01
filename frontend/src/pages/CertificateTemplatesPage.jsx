@@ -9,8 +9,9 @@ import { Label } from "@/components/ui/label";
 import { Plus, Trash2, Settings, Image as ImageIcon, Copy, Edit2, UploadCloud } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { getStorageUrl } from "@/lib/utils";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { MoreVertical } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import { Navigate } from "react-router-dom";
 
 export default function CertificateTemplatesPage() {
     const [templates, setTemplates] = useState([]);
@@ -34,6 +35,8 @@ export default function CertificateTemplatesPage() {
         certificate_type_id: "none",
         file: null
     });
+
+    const { user } = useAuth();
 
     useEffect(() => {
         fetchTemplates();
@@ -141,6 +144,10 @@ export default function CertificateTemplatesPage() {
             setIsBgModalOpen(true);
         }
     };
+
+    if (user?.role !== 'admin') {
+        return <Navigate to="/dashboard" replace />;
+    }
 
     return (
         <div className="space-y-6">

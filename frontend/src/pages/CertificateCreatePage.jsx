@@ -177,7 +177,13 @@ export default function CertificateCreatePage() {
 
                     {templates.length === 0 && (
                         <div className="col-span-full text-center py-12 text-muted-foreground">
-                            Henüz tanımlı şablon yok. <Button variant="link" onClick={() => navigate('/dashboard/templates')}>Şablon Ekle</Button>
+                            {user?.role === 'admin' ? (
+                                <>
+                                    Henüz tanımlı şablon yok. <Button variant="link" onClick={() => navigate('/dashboard/templates')}>Şablon Ekle</Button>
+                                </>
+                            ) : (
+                                <p className="text-sm text-red-600 font-medium">Size atanmış kullanılabilir bir sertifika şablonu bulunamadı. Lütfen yönetici ile iletişime geçin.</p>
+                            )}
                         </div>
                     )}
                 </div>
