@@ -443,6 +443,7 @@ class CertificateController extends Controller
                 }
             }
             $customPaper = [0, 0, $width * 72 / 96, $height * 72 / 96];
+            $bgBase64 = 'data:image/' . pathinfo($bgPath, PATHINFO_EXTENSION) . ';base64,' . base64_encode(file_get_contents($bgPath));
 
             $dealerLogoBase64 = null;
             if ($certificate->student && $certificate->student->user && $certificate->student->user->logo_path) {
