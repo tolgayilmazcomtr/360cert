@@ -79,26 +79,20 @@
                 case 'training_name':
                     $nameData = $certificate->training_program->name;
                     $certLang = $certificate->certificate_language ?? 'tr';
-                    $trContent = is_array($nameData) ? ($nameData['tr'] ?? current($nameData) ?? '') : $nameData;
-                    if ($certLang !== 'tr' && is_array($nameData) && !empty($nameData[$certLang])) {
-                        $translatedText = $nameData[$certLang];
-                        $transColor = isset($element['color_' . $certLang]) ? $element['color_' . $certLang] : ($element['color'] ?? '#000000');
-                        $content = $trContent . " / <span style=\"color: {$transColor};\">" . $translatedText . "</span>";
+                    if (is_array($nameData)) {
+                        $content = $nameData[$certLang] ?? $nameData['tr'] ?? current($nameData) ?? '';
                     } else {
-                        $content = $trContent;
+                        $content = $nameData;
                     }
                     break;
                 case 'certificate_type':
                     if ($certificate->certificateType) {
                         $typeData = $certificate->certificateType->name;
                         $certLang = $certificate->certificate_language ?? 'tr';
-                        $trContent = is_array($typeData) ? ($typeData['tr'] ?? current($typeData) ?? '') : $typeData;
-                        if ($certLang !== 'tr' && is_array($typeData) && !empty($typeData[$certLang])) {
-                            $translatedText = $typeData[$certLang];
-                            $transColor = isset($element['color_' . $certLang]) ? $element['color_' . $certLang] : ($element['color'] ?? '#000000');
-                            $content = $trContent . " / <span style=\"color: {$transColor};\">" . $translatedText . "</span>";
+                        if (is_array($typeData)) {
+                            $content = $typeData[$certLang] ?? $typeData['tr'] ?? current($typeData) ?? '';
                         } else {
-                            $content = $trContent;
+                            $content = $typeData;
                         }
                     } else {
                         $content = '';
