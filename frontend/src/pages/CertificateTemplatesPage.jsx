@@ -10,6 +10,7 @@ import { Plus, Trash2, Settings, Image as ImageIcon, Copy, Edit2, UploadCloud } 
 import { useNavigate } from "react-router-dom";
 import { getStorageUrl } from "@/lib/utils";
 import { MoreVertical } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/context/AuthContext";
 import { Navigate } from "react-router-dom";
 
