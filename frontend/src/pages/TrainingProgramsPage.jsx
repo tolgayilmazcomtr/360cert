@@ -22,6 +22,12 @@ export default function TrainingProgramsPage() {
     const [importing, setImporting] = useState(false);
     const { toast } = useToast();
 
+    // Pagination & Search State
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [searchQuery, setSearchQuery] = useState("");
+    const [debouncedSearch, setDebouncedSearch] = useState("");
+
     // Form State
     const [formData, setFormData] = useState({
         description: "",
@@ -32,8 +38,19 @@ export default function TrainingProgramsPage() {
 
     useEffect(() => {
         fetchPrograms();
+    }, [currentPage, debouncedSearch]);
+
+    useEffect(() => {
         fetchLanguages();
     }, []);
+
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setDebouncedSearch(searchQuery);
+            if (currentPage !== 1) setCurrentPage(1); // Reset to page 1 on new search
+        }, 500);
+        return () => clearTimeout(handler);
+    }, [searchQuery]);
 
     const fetchLanguages = async () => {
         try {
@@ -53,11 +70,27 @@ export default function TrainingProgramsPage() {
     };
 
     const fetchPrograms = async () => {
+        setLoading(true);
         try {
-            const response = await api.get("/training-programs");
-            setPrograms(response.data);
+            const params = {
+                paginate: 1,
+                page: currentPage
+            };
+            if (debouncedSearch) {
+                params.search = debouncedSearch;
+            }
+
+            const response = await api.get("/training-programs", { params });
+            // Handle Laravel object paginator wrapper
+            if (response.data && response.data.data) {
+                setPrograms(response.data.data);
+                setTotalPages(response.data.last_page || 1);
+            } else {
+                setPrograms(response.data);
+            }
         } catch (error) {
             console.error("Eğitimler yüklenemedi", error);
+            toast({ title: "Hata", description: "Eğitimler yüklenemedi.", variant: "destructive" });
         } finally {
             setLoading(false);
         }
@@ -196,6 +229,17 @@ export default function TrainingProgramsPage() {
                 </div>
             </div>
 
+            <div className="flex items-center gap-4 mb-2">
+                <div className="flex-1 max-w-sm">
+                    <Input
+                        placeholder="Eğitim programı ara..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full bg-white dark:bg-slate-900"
+                    />
+                </div>
+            </div>
+
             <div className="rounded-md border bg-white dark:bg-slate-900 shadow-sm">
                 <Table>
                     <TableHeader>
@@ -260,6 +304,33 @@ export default function TrainingProgramsPage() {
                     </TableBody>
                 </Table>
             </div>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+                <div className="flex items-center justify-between">
+                    <div className="text-sm text-muted-foreground">
+                        Sayfa {currentPage} / {totalPages}
+                    </div>
+                    <div className="flex gap-2">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                            disabled={currentPage === 1 || loading}
+                        >
+                            Önceki
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                            disabled={currentPage === totalPages || loading}
+                        >
+                            Sonraki
+                        </Button>
+                    </div>
+                </div>
+            )}
 
             <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
                 <DialogContent className="sm:max-w-[425px]">

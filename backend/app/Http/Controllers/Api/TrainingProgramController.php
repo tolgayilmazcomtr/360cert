@@ -11,9 +11,24 @@ use Exception;
 
 class TrainingProgramController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        return response()->json(TrainingProgram::where('is_active', true)->get());
+        $query = TrainingProgram::where('is_active', true);
+
+        // Optional search filtering
+        if ($request->has('search') && !empty($request->search)) {
+            $search = strtolower($request->search);
+            // Search in JSON 'name' column (example: {"tr": "Sertifika", "en": "Certificate"})
+            $query->whereRaw('LOWER(name) LIKE ?', ["%{$search}%"])
+                  ->orWhere('description', 'LIKE', "%{$request->search}%");
+        }
+
+        // Return paginated or all
+        if ($request->boolean('paginate')) {
+            return response()->json($query->paginate(15));
+        }
+
+        return response()->json($query->get());
     }
 
     public function store(Request $request)

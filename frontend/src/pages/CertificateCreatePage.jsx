@@ -8,7 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CheckCircle, ArrowRight, FileText, UploadCloud, ChevronLeft } from "lucide-react";
+import { CheckCircle, ArrowRight, FileText, UploadCloud, ChevronLeft, Search, Check, ChevronDown } from "lucide-react";
 import { getStorageUrl } from "@/lib/utils";
 
 export default function CertificateCreatePage() {
@@ -20,6 +20,10 @@ export default function CertificateCreatePage() {
     const [selectedTemplate, setSelectedTemplate] = useState(null);
     const [step, setStep] = useState(1);
     const [loading, setLoading] = useState(false);
+
+    // Custom Searchable Dropdown State
+    const [programSearchTerm, setProgramSearchTerm] = useState("");
+    const [programDropdownOpen, setProgramDropdownOpen] = useState(false);
 
     const [formData, setFormData] = useState({
         first_name: "",
@@ -52,6 +56,22 @@ export default function CertificateCreatePage() {
         } catch (error) {
             console.error("Veri yükleme hatası", error);
         }
+    };
+
+    // Filter programs based on search term
+    const filteredPrograms = programs.filter(p => {
+        const nameText = typeof p.name === 'object'
+            ? (p.name.tr || Object.values(p.name)[0] || '')
+            : (p.name || '');
+        return nameText.toLowerCase().includes(programSearchTerm.toLowerCase());
+    });
+
+    // Helper to get program name
+    const getProgramName = (program) => {
+        if (!program) return "Eğitim Seçiniz";
+        return typeof program.name === 'object'
+            ? (program.name.tr || Object.values(program.name)[0] || 'İsimsiz Eğitim')
+            : (program.name || 'İsimsiz Eğitim');
     };
 
     const handleSubmit = async (e) => {
@@ -215,20 +235,61 @@ export default function CertificateCreatePage() {
 
                         {/* Row 3: Eğitim & Sertifika Dil */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="space-y-2">
+                            <div className="space-y-2 relative">
                                 <Label className="text-base font-semibold">Eğitim <span className="text-red-500">*</span></Label>
-                                <Select onValueChange={(v) => setFormData({ ...formData, training_program_id: v })} value={formData.training_program_id}>
-                                    <SelectTrigger className="h-11">
-                                        <SelectValue placeholder="Eğitim Seçiniz" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {programs.map(p => (
-                                            <SelectItem key={p.id} value={p.id.toString()}>
-                                                {typeof p.name === 'object' ? (p.name.tr || Object.values(p.name)[0] || 'İsimsiz Eğitim') : (p.name || 'İsimsiz Eğitim')}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                                <div className="relative">
+                                    <div
+                                        className="flex items-center justify-between border rounded-md h-11 px-3 cursor-pointer bg-transparent hover:bg-slate-50 dark:hover:bg-slate-800"
+                                        onClick={() => setProgramDropdownOpen(!programDropdownOpen)}
+                                    >
+                                        <span className={`truncate ${!formData.training_program_id ? 'text-muted-foreground' : ''}`}>
+                                            {formData.training_program_id
+                                                ? getProgramName(programs.find(p => p.id.toString() === formData.training_program_id))
+                                                : "Eğitim Seçiniz"}
+                                        </span>
+                                        <ChevronDown className="h-4 w-4 opacity-50" />
+                                    </div>
+
+                                    {programDropdownOpen && (
+                                        <div className="absolute z-50 w-full mt-1 bg-white dark:bg-slate-950 border rounded-md shadow-lg overflow-hidden flex flex-col max-h-60">
+                                            <div className="flex items-center border-b px-2 sticky top-0 bg-white dark:bg-slate-950">
+                                                <Search className="h-4 w-4 text-muted-foreground shrink-0" />
+                                                <Input
+                                                    ref={input => input && input.focus()}
+                                                    placeholder="Eğitim ara..."
+                                                    className="border-0 focus-visible:ring-0 shadow-none h-10 w-full"
+                                                    value={programSearchTerm}
+                                                    onChange={e => setProgramSearchTerm(e.target.value)}
+                                                    onClick={e => e.stopPropagation()} // Prevent parent toggler
+                                                />
+                                            </div>
+                                            <div className="overflow-y-auto w-full">
+                                                {filteredPrograms.length === 0 ? (
+                                                    <div className="p-3 text-sm text-center text-muted-foreground">
+                                                        Sonuç bulunamadı.
+                                                    </div>
+                                                ) : (
+                                                    filteredPrograms.map(p => (
+                                                        <div
+                                                            key={p.id}
+                                                            className={`px-3 py-2 text-sm cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-between ${formData.training_program_id === p.id.toString() ? 'bg-slate-50 dark:bg-slate-900 font-medium' : ''}`}
+                                                            onClick={() => {
+                                                                setFormData({ ...formData, training_program_id: p.id.toString() });
+                                                                setProgramDropdownOpen(false);
+                                                                setProgramSearchTerm("");
+                                                            }}
+                                                        >
+                                                            {getProgramName(p)}
+                                                            {formData.training_program_id === p.id.toString() && (
+                                                                <Check className="h-4 w-4 shrink-0" />
+                                                            )}
+                                                        </div>
+                                                    ))
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                             <div className="space-y-2">
                                 <Label className="text-base font-semibold">Sertifika Dil <span className="text-red-500">*</span></Label>
