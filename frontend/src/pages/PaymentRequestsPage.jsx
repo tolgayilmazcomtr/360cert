@@ -9,8 +9,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { useToast } from "@/hooks/use-toast";
 import { CheckCircle, XCircle, Eye, FileText, RefreshCw } from "lucide-react";
 
-const API_BASE = import.meta.env.VITE_API_URL?.replace('/api', '') || '';
-
 export default function PaymentRequestsPage() {
     const { toast } = useToast();
     const [transactions, setTransactions] = useState([]);
@@ -60,12 +58,6 @@ export default function PaymentRequestsPage() {
             case "rejected": return <Badge className="bg-red-500 hover:bg-red-600">Reddedildi</Badge>;
             default: return <Badge variant="outline">{status}</Badge>;
         }
-    };
-
-    const getReceiptUrl = (path) => {
-        if (!path) return null;
-        if (path.startsWith("http")) return path;
-        return `${API_BASE}/storage/${path}`;
     };
 
     return (
@@ -150,7 +142,7 @@ export default function PaymentRequestsPage() {
                                         </TableCell>
                                         <TableCell>{getStatusBadge(t.status)}</TableCell>
                                         <TableCell>
-                                            {t.document_path ? (
+                                            {t.document_url ? (
                                                 <Button
                                                     variant="ghost"
                                                     size="sm"
@@ -205,17 +197,17 @@ export default function PaymentRequestsPage() {
                             {previewTx?.user?.company_name || previewTx?.user?.name} — {previewTx && formatCurrency(previewTx.amount)}
                         </DialogDescription>
                     </DialogHeader>
-                    {previewTx?.document_path && (
+                    {previewTx?.document_url && (
                         <div className="mt-2">
-                            {previewTx.document_path.endsWith(".pdf") ? (
+                            {previewTx.document_url.endsWith(".pdf") || previewTx.document_path?.endsWith(".pdf") ? (
                                 <iframe
-                                    src={getReceiptUrl(previewTx.document_path)}
+                                    src={previewTx.document_url}
                                     className="w-full h-[500px] border rounded-md"
                                     title="Dekont"
                                 />
                             ) : (
                                 <img
-                                    src={getReceiptUrl(previewTx.document_path)}
+                                    src={previewTx.document_url}
                                     alt="Dekont"
                                     className="w-full max-h-[500px] object-contain border rounded-md"
                                 />

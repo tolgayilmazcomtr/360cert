@@ -46,8 +46,8 @@ class TransactionController extends Controller
         }
 
         // Apply Method Filter
-        if ($request->has('method') && $request->method !== 'all') {
-            $query->where('method', $request->method);
+        if ($request->has('method') && $request->input('method') !== 'all') {
+            $query->where('method', $request->input('method'));
         }
 
         // Apply Status Filter
