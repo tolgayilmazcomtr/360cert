@@ -32,6 +32,8 @@ export default function BalancePage() {
         bank_name: "",
         bank_description: "Lütfen açıklama kısmına Bayi ID'nizi yazınız.",
     });
+    const [receipt, setReceipt] = useState(null);
+    const [wireLoading, setWireLoading] = useState(false);
 
     useEffect(() => {
         const paymentStatus = searchParams.get('payment_status');
@@ -81,20 +83,36 @@ export default function BalancePage() {
     };
 
     const handleWireTransfer = async () => {
-        if (!amount || parseFloat(amount) <= 0) return;
+        if (!amount || parseFloat(amount) <= 0) {
+            toast({ title: "Hata", description: "Lütfen geçerli bir tutar girin.", variant: "destructive" });
+            return;
+        }
+        if (!receipt) {
+            toast({ title: "Hata", description: "Lütfen dekont dosyası yükleyin.", variant: "destructive" });
+            return;
+        }
+        setWireLoading(true);
         try {
-            await api.post("/transactions", {
-                amount: parseFloat(amount),
-                method: "wire_transfer",
-                description: "Havale Bildirimi",
+            const formData = new FormData();
+            formData.append("amount", parseFloat(amount));
+            formData.append("method", "wire_transfer");
+            formData.append("description", "Havale / EFT ile Bakiye Yükleme");
+            formData.append("receipt", receipt);
+
+            await api.post("/transactions", formData, {
+                headers: { "Content-Type": "multipart/form-data" },
             });
+
             setOpen(false);
             setAmount("");
+            setReceipt(null);
             fetchTransactions();
-            toast({ title: "Bildirim Oluşturuldu", description: "Havale bildiriminiz alındı, onay bekleniyor." });
+            toast({ title: "Bildirim Oluşturuldu", description: "Havale bildiriminiz ve dekontu alındı. Yönetici onayından sonra bakiyeniz yüklenecektir." });
         } catch (error) {
             console.error("Yükleme başarısız", error);
-            toast({ title: "Hata", description: "İşlem başarısız oldu.", variant: "destructive" });
+            toast({ title: "Hata", description: error.response?.data?.message || "İşlem başarısız oldu.", variant: "destructive" });
+        } finally {
+            setWireLoading(false);
         }
     };
 
@@ -285,12 +303,50 @@ export default function BalancePage() {
                                             <p className="text-muted-foreground text-xs">Banka bilgileri sistem yöneticisi tarafından henüz girilmemiş.</p>
                                         )}
                                     </div>
+
+                                    {/* Receipt upload */}
+                                    <div className="space-y-1.5 mb-4">
+                                        <Label htmlFor="receipt-upload">
+                                            Dekont / Ödeme Belgesi <span className="text-red-500">*</span>
+                                        </Label>
+                                        <div
+                                            className={`flex items-center gap-3 border-2 border-dashed rounded-md p-3 cursor-pointer transition-colors ${receipt ? 'border-emerald-400 bg-emerald-50' : 'border-slate-200 hover:border-indigo-300 hover:bg-slate-50'}`}
+                                            onClick={() => document.getElementById('receipt-upload').click()}
+                                        >
+                                            <CreditCard size={20} className={receipt ? 'text-emerald-600' : 'text-slate-400'} />
+                                            <div className="flex-1 min-w-0">
+                                                {receipt ? (
+                                                    <p className="text-sm font-medium text-emerald-700 truncate">{receipt.name}</p>
+                                                ) : (
+                                                    <p className="text-sm text-muted-foreground">Dekont yüklemek için tıklayın</p>
+                                                )}
+                                                <p className="text-xs text-muted-foreground">JPG, PNG veya PDF — maks. 5 MB</p>
+                                            </div>
+                                            {receipt && (
+                                                <button
+                                                    type="button"
+                                                    onClick={(e) => { e.stopPropagation(); setReceipt(null); }}
+                                                    className="text-xs text-red-500 hover:text-red-700 shrink-0"
+                                                >
+                                                    Kaldır
+                                                </button>
+                                            )}
+                                        </div>
+                                        <input
+                                            id="receipt-upload"
+                                            type="file"
+                                            accept=".jpg,.jpeg,.png,.pdf"
+                                            className="hidden"
+                                            onChange={(e) => setReceipt(e.target.files[0] || null)}
+                                        />
+                                    </div>
+
                                     <Button
                                         onClick={handleWireTransfer}
                                         className="w-full"
-                                        disabled={!amount || parseFloat(amount) <= 0}
+                                        disabled={wireLoading || !amount || parseFloat(amount) <= 0 || !receipt}
                                     >
-                                        Havale Bildirimi Oluştur
+                                        {wireLoading ? "Gönderiliyor..." : "Havale Bildirimi Oluştur"}
                                     </Button>
                                 </TabsContent>
                             </div>

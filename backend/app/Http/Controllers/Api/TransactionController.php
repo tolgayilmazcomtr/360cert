@@ -52,45 +52,50 @@ class TransactionController extends Controller
         return $query->paginate($request->get('per_page', 20));
     }
 
-    // Create a new deposit request (Credit Card or Wire Transfer)
+    // Create a new deposit request (Wire Transfer with receipt)
     public function store(Request $request)
     {
         $request->validate([
-            'amount' => 'required|numeric|min:1',
-            'method' => 'required|in:credit_card,wire_transfer',
+            'amount'      => 'required|numeric|min:1',
+            'method'      => 'required|in:wire_transfer',
             'description' => 'nullable|string',
+            'receipt'     => 'required|file|mimes:jpg,jpeg,png,pdf|max:5120',
         ]);
 
         $user = $request->user();
-        $status = 'pending';
-        
-        // Mock Credit Card Process: Auto approve if method is credit_card
-        if ($request->method === 'credit_card') {
-            $status = 'approved';
-            // Here you would integrate with Iyzico/PayTR
-        }
+
+        // Save the receipt file
+        $receiptPath = $request->file('receipt')->store('receipts', 'public');
 
         DB::beginTransaction();
         try {
             $transaction = Transaction::create([
-                'user_id' => $user->id,
-                'amount' => $request->amount,
-                'type' => 'deposit',
-                'method' => $request->method,
-                'status' => $status,
-                'description' => $request->description ?? 'Bakiye Yükleme',
+                'user_id'       => $user->id,
+                'amount'        => $request->amount,
+                'type'          => 'deposit',
+                'method'        => 'wire_transfer',
+                'status'        => 'pending',
+                'description'   => $request->description ?? 'Havale / EFT ile Bakiye Yükleme',
+                'document_path' => $receiptPath,
             ]);
 
-            // If auto-approved (Credit Card), update balance immediately
-            if ($status === 'approved') {
-                $user->increment('balance', $request->amount);
-            }
-
             DB::commit();
+
+            // Notify all admins
+            $dealerName = $user->company_name ?: $user->name;
+            NotificationController::notifyAllAdmins(
+                'wire_transfer_request',
+                'Yeni Havale Bildirimi',
+                "{$dealerName} adlı bayi " . number_format($transaction->amount, 2, ',', '.') . " TL tutarında havale bildirimi gönderdi. Dekont yüklendi, onay bekleniyor.",
+                ['transaction_id' => $transaction->id, 'user_id' => $user->id]
+            );
 
             return response()->json($transaction, 201);
         } catch (\Exception $e) {
             DB::rollBack();
+            if (isset($receiptPath)) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($receiptPath);
+            }
             return response()->json(['message' => 'İşlem sırasında hata oluştu.'], 500);
         }
     }
