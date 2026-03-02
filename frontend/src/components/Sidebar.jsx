@@ -48,6 +48,7 @@ export default function Sidebar() {
             subItems: [
                 { name: "Özet Raporlar", path: "/dashboard/finance" },
                 { name: "Hesap Hareketleri", path: "/dashboard/transactions" },
+                { name: "Ödeme Talepleri", path: "/dashboard/payment-requests" },
             ]
         },
         { name: "Duyurular", icon: Bell, path: "/dashboard/notifications" },
@@ -85,6 +86,7 @@ export default function Sidebar() {
 
     const [unreadCount, setUnreadCount] = useState(0);
     const [pendingUpdatesCount, setPendingUpdatesCount] = useState(0);
+    const [pendingPaymentsCount, setPendingPaymentsCount] = useState(0);
     const [openMenus, setOpenMenus] = useState({});
     const [siteLogo, setSiteLogo] = useState(null);
     const [siteTitle, setSiteTitle] = useState("IAC");
@@ -104,6 +106,10 @@ export default function Sidebar() {
                 try {
                     const res = await api.get('/dealers/update-requests/pending-count');
                     setPendingUpdatesCount(res.data.count || 0);
+                } catch { }
+                try {
+                    const res = await api.get('/transactions', { params: { method: 'wire_transfer', status: 'pending', per_page: 1 } });
+                    setPendingPaymentsCount(res.data.total || 0);
                 } catch { }
             }
         };
@@ -174,6 +180,7 @@ export default function Sidebar() {
                                     <div className="ml-[22px] mt-1 pl-4 border-l border-slate-200 space-y-1 py-1">
                                         {item.subItems.map(subItem => {
                                             const isActive = location.pathname === subItem.path || location.pathname.startsWith(subItem.path + '/');
+                                            const isPaymentReqs = subItem.path === '/dashboard/payment-requests';
                                             return (
                                                 <Link key={subItem.path} to={subItem.path}>
                                                     <Button
@@ -184,6 +191,11 @@ export default function Sidebar() {
                                                         )}
                                                     >
                                                         <span className="text-[13px]">{subItem.name}</span>
+                                                        {isPaymentReqs && pendingPaymentsCount > 0 && (
+                                                            <span className="ml-auto bg-red-500 text-white text-[10px] font-bold rounded-full px-1.5 py-0.5 min-w-[18px] text-center">
+                                                                {pendingPaymentsCount > 9 ? '9+' : pendingPaymentsCount}
+                                                            </span>
+                                                        )}
                                                     </Button>
                                                 </Link>
                                             )

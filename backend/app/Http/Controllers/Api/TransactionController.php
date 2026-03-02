@@ -7,6 +7,7 @@ use App\Models\Transaction;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class TransactionController extends Controller
 {
@@ -42,6 +43,11 @@ class TransactionController extends Controller
         // Apply Type Filter
         if ($request->has('type') && $request->type !== 'all') {
             $query->where('type', $request->type);
+        }
+
+        // Apply Method Filter
+        if ($request->has('method') && $request->method !== 'all') {
+            $query->where('method', $request->method);
         }
 
         // Apply Status Filter
@@ -94,7 +100,7 @@ class TransactionController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             if (isset($receiptPath)) {
-                \Illuminate\Support\Facades\Storage::disk('public')->delete($receiptPath);
+                Storage::disk('public')->delete($receiptPath);
             }
             return response()->json(['message' => 'İşlem sırasında hata oluştu.'], 500);
         }
