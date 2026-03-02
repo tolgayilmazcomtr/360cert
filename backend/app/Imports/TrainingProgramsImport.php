@@ -41,13 +41,18 @@ class TrainingProgramsImport implements ToModel, WithHeadingRow, WithValidation,
         // Filter out nulls
         $nameJson = array_filter($nameJson);
 
-        return new TrainingProgram([
-            'name' => $nameJson,
-            'duration_hours' => (int) $duration,
-            'default_price' => (float) $price,
-            'description' => $description,
-            'is_active' => true,
-        ]);
+        return TrainingProgram::updateOrCreate(
+            // Eşleştirme kriteri: Türkçe adı aynı olan kayıt
+            ['name->tr' => $nameTr],
+            // Güncellenecek alanlar
+            [
+                'name'           => $nameJson,
+                'duration_hours' => (int) $duration,
+                'default_price'  => (float) $price,
+                'description'    => $description,
+                'is_active'      => true,
+            ]
+        );
     }
 
     public function rules(): array
