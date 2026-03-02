@@ -30,12 +30,12 @@ class PaymentController extends Controller
         }
 
         $request->validate([
-            'package_id' => 'required|exists:packages,id',
-            'card_name' => 'required|string',
-            'card_number' => 'required|string',
-            'expire_month' => 'required|string|size:2',
-            'expire_year' => 'required|string|size:4',
-            'cvc' => 'required|string|min:3|max:4',
+            'package_id'    => 'required|exists:packages,id',
+            'card_name'     => 'required|string',
+            'card_number'   => 'required|string',
+            'expire_month'  => 'required|string|min:1|max:2',
+            'expire_year'   => 'required|string|min:2|max:4',
+            'cvc'           => 'required|string|min:3|max:4',
         ]);
 
         $package = Package::where('id', $request->package_id)->where('is_active', true)->firstOrFail();
@@ -109,6 +109,89 @@ class PaymentController extends Controller
             Log::error('Payment processing failed: ' . $e->getMessage());
             return response()->json(['message' => 'İşlem hatası oluştu.'], 500);
         }
+    }
+
+    /**
+     * Start a 3D Secure payment for balance top-up (direct amount, no package)
+     */
+    public function depositBalance(Request $request)
+    {
+        $user = $request->user();
+
+        $request->validate([
+            'amount'        => 'required|numeric|min:1',
+            'card_name'     => 'required|string',
+            'card_number'   => 'required|string',
+            'expire_month'  => 'required|string|min:1|max:2',
+            'expire_year'   => 'required|string|min:2|max:4',
+            'cvc'           => 'required|string|min:3|max:4',
+        ]);
+
+        $amount = (float) $request->amount;
+
+        DB::beginTransaction();
+        try {
+            $transaction = Transaction::create([
+                'user_id'     => $user->id,
+                'amount'      => $amount,
+                'type'        => 'deposit',
+                'method'      => 'credit_card',
+                'status'      => 'pending',
+                'description' => 'Kredi Kartı ile Bakiye Yükleme',
+                'meta'        => json_encode(['source' => 'balance_topup']),
+            ]);
+
+            $orderId = 'BAL-' . $transaction->id . '-' . time();
+            $transaction->meta = json_encode(array_merge(
+                json_decode($transaction->meta, true),
+                ['order_id' => $orderId]
+            ));
+            $transaction->save();
+            DB::commit();
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Balance deposit transaction create failed: ' . $e->getMessage());
+            return response()->json(['message' => 'İşlem başlatılamadı.'], 500);
+        }
+
+        $card = [
+            'card_holder'   => $request->card_name,
+            'card_number'   => $request->card_number,
+            'expire_month'  => $request->expire_month,
+            'expire_year'   => $request->expire_year,
+            'cvc'           => $request->cvc,
+        ];
+
+        $callbackUrl = env('APP_URL') . '/api/payment/callback';
+
+        $orderInfo = [
+            'order_id'     => $orderId,
+            'amount'       => $amount,
+            'total_amount' => $amount,
+            'installments' => '1',
+            'description'  => 'Bakiye Yükleme',
+            'phone'        => $user->phone ?? '5555555555',
+            'success_url'  => $callbackUrl,
+            'fail_url'     => $callbackUrl,
+            'data1'        => $transaction->id,
+            'data2'        => $user->id,
+        ];
+
+        $result = $this->paramPos->start3DPayment($card, $orderInfo);
+
+        if ($result['status'] === 'success') {
+            return response()->json([
+                'status'       => 'success',
+                'redirect_url' => $result['redirect_url'],
+                'html'         => $result['html'] ?? null,
+            ]);
+        }
+
+        return response()->json([
+            'status'  => 'error',
+            'message' => 'Ödeme başlatılamadı: ' . $result['message'],
+        ], 400);
     }
 
     /**

@@ -3,16 +3,18 @@ import api from "../api/axios";
 import { useAuth } from "../context/AuthContext";
 import { formatCurrency } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { CreditCard, Wallet, ArrowUpCircle, ArrowDownCircle, History } from "lucide-react";
+import { CreditCard, Wallet, ArrowUpCircle, ArrowDownCircle, History, Lock } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+
+const defaultCardForm = { card_name: "", card_number: "", expire_month: "", expire_year: "", cvc: "" };
 
 export default function BalancePage() {
     const { user } = useAuth();
@@ -22,6 +24,14 @@ export default function BalancePage() {
     const [loading, setLoading] = useState(true);
     const [amount, setAmount] = useState("");
     const [open, setOpen] = useState(false);
+    const [cardForm, setCardForm] = useState(defaultCardForm);
+    const [paying, setPaying] = useState(false);
+    const [bankSettings, setBankSettings] = useState({
+        bank_account_name: "",
+        bank_iban: "",
+        bank_name: "",
+        bank_description: "Lütfen açıklama kısmına Bayi ID'nizi yazınız.",
+    });
 
     useEffect(() => {
         const paymentStatus = searchParams.get('payment_status');
@@ -29,17 +39,17 @@ export default function BalancePage() {
 
         if (paymentStatus) {
             if (paymentStatus === 'success') {
-                toast({ title: "Ödeme Başarılı", description: message || "Paket başarıyla satın alındı ve bakiye eklendi." });
+                toast({ title: "Ödeme Başarılı", description: message || "Bakiyeniz başarıyla yüklendi." });
             } else if (paymentStatus === 'error') {
                 toast({ title: "Ödeme Hatası", description: message || "İşlem başarısız.", variant: "destructive" });
             } else if (paymentStatus === 'info') {
                 toast({ title: "Bilgi", description: message });
             }
-            // Clear the params from URL
             setSearchParams({});
         }
 
         fetchTransactions();
+        fetchBankSettings();
     }, []);
 
     const fetchTransactions = async () => {
@@ -53,21 +63,85 @@ export default function BalancePage() {
         }
     };
 
-    const handleDeposit = async (method) => {
+    const fetchBankSettings = async () => {
+        try {
+            const res = await api.get("/public/settings");
+            if (res.data) {
+                setBankSettings(prev => ({
+                    ...prev,
+                    bank_account_name: res.data.bank_account_name || "",
+                    bank_iban: res.data.bank_iban || "",
+                    bank_name: res.data.bank_name || "",
+                    bank_description: res.data.bank_description || "Lütfen açıklama kısmına Bayi ID'nizi yazınız.",
+                }));
+            }
+        } catch (e) {
+            // Settings not critical, ignore errors
+        }
+    };
+
+    const handleWireTransfer = async () => {
+        if (!amount || parseFloat(amount) <= 0) return;
         try {
             await api.post("/transactions", {
                 amount: parseFloat(amount),
-                method: method, // 'credit_card' or 'wire_transfer'
-                description: method === 'credit_card' ? 'Kredi Kartı ile Yükleme' : 'Havale Bildirimi',
+                method: "wire_transfer",
+                description: "Havale Bildirimi",
             });
             setOpen(false);
             setAmount("");
             fetchTransactions();
-            // Gerçek senaryoda kullanıcı bakiyesi context update veya re-fetch user ile güncellenmeli
-            // window.location.reload(); // Basit çözüm için reload veya user context refresh
+            toast({ title: "Bildirim Oluşturuldu", description: "Havale bildiriminiz alındı, onay bekleniyor." });
         } catch (error) {
             console.error("Yükleme başarısız", error);
-            alert("İşlem başarısız oldu.");
+            toast({ title: "Hata", description: "İşlem başarısız oldu.", variant: "destructive" });
+        }
+    };
+
+    const handleCreditCardPayment = async (e) => {
+        e.preventDefault();
+        if (!amount || parseFloat(amount) <= 0) {
+            toast({ title: "Hata", description: "Lütfen geçerli bir tutar girin.", variant: "destructive" });
+            return;
+        }
+        setPaying(true);
+        try {
+            const res = await api.post("/payment/deposit", {
+                amount: parseFloat(amount),
+                card_name: cardForm.card_name,
+                card_number: cardForm.card_number,
+                expire_month: cardForm.expire_month,
+                expire_year: cardForm.expire_year,
+                cvc: cardForm.cvc,
+            });
+
+            if (res.data.status === "success") {
+                if (res.data.redirect_url) {
+                    window.location.href = res.data.redirect_url;
+                } else if (res.data.html) {
+                    document.open();
+                    document.write(res.data.html);
+                    document.close();
+                } else {
+                    toast({ title: "Başarılı", description: "Ödeme tamamlandı." });
+                    setOpen(false);
+                    fetchTransactions();
+                }
+            } else {
+                toast({ title: "Ödeme Hatası", description: res.data.message || "İşlem başarısız.", variant: "destructive" });
+            }
+        } catch (err) {
+            toast({ title: "Ödeme Hatası", description: err.response?.data?.message || "İşlem başarısız.", variant: "destructive" });
+        } finally {
+            setPaying(false);
+        }
+    };
+
+    const handleOpenChange = (isOpen) => {
+        setOpen(isOpen);
+        if (!isOpen) {
+            setAmount("");
+            setCardForm(defaultCardForm);
         }
     };
 
@@ -84,14 +158,14 @@ export default function BalancePage() {
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <h2 className="text-3xl font-bold tracking-tight">Bakiye ve Ödemeler</h2>
-                <Dialog open={open} onOpenChange={setOpen}>
+                <Dialog open={open} onOpenChange={handleOpenChange}>
                     <DialogTrigger asChild>
                         <Button className="gap-2">
                             <Wallet size={16} />
                             Bakiye Yükle
                         </Button>
                     </DialogTrigger>
-                    <DialogContent className="sm:max-w-[425px]">
+                    <DialogContent className="sm:max-w-[460px]">
                         <DialogHeader>
                             <DialogTitle>Bakiye Yükle</DialogTitle>
                             <DialogDescription>
@@ -104,42 +178,118 @@ export default function BalancePage() {
                                 <TabsTrigger value="wire_transfer">Havale / EFT</TabsTrigger>
                             </TabsList>
 
-                            <div className="p-4 py-6">
-                                <div className="grid w-full items-center gap-4 mb-4">
-                                    <div className="flex flex-col space-y-1.5">
-                                        <Label htmlFor="amount">Yüklenecek Tutar (TL)</Label>
-                                        <Input
-                                            id="amount"
-                                            type="number"
-                                            placeholder="0.00"
-                                            value={amount}
-                                            onChange={(e) => setAmount(e.target.value)}
-                                        />
-                                    </div>
+                            <div className="p-1 py-4">
+                                {/* Amount input — shared */}
+                                <div className="flex flex-col space-y-1.5 mb-4">
+                                    <Label htmlFor="amount">Yüklenecek Tutar (TL)</Label>
+                                    <Input
+                                        id="amount"
+                                        type="number"
+                                        placeholder="0.00"
+                                        min="1"
+                                        value={amount}
+                                        onChange={(e) => setAmount(e.target.value)}
+                                    />
                                 </div>
 
+                                {/* Credit Card Tab */}
                                 <TabsContent value="credit_card">
-                                    <div className="rounded-md border p-4 bg-slate-50 mb-4">
-                                        <p className="text-sm text-muted-foreground mb-2">Simülasyon Modu: "Ödeme Yap" butonuna bastığınızda işlem onaylanacaktır.</p>
-                                        <div className="flex items-center gap-2 text-sm font-medium">
-                                            <CreditCard size={20} />
-                                            **** **** **** 1234
+                                    <form onSubmit={handleCreditCardPayment}>
+                                        <div className="space-y-3">
+                                            <div className="space-y-1.5">
+                                                <Label htmlFor="cc-name">Kart Üzerindeki İsim *</Label>
+                                                <Input
+                                                    id="cc-name"
+                                                    required
+                                                    value={cardForm.card_name}
+                                                    onChange={(e) => setCardForm(p => ({ ...p, card_name: e.target.value.toUpperCase() }))}
+                                                    placeholder="AD SOYAD"
+                                                />
+                                            </div>
+                                            <div className="space-y-1.5">
+                                                <Label htmlFor="cc-number">Kart Numarası *</Label>
+                                                <Input
+                                                    id="cc-number"
+                                                    required
+                                                    maxLength="19"
+                                                    value={cardForm.card_number}
+                                                    onChange={(e) => {
+                                                        let val = e.target.value.replace(/\D/g, '');
+                                                        let formatted = val.match(/.{1,4}/g)?.join(' ') || val;
+                                                        setCardForm(p => ({ ...p, card_number: formatted }));
+                                                    }}
+                                                    placeholder="0000 0000 0000 0000"
+                                                />
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div className="space-y-1.5">
+                                                    <Label>Son Kullanma Tarihi *</Label>
+                                                    <div className="flex gap-2">
+                                                        <Input
+                                                            placeholder="Ay (MM)"
+                                                            required
+                                                            maxLength="2"
+                                                            value={cardForm.expire_month}
+                                                            onChange={(e) => setCardForm(p => ({ ...p, expire_month: e.target.value.replace(/\D/g, '') }))}
+                                                            className="text-center"
+                                                        />
+                                                        <Input
+                                                            placeholder="Yıl (YYYY)"
+                                                            required
+                                                            maxLength="4"
+                                                            value={cardForm.expire_year}
+                                                            onChange={(e) => setCardForm(p => ({ ...p, expire_year: e.target.value.replace(/\D/g, '') }))}
+                                                            className="text-center"
+                                                        />
+                                                    </div>
+                                                </div>
+                                                <div className="space-y-1.5">
+                                                    <Label htmlFor="cc-cvc">Güvenlik Kodu (CVC) *</Label>
+                                                    <Input
+                                                        id="cc-cvc"
+                                                        required
+                                                        maxLength="4"
+                                                        type="password"
+                                                        value={cardForm.cvc}
+                                                        onChange={(e) => setCardForm(p => ({ ...p, cvc: e.target.value.replace(/\D/g, '') }))}
+                                                        placeholder="***"
+                                                    />
+                                                </div>
+                                            </div>
+                                            <p className="text-[10px] text-muted-foreground flex items-center gap-1 mt-1">
+                                                <Lock size={10} className="text-emerald-600" />
+                                                Kart bilgileriniz 256-bit SSL ile şifrelenerek Param POS altyapısına iletilir. 3D Secure ekranına yönlendirileceksiniz.
+                                            </p>
                                         </div>
-                                    </div>
-                                    <Button onClick={() => handleDeposit('credit_card')} className="w-full" disabled={!amount || parseFloat(amount) <= 0}>
-                                        Güvenli Ödeme Yap
-                                    </Button>
+                                        <Button
+                                            type="submit"
+                                            className="w-full mt-4"
+                                            disabled={paying || !amount || parseFloat(amount) <= 0}
+                                        >
+                                            {paying ? "İşleniyor..." : "Güvenli Ödeme Yap"}
+                                        </Button>
+                                    </form>
                                 </TabsContent>
 
+                                {/* Wire Transfer Tab */}
                                 <TabsContent value="wire_transfer">
                                     <div className="rounded-md border p-4 bg-slate-50 mb-4 text-sm space-y-2">
                                         <p className="font-semibold">Banka Bilgileri:</p>
-                                        <p>Tolga YILMAZ</p>
-                                        <p>TR12 0000 0000 0000 0000 0000 00</p>
-                                        <p>Ziraat Bankası</p>
-                                        <p className="text-xs text-muted-foreground mt-2">Lütfen açıklama kısmına Bayi ID'nizi yazınız.</p>
+                                        {bankSettings.bank_account_name && <p>{bankSettings.bank_account_name}</p>}
+                                        {bankSettings.bank_iban && <p className="font-mono">{bankSettings.bank_iban}</p>}
+                                        {bankSettings.bank_name && <p>{bankSettings.bank_name}</p>}
+                                        {bankSettings.bank_description && (
+                                            <p className="text-xs text-muted-foreground mt-2">{bankSettings.bank_description}</p>
+                                        )}
+                                        {!bankSettings.bank_account_name && !bankSettings.bank_iban && (
+                                            <p className="text-muted-foreground text-xs">Banka bilgileri sistem yöneticisi tarafından henüz girilmemiş.</p>
+                                        )}
                                     </div>
-                                    <Button onClick={() => handleDeposit('wire_transfer')} className="w-full" disabled={!amount || parseFloat(amount) <= 0}>
+                                    <Button
+                                        onClick={handleWireTransfer}
+                                        className="w-full"
+                                        disabled={!amount || parseFloat(amount) <= 0}
+                                    >
                                         Havale Bildirimi Oluştur
                                     </Button>
                                 </TabsContent>

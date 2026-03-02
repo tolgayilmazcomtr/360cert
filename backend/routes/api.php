@@ -129,6 +129,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Payment Processing
     Route::post('/payment/process', [\App\Http\Controllers\Api\PaymentController::class, 'process']);
+    Route::post('/payment/deposit', [\App\Http\Controllers\Api\PaymentController::class, 'depositBalance']);
 });
 
 // Public Routes

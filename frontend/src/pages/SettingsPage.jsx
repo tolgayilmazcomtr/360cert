@@ -27,7 +27,11 @@ export default function SettingsPage() {
         social_instagram: "",
         social_twitter: "",
         social_linkedin: "",
-        social_youtube: ""
+        social_youtube: "",
+        bank_account_name: "",
+        bank_iban: "",
+        bank_name: "",
+        bank_description: "Lütfen açıklama kısmına Bayi ID'nizi yazınız.",
     });
     const [logoPreview, setLogoPreview] = useState(null);
     const [newLogoFile, setNewLogoFile] = useState(null);
@@ -397,6 +401,56 @@ export default function SettingsPage() {
                         <p className="text-xs text-gray-400 mt-4 leading-relaxed">
                             Sertifikalar oluşturulurken seçilebilecek dilleri buradan aktif edebilir veya silebilirsiniz. Bir dil önceden alınmış sertifikalarla veya mevcut eğitim isimleriyle ilişkiliyse silinmeyebilir.
                         </p>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Havale / EFT Banka Bilgileri</CardTitle>
+                        <CardDescription>Bayi bakiye yükleme ekranındaki havale bölümünde gösterilecek bilgiler.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        {isLoadingSettings ? (
+                            <p className="text-sm text-gray-500">Ayarlar yükleniyor...</p>
+                        ) : (
+                            <div className="space-y-4">
+                                <div className="space-y-2">
+                                    <Label>Hesap Sahibi Adı</Label>
+                                    <Input
+                                        value={settings.bank_account_name || ""}
+                                        onChange={(e) => setSettings({ ...settings, bank_account_name: e.target.value })}
+                                        placeholder="Ad Soyad veya Şirket Adı"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>IBAN</Label>
+                                    <Input
+                                        value={settings.bank_iban || ""}
+                                        onChange={(e) => setSettings({ ...settings, bank_iban: e.target.value })}
+                                        placeholder="TR00 0000 0000 0000 0000 0000 00"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Banka Adı</Label>
+                                    <Input
+                                        value={settings.bank_name || ""}
+                                        onChange={(e) => setSettings({ ...settings, bank_name: e.target.value })}
+                                        placeholder="Ziraat Bankası"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Açıklama Notu</Label>
+                                    <Input
+                                        value={settings.bank_description || ""}
+                                        onChange={(e) => setSettings({ ...settings, bank_description: e.target.value })}
+                                        placeholder="Lütfen açıklama kısmına Bayi ID'nizi yazınız."
+                                    />
+                                </div>
+                                <Button variant="outline" onClick={handleSaveSettings} disabled={isSavingSettings}>
+                                    {isSavingSettings ? <Loader2 className="animate-spin mr-2" size={16} /> : null}
+                                    Ayarları Kaydet
+                                </Button>
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
             </div>
