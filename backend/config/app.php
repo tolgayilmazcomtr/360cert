@@ -54,6 +54,11 @@ return [
 
     'url' => env('APP_URL', 'http://localhost'),
 
+    'frontend_url' => (function() {
+        $urls = explode(',', env('FRONTEND_URL', ''));
+        return rtrim(trim($urls[0] ?: env('APP_URL')), '/');
+    })(),
+
     /*
     |--------------------------------------------------------------------------
     | Application Timezone

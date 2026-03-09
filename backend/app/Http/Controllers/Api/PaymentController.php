@@ -72,7 +72,7 @@ class PaymentController extends Controller
             ];
 
             // Order info
-            $frontendUrl = rtrim(env('FRONTEND_URL', config('app.url')), '/');
+            $frontendUrl = config('app.frontend_url');
             $callbackUrl = env('APP_URL') . '/api/payment/callback';
 
             $orderInfo = [
@@ -201,7 +201,7 @@ class PaymentController extends Controller
     {
         Log::info('ParamPOS Callback Data:', $request->all());
 
-        $frontendUrl = rtrim(env('FRONTEND_URL', config('app.url')), '/');
+        $frontendUrl = config('app.frontend_url');
         
         $transactionId = $request->input('Data1');
         $status = $request->input('TURKPOS_RETVAL_Sonuc');

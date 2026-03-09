@@ -305,9 +305,7 @@ class CertificateController extends Controller
         }
 
         // Generate QR Code
-        $frontendUrl = env('FRONTEND_URL', config('app.url'));
-        $frontendUrl = rtrim($frontendUrl, '/');
-        $verifyUrl = $frontendUrl . "/verify/" . $certificate->qr_code_hash;
+        $verifyUrl = config('app.frontend_url') . "/verify/" . $certificate->qr_code_hash;
         $qrCode = base64_encode(QrCode::format('svg')->size(100)->generate($verifyUrl));
 
         // Get Background Image Base64
@@ -402,11 +400,7 @@ class CertificateController extends Controller
         }
 
         // Generate QR Code
-        // Generate QR Code
-        $frontendUrl = env('FRONTEND_URL', config('app.url'));
-        // Ensure no trailing slash
-        $frontendUrl = rtrim($frontendUrl, '/');
-        $verifyUrl = $frontendUrl . "/verify/" . $certificate->qr_code_hash;
+        $verifyUrl = config('app.frontend_url') . "/verify/" . $certificate->qr_code_hash;
         $qrCode = base64_encode(QrCode::format('svg')->size(100)->generate($verifyUrl));
 
         // Get Background Image Base64
@@ -519,8 +513,7 @@ class CertificateController extends Controller
         }
 
         // --- Standard PDF Generation Logic ---
-        $frontendUrl = rtrim(env('FRONTEND_URL', config('app.url')), '/');
-        $qrUrl = $frontendUrl . '/verify/' . $certificate->qr_code_hash;
+        $qrUrl = config('app.frontend_url') . '/verify/' . $certificate->qr_code_hash;
         $qrCode = base64_encode(\SimpleSoftwareIO\QrCode\Facades\QrCode::format('svg')->size(200)->generate($qrUrl));
         
         $bgPath = storage_path('app/public/' . $cardTemplate->background_path);
