@@ -241,7 +241,7 @@ class PaymentController extends Controller
                 return redirect()->to($frontendUrl . '/balance?payment_status=error&message=' . urlencode('Bakiye eklenirken hata oluştu.'));
             }
         } else {
-            $transaction->status = 'failed';
+            $transaction->status = 'rejected';
             $transaction->save();
             return redirect()->to($frontendUrl . '/balance?payment_status=error&message=' . urlencode($resultMessage ?? 'Kredi kartı işlemi reddedildi.'));
         }
