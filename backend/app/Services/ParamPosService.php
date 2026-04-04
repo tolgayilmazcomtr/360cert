@@ -53,9 +53,10 @@ class ParamPosService
             $totalAmountStr = number_format((float)$orderInfo['total_amount'], 2, ',', '');
 
             $securityString = $this->clientCode . $this->guid . $orderInfo['installments'] . $amountStr . $totalAmountStr . $orderInfo['order_id'] . $orderInfo['success_url'] . $orderInfo['fail_url'];
-            
+
             $hashObj = hash('sha256', $securityString);
             $islemHash = base64_encode(pack('H*', $hashObj));
+            Log::debug('ParamPOS SecurityString: ' . $securityString . ' | Hash: ' . $islemHash);
 
             $params = [
                 'G' => [
