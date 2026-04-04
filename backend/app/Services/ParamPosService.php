@@ -23,7 +23,7 @@ class ParamPosService
         $this->mode = config('parampos.mode', 'test');
 
         // Always use production WSDL for schema as test WSDL is sometimes blocked by Cloudflare 403
-        $this->wsdlUrl = 'https://posws.param.com.tr/turkpos.ws/service_turkpos_prod.asmx?WSDL';
+        $this->wsdlUrl = 'https://posws.param.com.tr/turkpos.ws/service_turkpos_prod.asmx?wsdl';
 
         $this->endpointUrl = $this->mode === 'production' 
             ? 'https://posws.param.com.tr/turkpos.ws/service_turkpos_prod.asmx' 
