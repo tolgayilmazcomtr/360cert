@@ -203,7 +203,10 @@ class PaymentController extends Controller
 
         $frontendUrl = config('app.frontend_url');
         
-        $transactionId = $request->input('Data1');
+        // Param sends custom data fields in TURKPOS_RETVAL_Ext_Data as pipe-separated: Data1|Data2|...
+        $extData = $request->input('TURKPOS_RETVAL_Ext_Data', '');
+        $extParts = explode('|', $extData);
+        $transactionId = $extParts[0] ?? $request->input('Data1');
         $status = $request->input('TURKPOS_RETVAL_Sonuc');
         $resultMessage = $request->input('TURKPOS_RETVAL_Sonuc_Str');
 
