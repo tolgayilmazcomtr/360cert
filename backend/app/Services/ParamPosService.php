@@ -55,7 +55,6 @@ class ParamPosService
             $securityString = $this->clientCode . $this->guid . $orderInfo['installments'] . $amountStr . $totalAmountStr . $orderInfo['order_id'] . $orderInfo['fail_url'] . $orderInfo['success_url'];
 
             $islemHash = base64_encode(sha1(mb_convert_encoding($securityString, 'ISO-8859-9'), true));
-            Log::debug('ParamPOS SecurityString: ' . $securityString . ' | Hash: ' . $islemHash);
 
             $params = [
                 'G' => [
