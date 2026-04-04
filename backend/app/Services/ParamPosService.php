@@ -105,6 +105,7 @@ class ParamPosService
                         'html' => $result->UCD_HTML ?? null,
                     ];
                 } else {
+                    Log::error('ParamPOS Rejected: ' . ($result->Sonuc_Str ?? 'unknown') . ' | Code: ' . ($result->Sonuc ?? '-1'));
                     return [
                         'status' => 'error',
                         'message' => $result->Sonuc_Str ?? 'Payment failed',
@@ -113,6 +114,7 @@ class ParamPosService
                 }
             }
 
+            Log::error('ParamPOS Invalid Response: ' . json_encode($response));
             return ['status' => 'error', 'message' => 'Invalid API Response'];
 
         } catch (Exception $e) {
