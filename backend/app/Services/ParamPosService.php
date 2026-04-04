@@ -52,10 +52,9 @@ class ParamPosService
             $amountStr = number_format((float)$orderInfo['amount'], 2, ',', '');
             $totalAmountStr = number_format((float)$orderInfo['total_amount'], 2, ',', '');
 
-            $securityString = $this->clientCode . strtolower($this->guid) . $orderInfo['installments'] . $amountStr . $totalAmountStr . $orderInfo['order_id'] . $orderInfo['success_url'] . $orderInfo['fail_url'];
+            $securityString = $this->clientCode . $this->guid . $orderInfo['installments'] . $amountStr . $totalAmountStr . $orderInfo['order_id'] . $orderInfo['fail_url'] . $orderInfo['success_url'];
 
-            $hashObj = hash('sha256', $securityString);
-            $islemHash = base64_encode(pack('H*', $hashObj));
+            $islemHash = base64_encode(sha1(mb_convert_encoding($securityString, 'ISO-8859-9'), true));
             Log::debug('ParamPOS SecurityString: ' . $securityString . ' | Hash: ' . $islemHash);
 
             $params = [
