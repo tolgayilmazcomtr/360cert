@@ -162,8 +162,12 @@ export default function TemplateDesignPage() {
         let label = "Yeni Alan";
         if (newElementType === 'student_name') label = "Öğrenci Adı Soyadı";
         else if (newElementType === 'tc_number') label = "TC Kimlik No";
+        else if (newElementType === 'birth_date') label = "Doğum Tarihi";
         else if (newElementType === 'certificate_no') label = "Sertifika No";
         else if (newElementType === 'issue_date') label = "Veriliş Tarihi";
+        else if (newElementType === 'start_date') label = "Eğitim Başlangıç Tarihi";
+        else if (newElementType === 'end_date') label = "Eğitim Bitiş Tarihi";
+        else if (newElementType === 'duration_hours') label = "Eğitim Süresi";
         else if (newElementType === 'qr_code') label = "QR Kod";
         else if (newElementType === 'dealer_logo') label = "Yetkili Logosu";
         else if (newElementType === 'student_photo') label = "Öğrenci Resmi";
@@ -347,8 +351,12 @@ export default function TemplateDesignPage() {
                             >
                                 <option value="student_name">Öğrenci Adı Soyadı</option>
                                 <option value="tc_number">TC Kimlik No</option>
+                                <option value="birth_date">Doğum Tarihi</option>
                                 <option value="certificate_no">Sertifika No</option>
                                 <option value="issue_date">Veriliş Tarihi</option>
+                                <option value="start_date">Eğitim Başlangıç Tarihi</option>
+                                <option value="end_date">Eğitim Bitiş Tarihi</option>
+                                <option value="duration_hours">Eğitim Süresi</option>
                                 <option value="qr_code">QR Kod</option>
                                 <option value="dealer_logo">Yetkili Logosu</option>
                                 <option value="student_photo">Öğrenci Resmi</option>

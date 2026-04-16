@@ -15,6 +15,7 @@ class Student extends Model
         'phone',
         'city',
         'birth_year',
+        'birth_date',
         'photo_path'
     ];
     

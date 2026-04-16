@@ -640,7 +640,7 @@ export default function CertificatesPage() {
                                     <CardContent className="space-y-1">
                                         <div className="font-semibold text-lg">{inspectionCert.student?.first_name} {inspectionCert.student?.last_name}</div>
                                         <div className="text-sm text-slate-600">TC/Pasaport No: {inspectionCert.student?.tc_number}</div>
-                                        <div className="text-sm text-slate-600">Doğum Yılı: {inspectionCert.student?.birth_year || '-'}</div>
+                                        <div className="text-sm text-slate-600">Doğum Tarihi: {inspectionCert.student?.birth_date ? new Date(inspectionCert.student.birth_date).toLocaleDateString('tr-TR') : (inspectionCert.student?.birth_year || '-')}</div>
                                         {inspectionCert.student?.photo_path && (
                                             <div className="mt-2">
                                                 <img

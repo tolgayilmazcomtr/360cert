@@ -129,6 +129,11 @@
                 case 'birth_year':
                     $content = $certificate->student?->birth_year ?? '';
                     break;
+                case 'birth_date':
+                    $content = $certificate->student?->birth_date
+                        ? \Carbon\Carbon::parse($certificate->student->birth_date)->format('d.m.Y')
+                        : ($certificate->student?->birth_year ?? '');
+                    break;
                 case 'qr_code':
                     $w = $element['width'] ?? 100;
                     $h = $element['height'] ?? 100;

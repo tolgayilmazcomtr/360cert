@@ -29,7 +29,7 @@ export default function CertificateCreatePage() {
         first_name: "",
         last_name: "",
         tc_number: "",
-        birth_year: "",
+        birth_date: "",
         training_program_id: "",
         certificate_language: "tr",
         duration_hours: "",
@@ -88,7 +88,7 @@ export default function CertificateCreatePage() {
             data.append('first_name', formData.first_name);
             data.append('last_name', formData.last_name);
             data.append('tc_number', formData.tc_number);
-            data.append('birth_year', formData.birth_year);
+            data.append('birth_date', formData.birth_date);
 
             data.append('training_program_id', formData.training_program_id);
             data.append('certificate_template_id', selectedTemplate.id);
@@ -226,15 +226,12 @@ export default function CertificateCreatePage() {
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label className="text-base font-semibold">Doğum Yılı <span className="text-red-500">*</span></Label>
+                                <Label className="text-base font-semibold">Doğum Tarihi <span className="text-red-500">*</span></Label>
                                 <Input
                                     className="h-11"
-                                    placeholder="Doğum Yılı Giriniz"
-                                    type="number"
-                                    min="1900"
-                                    max="2099"
-                                    value={formData.birth_year}
-                                    onChange={e => setFormData({ ...formData, birth_year: e.target.value })}
+                                    type="date"
+                                    value={formData.birth_date}
+                                    onChange={e => setFormData({ ...formData, birth_date: e.target.value })}
                                 />
                             </div>
                         </div>

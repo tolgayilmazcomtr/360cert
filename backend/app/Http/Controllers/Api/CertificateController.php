@@ -151,7 +151,7 @@ class CertificateController extends Controller
             'tc_number' => 'required|string|max:11',
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
-            'birth_year' => 'required|string|max:4',
+            'birth_date' => 'required|date',
             'photo' => 'nullable|image|mimes:jpeg,png,jpg|max:5120', // Öğrenci Resmi
             
             'training_program_id' => 'required|exists:training_programs,id',
@@ -201,7 +201,7 @@ class CertificateController extends Controller
 
             $student->first_name = $request->first_name;
             $student->last_name = $request->last_name;
-            $student->birth_year = $request->birth_year;
+            $student->birth_date = $request->birth_date;
 
             // Handle Student Photo
             if ($request->hasFile('photo')) {
