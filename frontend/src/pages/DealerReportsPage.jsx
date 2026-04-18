@@ -266,40 +266,55 @@ export default function DealerReportsPage() {
                                         )}
                                         <th className="px-4 py-2.5 text-right">Tutar</th>
                                         <th className="px-4 py-2.5 text-center">Tür</th>
+                                        <th className="px-4 py-2.5 text-right">Kalan</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y">
-                                    {transactions.map(tx => (
-                                        <tr key={tx.id} className={`${tx.type === 'deposit' ? 'hover:bg-emerald-50/30' : 'hover:bg-red-50/20'} transition-colors`}>
-                                            <td className="px-4 py-2.5 text-xs text-slate-500 whitespace-nowrap">{tx.date}</td>
-                                            <td className="px-4 py-2.5 text-slate-700 max-w-xs truncate">{tx.description || '-'}</td>
-                                            {detailModal.dealer?.is_main_dealer && (
-                                                <td className="px-4 py-2.5">
-                                                    {tx.is_sub_dealer ? (
-                                                        <span className="text-xs text-slate-500 bg-slate-100 rounded px-1.5 py-0.5">{tx.dealer_name}</span>
+                                    {(() => {
+                                        // Transactions are newest-first; compute running balance oldest-first then reverse
+                                        const ordered = [...transactions].reverse();
+                                        let running = 0;
+                                        const withBalance = ordered.map(tx => {
+                                            running += tx.type === 'deposit' ? tx.amount : -tx.amount;
+                                            return { ...tx, running: Math.round(running * 100) / 100 };
+                                        });
+                                        return withBalance.reverse().map(tx => (
+                                            <tr key={tx.id} className={`${tx.type === 'deposit' ? 'hover:bg-emerald-50/30' : 'hover:bg-red-50/20'} transition-colors`}>
+                                                <td className="px-4 py-2.5 text-xs text-slate-500 whitespace-nowrap">{tx.date}</td>
+                                                <td className="px-4 py-2.5 text-slate-700 max-w-xs truncate">{tx.description || '-'}</td>
+                                                {detailModal.dealer?.is_main_dealer && (
+                                                    <td className="px-4 py-2.5">
+                                                        {tx.is_sub_dealer ? (
+                                                            <span className="text-xs text-slate-500 bg-slate-100 rounded px-1.5 py-0.5">{tx.dealer_name}</span>
+                                                        ) : (
+                                                            <span className="text-xs text-purple-600 bg-purple-50 rounded px-1.5 py-0.5">Ana Bayi</span>
+                                                        )}
+                                                    </td>
+                                                )}
+                                                <td className="px-4 py-2.5 text-right font-semibold whitespace-nowrap">
+                                                    <span className={tx.type === 'deposit' ? 'text-emerald-600' : 'text-red-500'}>
+                                                        {tx.type === 'deposit' ? '+' : '-'}{tx.amount.toFixed(2)} TL
+                                                    </span>
+                                                </td>
+                                                <td className="px-4 py-2.5 text-center">
+                                                    {tx.type === 'deposit' ? (
+                                                        <span className="inline-flex items-center gap-1 text-[11px] bg-emerald-100 text-emerald-700 rounded-full px-2 py-0.5">
+                                                            <ArrowUpCircle size={11} /> Ödeme
+                                                        </span>
                                                     ) : (
-                                                        <span className="text-xs text-purple-600 bg-purple-50 rounded px-1.5 py-0.5">Ana Bayi</span>
+                                                        <span className="inline-flex items-center gap-1 text-[11px] bg-red-100 text-red-600 rounded-full px-2 py-0.5">
+                                                            <ArrowDownCircle size={11} /> Harcama
+                                                        </span>
                                                     )}
                                                 </td>
-                                            )}
-                                            <td className="px-4 py-2.5 text-right font-semibold whitespace-nowrap">
-                                                <span className={tx.type === 'deposit' ? 'text-emerald-600' : 'text-red-500'}>
-                                                    {tx.type === 'deposit' ? '+' : '-'}{tx.amount.toFixed(2)} TL
-                                                </span>
-                                            </td>
-                                            <td className="px-4 py-2.5 text-center">
-                                                {tx.type === 'deposit' ? (
-                                                    <span className="inline-flex items-center gap-1 text-[11px] bg-emerald-100 text-emerald-700 rounded-full px-2 py-0.5">
-                                                        <ArrowUpCircle size={11} /> Ödeme
+                                                <td className="px-4 py-2.5 text-right whitespace-nowrap">
+                                                    <span className={`font-bold text-sm ${tx.running < 0 ? 'text-red-600' : 'text-slate-700'}`}>
+                                                        {tx.running.toFixed(2)} TL
                                                     </span>
-                                                ) : (
-                                                    <span className="inline-flex items-center gap-1 text-[11px] bg-red-100 text-red-600 rounded-full px-2 py-0.5">
-                                                        <ArrowDownCircle size={11} /> Harcama
-                                                    </span>
-                                                )}
-                                            </td>
-                                        </tr>
-                                    ))}
+                                                </td>
+                                            </tr>
+                                        ));
+                                    })()}
                                 </tbody>
                             </table>
                         )}
