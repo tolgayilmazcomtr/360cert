@@ -7,9 +7,12 @@ use App\Models\User;
 use App\Models\ProfileUpdateRequest;
 use App\Models\DealerProgramPrice;
 use App\Models\TrainingProgram;
+use App\Models\Transaction;
+use App\Models\Certificate;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 
 class DealerController extends Controller
 {
@@ -416,5 +419,118 @@ class DealerController extends Controller
         $updateRequest->save();
 
         return response()->json(['message' => 'Talep reddedildi.']);
+    }
+
+    /**
+     * Dealer stats for reporting: cert count + total spend per dealer.
+     * Admin → all top-level dealers (+ their sub-dealers aggregated)
+     * Main dealer → their own sub-dealers
+     */
+    public function stats(Request $request)
+    {
+        $user = $request->user();
+
+        if ($user->role === 'admin') {
+            // Top-level dealers
+            $dealers = User::where('role', 'dealer')->whereNull('parent_id')->get();
+        } elseif ($user->role === 'dealer' && $user->is_main_dealer) {
+            $dealers = User::where('role', 'dealer')->where('parent_id', $user->id)->get();
+        } else {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $result = $dealers->map(function ($dealer) {
+            // Include sub-dealers in the same query
+            $dealerIds = [$dealer->id];
+            $subIds = User::where('parent_id', $dealer->id)->pluck('id')->toArray();
+            $allIds = array_merge($dealerIds, $subIds);
+
+            $certCount = Certificate::whereIn('user_id', $allIds)->count();
+            $totalSpend = Transaction::whereIn('user_id', $allIds)
+                ->where('type', 'expense')
+                ->where('status', 'approved')
+                ->sum('amount');
+
+            // Sub-dealer breakdown
+            $subStats = User::where('parent_id', $dealer->id)->get()->map(function ($sub) {
+                $certCount = Certificate::where('user_id', $sub->id)->count();
+                $totalSpend = Transaction::where('user_id', $sub->id)
+                    ->where('type', 'expense')
+                    ->where('status', 'approved')
+                    ->sum('amount');
+                return [
+                    'id' => $sub->id,
+                    'name' => $sub->name,
+                    'company_name' => $sub->company_name,
+                    'balance' => $sub->balance,
+                    'cert_count' => $certCount,
+                    'total_spend' => (float) $totalSpend,
+                ];
+            });
+
+            return [
+                'id' => $dealer->id,
+                'name' => $dealer->name,
+                'company_name' => $dealer->company_name,
+                'balance' => $dealer->balance,
+                'is_main_dealer' => $dealer->is_main_dealer,
+                'cert_count' => $certCount,
+                'total_spend' => (float) $totalSpend,
+                'sub_dealers' => $subStats,
+            ];
+        });
+
+        return response()->json($result);
+    }
+
+    /**
+     * Add balance to a dealer.
+     * Admin can top up any top-level dealer.
+     * Main dealer can top up their own sub-dealers.
+     */
+    public function addBalance(Request $request, $id)
+    {
+        $user = $request->user();
+
+        $request->validate([
+            'amount' => 'required|numeric|min:0.01',
+            'note' => 'nullable|string|max:255',
+        ]);
+
+        $dealer = User::where('role', 'dealer')->findOrFail($id);
+
+        // Authorization
+        if ($user->role === 'admin') {
+            // Admin can top up any dealer
+        } elseif ($user->role === 'dealer' && $user->is_main_dealer) {
+            if ($dealer->parent_id !== $user->id) {
+                return response()->json(['message' => 'Bu bayiye ödeme ekleyemezsiniz.'], 403);
+            }
+        } else {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        DB::beginTransaction();
+        try {
+            $dealer->increment('balance', $request->amount);
+
+            Transaction::create([
+                'user_id' => $dealer->id,
+                'amount' => $request->amount,
+                'type' => 'deposit',
+                'method' => 'manual',
+                'status' => 'approved',
+                'description' => $request->note ?: 'Manuel bakiye yükleme',
+            ]);
+
+            DB::commit();
+            return response()->json([
+                'message' => 'Bakiye başarıyla eklendi.',
+                'new_balance' => $dealer->fresh()->balance,
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'İşlem başarısız.'], 500);
+        }
     }
 }

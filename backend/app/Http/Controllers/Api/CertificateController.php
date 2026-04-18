@@ -191,8 +191,9 @@ class CertificateController extends Controller
             }
         }
 
-        // Balance Check for Dealers
-        if ($user->role !== 'admin') {
+        // Balance Check for Dealers (sub-dealers skip balance check — billed to parent)
+        $isSubDealer = $user->role === 'dealer' && !is_null($user->parent_id);
+        if ($user->role !== 'admin' && !$isSubDealer) {
             if ($user->balance < $effectivePrice) {
                 return response()->json(['message' => 'Yetersiz bakiye. Lütfen bakiye yükleyiniz.'], 402);
             }
@@ -236,13 +237,15 @@ class CertificateController extends Controller
             $student->save();
 
 
-            // Deduct Balance
-            if ($user->role !== 'admin') {
+            $programNameStr = is_array($program->name) ? ($program->name['tr'] ?? current($program->name) ?? '') : $program->name;
+
+            // Deduct Balance (sub-dealers don't decrement — they have no balance to deduct)
+            if ($user->role !== 'admin' && !$isSubDealer) {
                 $user->decrement('balance', $effectivePrice);
+            }
 
-                $programNameStr = is_array($program->name) ? ($program->name['tr'] ?? current($program->name) ?? '') : $program->name;
-
-                // Log Transaction (Expense)
+            // Log Transaction for all non-admin users (including sub-dealers for reporting)
+            if ($user->role !== 'admin') {
                 \App\Models\Transaction::create([
                     'user_id' => $user->id,
                     'amount' => $effectivePrice,

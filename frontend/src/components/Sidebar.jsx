@@ -47,6 +47,7 @@ export default function Sidebar() {
             icon: CreditCard,
             subItems: [
                 { name: "Özet Raporlar", path: "/dashboard/finance" },
+                { name: "Bayi Raporları", path: "/dashboard/dealer-reports" },
                 { name: "Hesap Hareketleri", path: "/dashboard/transactions" },
                 { name: "Ödeme Talepleri", path: "/dashboard/payment-requests" },
             ]
@@ -89,6 +90,7 @@ export default function Sidebar() {
     const mainDealerExtra = user?.is_main_dealer ? [
         { name: "Alt Bayilerim", icon: Building, path: "/dashboard/sub-dealers" },
         { name: "Alt Bayi Fiyatları", icon: CreditCard, path: "/dashboard/sub-dealer-pricing" },
+        { name: "Alt Bayi Raporları", icon: Award, path: "/dashboard/dealer-reports" },
     ] : [];
 
     const baseMenu = user?.role === 'admin' ? adminMenu : dealerMenu;

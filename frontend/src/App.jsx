@@ -36,6 +36,7 @@ import AccreditationsPage from "./pages/AccreditationsPage";
 import PaymentRequestsPage from "./pages/PaymentRequestsPage";
 import SubDealersPage from "./pages/SubDealersPage";
 import SubDealerPricingPage from "./pages/SubDealerPricingPage";
+import DealerReportsPage from "./pages/DealerReportsPage";
 
 const ProtectedRoute = ({ children }) => {
   const { user, isLoading } = useAuth();
@@ -100,6 +101,7 @@ function AppRoutes() {
         <Route path="payment-requests" element={<PaymentRequestsPage />} />
         <Route path="sub-dealers" element={<SubDealersPage />} />
         <Route path="sub-dealer-pricing" element={<SubDealerPricingPage />} />
+        <Route path="dealer-reports" element={<DealerReportsPage />} />
         {/* Diğer alt sayfalar buraya eklenecek */}
       </Route>
 
