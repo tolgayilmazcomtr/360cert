@@ -20,6 +20,8 @@ export const getStorageUrl = (path) => {
         .trim()
         .replace(/\/api\/?$/, '') // remove trailing /api or /api/
         .replace(/\/$/, '');      // remove any trailing slash
-    const cleanPath = path.replace(/^\/+/, ''); // remove leading slashes
+    const cleanPath = path
+        .replace(/^\/+/, '')           // remove leading slashes
+        .replace(/^storage\//, '');    // remove leading "storage/" if already present
     return `${base}/storage/${cleanPath}`;
 };
