@@ -403,6 +403,49 @@ class DealerController extends Controller
         return response()->json(['message' => 'Talep onaylandı ve bilgiler güncellendi.']);
     }
 
+    /**
+     * Dealer transaction history (for reporting modal).
+     * Admin can view any dealer. Main dealer can view own sub-dealers.
+     */
+    public function transactions(Request $request, $id)
+    {
+        $user = $request->user();
+        $dealer = \App\Models\User::where('role', 'dealer')->findOrFail($id);
+
+        if ($user->role === 'admin') {
+            // OK
+        } elseif ($user->role === 'dealer' && $user->is_main_dealer && $dealer->parent_id === $user->id) {
+            // OK
+        } else {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        // All dealer IDs to include (dealer + its sub-dealers if main)
+        $dealerIds = [$dealer->id];
+        $subIds = \App\Models\User::where('parent_id', $dealer->id)->pluck('id')->toArray();
+        $allIds = array_merge($dealerIds, $subIds);
+
+        $transactions = \App\Models\Transaction::whereIn('user_id', $allIds)
+            ->with('user:id,name,company_name,parent_id')
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($t) {
+                return [
+                    'id' => $t->id,
+                    'date' => $t->created_at->format('d.m.Y H:i'),
+                    'type' => $t->type,
+                    'amount' => (float) $t->amount,
+                    'method' => $t->method,
+                    'status' => $t->status,
+                    'description' => $t->description,
+                    'dealer_name' => $t->user?->company_name ?: $t->user?->name,
+                    'is_sub_dealer' => !is_null($t->user?->parent_id),
+                ];
+            });
+
+        return response()->json($transactions);
+    }
+
     public function rejectUpdateRequest(Request $request, $id)
     {
         if ($request->user()->role !== 'admin') {
