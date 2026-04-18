@@ -67,14 +67,28 @@ export default function BalancePage() {
 
     const fetchBankSettings = async () => {
         try {
+            // Sub-dealer: fetch parent dealer's bank info
+            if (user?.parent_id) {
+                const res = await api.get(`/dealers/${user.parent_id}/bank-info`);
+                if (res.data) {
+                    setBankSettings({
+                        bank_account_name: res.data.bank_account_name || "",
+                        bank_iban:         res.data.bank_iban || "",
+                        bank_name:         res.data.bank_name || "",
+                        bank_description:  res.data.bank_description || "Lütfen açıklama kısmına Bayi ID'nizi yazınız.",
+                    });
+                }
+                return;
+            }
+            // Regular dealer / admin: system settings
             const res = await api.get("/public/settings");
             if (res.data) {
                 setBankSettings(prev => ({
                     ...prev,
                     bank_account_name: res.data.bank_account_name || "",
-                    bank_iban: res.data.bank_iban || "",
-                    bank_name: res.data.bank_name || "",
-                    bank_description: res.data.bank_description || "Lütfen açıklama kısmına Bayi ID'nizi yazınız.",
+                    bank_iban:         res.data.bank_iban || "",
+                    bank_name:         res.data.bank_name || "",
+                    bank_description:  res.data.bank_description || "Lütfen açıklama kısmına Bayi ID'nizi yazınız.",
                 }));
             }
         } catch (e) {
@@ -190,11 +204,13 @@ export default function BalancePage() {
                                 Hesabınıza bakiye yüklemek için lütfen bir yöntem seçin.
                             </DialogDescription>
                         </DialogHeader>
-                        <Tabs defaultValue="credit_card" className="w-full">
-                            <TabsList className="grid w-full grid-cols-2">
-                                <TabsTrigger value="credit_card">Kredi Kartı</TabsTrigger>
-                                <TabsTrigger value="wire_transfer">Havale / EFT</TabsTrigger>
-                            </TabsList>
+                        <Tabs defaultValue={user?.parent_id ? "wire_transfer" : "credit_card"} className="w-full">
+                            {!user?.parent_id && (
+                                <TabsList className="grid w-full grid-cols-2">
+                                    <TabsTrigger value="credit_card">Kredi Kartı</TabsTrigger>
+                                    <TabsTrigger value="wire_transfer">Havale / EFT</TabsTrigger>
+                                </TabsList>
+                            )}
 
                             <div className="p-1 py-4">
                                 {/* Amount input — shared */}
@@ -210,8 +226,8 @@ export default function BalancePage() {
                                     />
                                 </div>
 
-                                {/* Credit Card Tab */}
-                                <TabsContent value="credit_card">
+                                {/* Credit Card Tab — hidden for sub-dealers */}
+                                {!user?.parent_id && <TabsContent value="credit_card">
                                     <form onSubmit={handleCreditCardPayment}>
                                         <div className="space-y-3">
                                             <div className="space-y-1.5">
@@ -287,7 +303,7 @@ export default function BalancePage() {
                                             {paying ? "İşleniyor..." : "Güvenli Ödeme Yap"}
                                         </Button>
                                     </form>
-                                </TabsContent>
+                                </TabsContent>}
 
                                 {/* Wire Transfer Tab */}
                                 <TabsContent value="wire_transfer">

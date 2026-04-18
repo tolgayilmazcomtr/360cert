@@ -245,6 +245,55 @@ class DealerController extends Controller
         return response()->json($dealer->templates);
     }
 
+    // --- Bank Info (Main Dealer) ---
+
+    // Get main dealer's bank info — accessible by the main dealer themselves or their sub-dealers
+    public function getBankInfo(Request $request, $id)
+    {
+        $user = $request->user();
+
+        // Main dealer viewing their own info, or sub-dealer viewing parent's info, or admin
+        if ($user->role !== 'admin' && $user->id != $id && $user->parent_id != $id) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $dealer = User::where('role', 'dealer')->where('is_main_dealer', true)->findOrFail($id);
+
+        return response()->json([
+            'bank_account_name' => $dealer->bank_account_name,
+            'bank_iban'         => $dealer->bank_iban,
+            'bank_name'         => $dealer->bank_name,
+            'bank_description'  => $dealer->bank_description,
+        ]);
+    }
+
+    // Update main dealer's bank info (main dealer only)
+    public function updateBankInfo(Request $request, $id)
+    {
+        $user = $request->user();
+
+        if ($user->role !== 'admin' && $user->id != $id) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $dealer = User::where('role', 'dealer')->where('is_main_dealer', true)->findOrFail($id);
+
+        $request->validate([
+            'bank_account_name' => 'nullable|string|max:255',
+            'bank_iban'         => 'nullable|string|max:50',
+            'bank_name'         => 'nullable|string|max:255',
+            'bank_description'  => 'nullable|string|max:500',
+        ]);
+
+        $dealer->bank_account_name = $request->bank_account_name;
+        $dealer->bank_iban         = $request->bank_iban;
+        $dealer->bank_name         = $request->bank_name;
+        $dealer->bank_description  = $request->bank_description;
+        $dealer->save();
+
+        return response()->json(['message' => 'Banka bilgileri güncellendi.', 'dealer' => $dealer]);
+    }
+
     // --- Program Prices (Main Dealer) ---
 
     // Get custom prices set by a main dealer for their sub-dealers

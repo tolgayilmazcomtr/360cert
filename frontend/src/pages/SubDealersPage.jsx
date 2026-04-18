@@ -1,19 +1,25 @@
 import { useState, useEffect } from "react";
 import api from "../api/axios";
+import { useAuth } from "../context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, Edit } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Plus, Edit, Save } from "lucide-react";
 
 const emptyForm = {
     name: "", email: "", password: "", phone: "",
     company_name: "", tax_number: "", tax_office: "", city: ""
 };
 
+const emptyBank = { bank_account_name: "", bank_iban: "", bank_name: "", bank_description: "" };
+
 export default function SubDealersPage() {
+    const { user } = useAuth();
     const [dealers, setDealers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -21,7 +27,16 @@ export default function SubDealersPage() {
     const [formData, setFormData] = useState(emptyForm);
     const [saving, setSaving] = useState(false);
 
-    useEffect(() => { fetchDealers(); }, []);
+    // Bank info state
+    const [bankForm, setBankForm] = useState(emptyBank);
+    const [bankLoading, setBankLoading] = useState(true);
+    const [bankSaving, setBankSaving] = useState(false);
+    const [bankSaved, setBankSaved] = useState(false);
+
+    useEffect(() => {
+        fetchDealers();
+        fetchBankInfo();
+    }, []);
 
     const fetchDealers = async () => {
         setLoading(true);
@@ -32,6 +47,37 @@ export default function SubDealersPage() {
             console.error(e);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const fetchBankInfo = async () => {
+        if (!user?.id) return;
+        setBankLoading(true);
+        try {
+            const res = await api.get(`/dealers/${user.id}/bank-info`);
+            setBankForm({
+                bank_account_name: res.data.bank_account_name || "",
+                bank_iban:         res.data.bank_iban || "",
+                bank_name:         res.data.bank_name || "",
+                bank_description:  res.data.bank_description || "",
+            });
+        } catch (e) {
+            // not yet set — ignore
+        } finally {
+            setBankLoading(false);
+        }
+    };
+
+    const saveBankInfo = async () => {
+        setBankSaving(true);
+        try {
+            await api.put(`/dealers/${user.id}/bank-info`, bankForm);
+            setBankSaved(true);
+            setTimeout(() => setBankSaved(false), 3000);
+        } catch (e) {
+            alert(e.response?.data?.message || "Kayıt başarısız.");
+        } finally {
+            setBankSaving(false);
         }
     };
 
@@ -87,6 +133,64 @@ export default function SubDealersPage() {
                 </div>
                 <Button onClick={handleOpenCreate}><Plus size={16} className="mr-2" /> Alt Bayi Ekle</Button>
             </div>
+
+            {/* IBAN / Banka Bilgileri Kartı */}
+            <Card>
+                <CardHeader>
+                    <CardTitle className="text-base">Alt Bayi Havale Bilgileri (IBAN)</CardTitle>
+                    <CardDescription>
+                        Alt bayileriniz bakiye yüklerken bu banka bilgilerini görecek. Havale/EFT yönteminde görüntülenir.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    {bankLoading ? (
+                        <p className="text-sm text-muted-foreground">Yükleniyor...</p>
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-1">
+                                <Label>Hesap Sahibi Adı</Label>
+                                <Input
+                                    value={bankForm.bank_account_name}
+                                    onChange={e => setBankForm(f => ({ ...f, bank_account_name: e.target.value }))}
+                                    placeholder="Ad Soyad / Firma Adı"
+                                />
+                            </div>
+                            <div className="space-y-1">
+                                <Label>IBAN</Label>
+                                <Input
+                                    value={bankForm.bank_iban}
+                                    onChange={e => setBankForm(f => ({ ...f, bank_iban: e.target.value.toUpperCase() }))}
+                                    placeholder="TR00 0000 0000 0000 0000 0000 00"
+                                    className="font-mono"
+                                />
+                            </div>
+                            <div className="space-y-1">
+                                <Label>Banka Adı</Label>
+                                <Input
+                                    value={bankForm.bank_name}
+                                    onChange={e => setBankForm(f => ({ ...f, bank_name: e.target.value }))}
+                                    placeholder="Banka Adı"
+                                />
+                            </div>
+                            <div className="space-y-1">
+                                <Label>Açıklama / Yönlendirme</Label>
+                                <Input
+                                    value={bankForm.bank_description}
+                                    onChange={e => setBankForm(f => ({ ...f, bank_description: e.target.value }))}
+                                    placeholder="Lütfen açıklamaya Bayi ID'nizi yazınız."
+                                />
+                            </div>
+                            <div className="md:col-span-2 flex items-center gap-3 pt-1">
+                                <Button onClick={saveBankInfo} disabled={bankSaving} className="gap-2">
+                                    <Save size={14} />
+                                    {bankSaving ? "Kaydediliyor..." : "Kaydet"}
+                                </Button>
+                                {bankSaved && <span className="text-sm text-green-600 font-medium">✓ Kaydedildi</span>}
+                            </div>
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
 
             <div className="rounded-md border bg-white dark:bg-slate-900 shadow-sm">
                 <Table>

@@ -95,6 +95,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/dealers/{id}/templates', [\App\Http\Controllers\Api\DealerController::class, 'getTemplates']);
     Route::post('/dealers/{id}/templates', [\App\Http\Controllers\Api\DealerController::class, 'assignTemplate']);
     Route::delete('/dealers/{id}/templates/{templateId}', [\App\Http\Controllers\Api\DealerController::class, 'revokeTemplate']);
+    Route::get('/dealers/{id}/bank-info', [\App\Http\Controllers\Api\DealerController::class, 'getBankInfo']);
+    Route::put('/dealers/{id}/bank-info', [\App\Http\Controllers\Api\DealerController::class, 'updateBankInfo']);
     Route::get('/dealers/{id}/program-prices', [\App\Http\Controllers\Api\DealerController::class, 'getProgramPrices']);
     Route::post('/dealers/{id}/program-prices', [\App\Http\Controllers\Api\DealerController::class, 'setProgramPrice']);
     Route::delete('/dealers/{id}/program-prices/{programId}', [\App\Http\Controllers\Api\DealerController::class, 'deleteProgramPrice']);

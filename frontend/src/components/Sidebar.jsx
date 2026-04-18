@@ -71,13 +71,17 @@ export default function Sidebar() {
         },
     ];
 
+    const isSubDealer = user?.role === 'dealer' && !!user?.parent_id;
+
     const dealerMenu = [
         { name: "Genel Bakış", icon: Home, path: "/dashboard" },
         { name: "Öğrenciler", icon: Users, path: "/dashboard/students" },
         { name: "Sertifikalar", icon: FileText, path: "/dashboard/certificates" },
         { name: "Bildirimler", icon: Bell, path: "/dashboard/notifications" },
         { name: "Bakiye & Ödeme", icon: CreditCard, path: "/dashboard/balance" },
-        { name: "Paketler", icon: CreditCard, path: "/dashboard/packages" },
+        ...(!isSubDealer ? [
+            { name: "Paketler", icon: CreditCard, path: "/dashboard/packages" },
+        ] : []),
         { name: "Ödeme Geçmişi", icon: CreditCard, path: "/dashboard/payment-history" },
         { name: "Profilim", icon: Settings, path: "/dashboard/profile" },
     ];

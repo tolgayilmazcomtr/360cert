@@ -37,6 +37,10 @@ class User extends Authenticatable
         'logo_path',
         'is_main_dealer',
         'parent_id',
+        'bank_account_name',
+        'bank_iban',
+        'bank_name',
+        'bank_description',
     ];
 
     public function profileUpdateRequests()

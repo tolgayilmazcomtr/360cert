@@ -123,6 +123,16 @@ export default function PackagesPage() {
 
     const visiblePackages = isAdmin ? packages : packages.filter(p => p.is_active);
 
+    // Sub-dealers cannot purchase packages
+    if (!isAdmin && user?.parent_id) {
+        return (
+            <div className="p-6 text-center text-muted-foreground">
+                <p className="text-lg font-medium">Bu sayfa kullanılamaz.</p>
+                <p className="text-sm mt-1">Alt bayiler paket satın alamaz. Bakiye yüklemek için Havale / EFT yöntemini kullanın.</p>
+            </div>
+        );
+    }
+
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
