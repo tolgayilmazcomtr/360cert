@@ -474,7 +474,18 @@ export default function CertificatesPage() {
                                     </TableCell>
                                     {user?.role === 'admin' && (
                                         <TableCell>
-                                            <div className="text-sm text-slate-700">{cert.student?.user?.name || '-'}</div>
+                                            {cert.student?.user ? (
+                                                <div className="flex flex-col gap-0.5">
+                                                    <span className="text-sm text-slate-700 font-medium">
+                                                        {cert.student.user.company_name || cert.student.user.name}
+                                                    </span>
+                                                    {cert.student.user.parent_id && cert.student.user.parent && (
+                                                        <span className="text-[11px] text-slate-400">
+                                                            ↳ {cert.student.user.parent.company_name || cert.student.user.parent.name}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            ) : <span className="text-slate-400">-</span>}
                                         </TableCell>
                                     )}
                                     <TableCell>

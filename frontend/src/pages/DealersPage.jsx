@@ -432,7 +432,14 @@ export default function DealersPage() {
                                                             <ImageIcon size={20} />
                                                         </div>
                                                     )}
-                                                    <span className="font-medium text-sm">{dealer.company_name}</span>
+                                                    <div className="flex flex-col gap-0.5">
+                                                        <span className="font-medium text-sm">{dealer.company_name}</span>
+                                                        {dealer.is_main_dealer && (
+                                                            <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-purple-600 bg-purple-50 border border-purple-200 rounded px-1.5 py-0.5 w-fit">
+                                                                <Star size={9} className="fill-purple-500 text-purple-500" /> Ana Bayi
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </TableCell>
                                             <TableCell>

@@ -20,8 +20,8 @@ class CertificateController extends Controller
     public function index(Request $request) 
     {
         $user = $request->user();
-        // Eager load student.user to get dealer info
-        $query = Certificate::with(['student.user', 'training_program', 'certificateType']);
+        // Eager load student.user.parent to get dealer + parent dealer info
+        $query = Certificate::with(['student.user.parent', 'training_program', 'certificateType']);
 
         // 1. Search (Student Name, TC, Certificate No)
         if ($request->filled('search')) {
