@@ -49,7 +49,8 @@ const parseCSV = (text) => {
     if (lines.length < 2) return { rows: [], errors: ["Dosya boş veya başlık satırı eksik."] };
 
     const sep = lines[0].includes(";") ? ";" : ",";
-    const headers = lines[0].split(sep).map(h => h.trim().toLowerCase().replace(/"/g, ""));
+    // Strip hint "(GG.AA.YYYY)" suffixes so "dogum_tarihi (GG.AA.YYYY)" matches "dogum_tarihi"
+    const headers = lines[0].split(sep).map(h => h.trim().toLowerCase().replace(/"/g, "").replace(/\s*\(.*?\)/, "").trim());
 
     const colMap = {};
     CSV_COLUMNS.forEach(c => {
