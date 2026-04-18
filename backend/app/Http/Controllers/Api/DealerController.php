@@ -24,7 +24,7 @@ class DealerController extends Controller
         $user = $request->user();
 
         if ($user->role === 'admin') {
-            $query = User::where('role', 'dealer')->whereNull('parent_id');
+            $query = User::where('role', 'dealer')->whereNull('parent_id')->where('is_active', true);
 
             if ($request->has('status')) {
                 if ($request->status === 'pending') {
@@ -407,6 +407,54 @@ class DealerController extends Controller
      * Dealer transaction history (for reporting modal).
      * Admin can view any dealer. Main dealer can view own sub-dealers.
      */
+    /** List inactive (soft-deleted) dealers */
+    public function inactive(Request $request)
+    {
+        if ($request->user()->role !== 'admin') {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $dealers = User::where('role', 'dealer')
+            ->whereNull('parent_id')
+            ->where('is_active', false)
+            ->orderBy('updated_at', 'desc')
+            ->get();
+
+        return response()->json($dealers);
+    }
+
+    /** Restore a soft-deleted dealer (set is_active = true) */
+    public function restore(Request $request, $id)
+    {
+        if ($request->user()->role !== 'admin') {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $dealer = User::where('role', 'dealer')->where('is_active', false)->findOrFail($id);
+        $dealer->is_active = true;
+        $dealer->save();
+
+        return response()->json(['message' => 'Bayi geri getirildi.']);
+    }
+
+    /** Permanently delete a dealer and all related data */
+    public function destroy(Request $request, $id)
+    {
+        if ($request->user()->role !== 'admin') {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $dealer = User::where('role', 'dealer')->findOrFail($id);
+
+        // Delete media files
+        if ($dealer->photo_path) Storage::disk('public')->delete($dealer->photo_path);
+        if ($dealer->logo_path) Storage::disk('public')->delete($dealer->logo_path);
+
+        $dealer->delete();
+
+        return response()->json(['message' => 'Bayi kalıcı olarak silindi.']);
+    }
+
     public function transactions(Request $request, $id)
     {
         $user = $request->user();

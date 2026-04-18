@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Edit, Plus, Image as ImageIcon, CheckCircle, XCircle, DollarSign, Trash2, MoreHorizontal, Star, Layout } from "lucide-react";
+import { Edit, Plus, Image as ImageIcon, CheckCircle, XCircle, DollarSign, Trash2, MoreHorizontal, Star, Layout, RotateCcw } from "lucide-react";
 import { getStorageUrl } from "@/lib/utils";
 import { useAuth } from "../context/AuthContext";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -24,10 +24,47 @@ export default function DealersPage() {
 
     const { user } = useAuth();
 
+    const [inactiveDealers, setInactiveDealers] = useState([]);
+    const [loadingInactive, setLoadingInactive] = useState(false);
+
     useEffect(() => {
         fetchDealers();
         fetchUpdateRequests();
+        fetchInactiveDealers();
     }, []);
+
+    const fetchInactiveDealers = async () => {
+        setLoadingInactive(true);
+        try {
+            const res = await api.get("/dealers/inactive");
+            setInactiveDealers(res.data);
+        } catch (e) {
+            console.error("Silinmiş bayiler yüklenemedi", e);
+        } finally {
+            setLoadingInactive(false);
+        }
+    };
+
+    const handleRestore = async (dealer) => {
+        if (!window.confirm(`"${dealer.company_name || dealer.name}" bayisini geri getirmek istiyor musunuz?`)) return;
+        try {
+            await api.post(`/dealers/${dealer.id}/restore`);
+            fetchDealers();
+            fetchInactiveDealers();
+        } catch (e) {
+            alert(e.response?.data?.message || "İşlem başarısız.");
+        }
+    };
+
+    const handlePermanentDelete = async (dealer) => {
+        if (!window.confirm(`"${dealer.company_name || dealer.name}" bayisi ve tüm verileri kalıcı olarak silinecek. Bu işlem geri alınamaz. Emin misiniz?`)) return;
+        try {
+            await api.delete(`/dealers/${dealer.id}`);
+            fetchInactiveDealers();
+        } catch (e) {
+            alert(e.response?.data?.message || "Silme işlemi başarısız.");
+        }
+    };
 
     // Pricing modal state
     const [isPricingModalOpen, setIsPricingModalOpen] = useState(false);
@@ -388,9 +425,16 @@ export default function DealersPage() {
             <Tabs defaultValue="dealers" className="w-full">
                 <TabsList className="mb-4">
                     <TabsTrigger value="dealers">Bayi Listesi</TabsTrigger>
-                    <TabsTrigger value="requests">Güncelleme Talepleri
+                    <TabsTrigger value="requests">
+                        Güncelleme Talepleri
                         {updateRequests.filter(r => r.status === 'pending').length > 0 && (
                             <Badge variant="destructive" className="ml-2 px-1.5 py-0.5 text-[10px]">{updateRequests.filter(r => r.status === 'pending').length}</Badge>
+                        )}
+                    </TabsTrigger>
+                    <TabsTrigger value="inactive">
+                        Silinmiş Bayiler
+                        {inactiveDealers.length > 0 && (
+                            <Badge className="ml-2 px-1.5 py-0.5 text-[10px] bg-rose-500">{inactiveDealers.length}</Badge>
                         )}
                     </TabsTrigger>
                 </TabsList>
@@ -561,6 +605,72 @@ export default function DealersPage() {
                                         </TableRow>
                                     ))
                                 )}
+                            </TableBody>
+                        </Table>
+                    </div>
+                </TabsContent>
+
+                <TabsContent value="inactive">
+                    <div className="rounded-md border bg-white dark:bg-slate-900 shadow-soft">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Firma & Logo</TableHead>
+                                    <TableHead>Yetkili</TableHead>
+                                    <TableHead>İletişim</TableHead>
+                                    <TableHead>Silinme Tarihi</TableHead>
+                                    <TableHead className="text-right">İşlemler</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {loadingInactive ? (
+                                    <TableRow><TableCell colSpan={5} className="text-center py-8">Yükleniyor...</TableCell></TableRow>
+                                ) : inactiveDealers.length === 0 ? (
+                                    <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">Silinmiş bayi bulunamadı.</TableCell></TableRow>
+                                ) : inactiveDealers.map(dealer => (
+                                    <TableRow key={dealer.id} className="opacity-70 hover:opacity-100 transition-opacity">
+                                        <TableCell>
+                                            <div className="flex items-center gap-3">
+                                                {dealer.logo_path ? (
+                                                    <img src={getStorageUrl(dealer.logo_path)} className="w-10 h-10 rounded-md object-contain border bg-white grayscale" alt="Logo" />
+                                                ) : (
+                                                    <div className="w-10 h-10 rounded-md bg-slate-100 flex items-center justify-center border text-slate-400">
+                                                        <ImageIcon size={20} />
+                                                    </div>
+                                                )}
+                                                <span className="font-medium text-sm text-slate-500">{dealer.company_name}</span>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell>
+                                            <div className="flex flex-col">
+                                                <span className="text-sm">{dealer.name}</span>
+                                                <span className="text-xs text-muted-foreground">{dealer.email}</span>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell className="text-sm text-slate-500">{dealer.phone || '-'}</TableCell>
+                                        <TableCell className="text-sm text-slate-400">
+                                            {new Date(dealer.updated_at).toLocaleDateString('tr-TR')}
+                                        </TableCell>
+                                        <TableCell className="text-right">
+                                            <div className="flex justify-end gap-2">
+                                                <Button
+                                                    size="sm" variant="outline"
+                                                    className="text-emerald-600 border-emerald-300 hover:bg-emerald-50 gap-1"
+                                                    onClick={() => handleRestore(dealer)}
+                                                >
+                                                    <RotateCcw size={13} /> Geri Getir
+                                                </Button>
+                                                <Button
+                                                    size="sm" variant="destructive"
+                                                    className="gap-1"
+                                                    onClick={() => handlePermanentDelete(dealer)}
+                                                >
+                                                    <Trash2 size={13} /> Kalıcı Sil
+                                                </Button>
+                                            </div>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
                             </TableBody>
                         </Table>
                     </div>

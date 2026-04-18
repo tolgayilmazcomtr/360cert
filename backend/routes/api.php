@@ -88,6 +88,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Dealers
     Route::get('/dealers/stats', [\App\Http\Controllers\Api\DealerController::class, 'stats']);
+    Route::get('/dealers/inactive', [\App\Http\Controllers\Api\DealerController::class, 'inactive']);
+    Route::post('/dealers/{id}/restore', [\App\Http\Controllers\Api\DealerController::class, 'restore']);
+    Route::delete('/dealers/{id}', [\App\Http\Controllers\Api\DealerController::class, 'destroy']);
     Route::get('/dealers', [\App\Http\Controllers\Api\DealerController::class, 'index']);
     Route::post('/dealers', [\App\Http\Controllers\Api\DealerController::class, 'store']);
     Route::put('/dealers/{id}', [\App\Http\Controllers\Api\DealerController::class, 'update']);
