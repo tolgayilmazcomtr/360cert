@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import api from "../api/axios";
+import { getStorageUrl } from "@/lib/utils";
 import { useAuth } from "../context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -644,7 +645,7 @@ export default function CertificatesPage() {
                                         {inspectionCert.student?.photo_path && (
                                             <div className="mt-2">
                                                 <img
-                                                    src={`${api.defaults.baseURL.replace('/api', '')}/storage/${inspectionCert.student.photo_path}`}
+                                                    src={getStorageUrl(inspectionCert.student.photo_path)}
                                                     alt="Öğrenci"
                                                     className="w-16 h-16 rounded object-cover border border-slate-200"
                                                 />

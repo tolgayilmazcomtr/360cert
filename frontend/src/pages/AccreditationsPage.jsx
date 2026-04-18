@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle, Plus, Trash2, Edit2, Loader2, Save, X, Image as ImageIcon } from "lucide-react";
+import { getStorageUrl } from "@/lib/utils";
 
 export default function AccreditationsPage() {
     const [accreditations, setAccreditations] = useState([]);
@@ -47,7 +48,7 @@ export default function AccreditationsPage() {
                 is_active: accreditation.is_active,
                 logo: null
             });
-            setPreviewLogo(accreditation.logo_path ? import.meta.env.VITE_API_BASE_URL.replace('/api', '') + accreditation.logo_path : null);
+            setPreviewLogo(accreditation.logo_path ? getStorageUrl(accreditation.logo_path) : null);
         } else {
             setEditingId(null);
             setFormData({ name: "", website: "", is_active: true, logo: null });
@@ -138,8 +139,6 @@ export default function AccreditationsPage() {
         }
     };
 
-    const apiBase = import.meta.env.VITE_API_BASE_URL ? import.meta.env.VITE_API_BASE_URL.replace(/\/api\/?$/, '') : 'http://127.0.0.1:8000';
-
     return (
         <div className="space-y-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -182,7 +181,7 @@ export default function AccreditationsPage() {
                                         <td className="px-6 py-4">
                                             {a.logo_path ? (
                                                 <div className="w-16 h-16 rounded overflow-hidden bg-white border flex items-center justify-center p-1">
-                                                    <img src={`${apiBase}${a.logo_path}`} alt={a.name} className="max-w-full max-h-full object-contain" />
+                                                    <img src={getStorageUrl(a.logo_path)} alt={a.name} className="max-w-full max-h-full object-contain" />
                                                 </div>
                                             ) : (
                                                 <div className="w-16 h-16 rounded bg-slate-100 border flex items-center justify-center text-slate-400">

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import api from '../api/axios';
+import { getStorageUrl } from '@/lib/utils';
 
 export default function AccreditationSlider() {
     const [accreditations, setAccreditations] = useState([]);
@@ -34,7 +35,6 @@ export default function AccreditationSlider() {
 
     // Duplicate the array once more to create a seamless infinite loop from 0% to -50%
     const duplicatedLogos = [...baseArray, ...baseArray];
-    const apiBase = import.meta.env.VITE_API_BASE_URL ? import.meta.env.VITE_API_BASE_URL.replace(/\/api\/?$/, '') : 'http://127.0.0.1:8000';
 
     return (
         <div className="w-full bg-slate-900 border-t border-b border-slate-800 py-12 overflow-hidden relative">
@@ -77,7 +77,7 @@ export default function AccreditationSlider() {
                                     <a href={linkUrl} className="w-full h-full flex items-center justify-center">
                                         {acc.logo_path ? (
                                             <img
-                                                src={`${apiBase}${acc.logo_path}`}
+                                                src={getStorageUrl(acc.logo_path)}
                                                 alt={acc.name}
                                                 className="max-w-full max-h-full object-contain filter grayscale hover:grayscale-0 transition-all duration-300 opacity-70 hover:opacity-100"
                                                 title={`${acc.name} - Sayfasına Git`}
@@ -92,7 +92,7 @@ export default function AccreditationSlider() {
                                     <div className="w-full h-full flex items-center justify-center">
                                         {acc.logo_path ? (
                                             <img
-                                                src={`${apiBase}${acc.logo_path}`}
+                                                src={getStorageUrl(acc.logo_path)}
                                                 alt={acc.name}
                                                 className="max-w-full max-h-full object-contain filter grayscale hover:grayscale-0 transition-all duration-300 opacity-70 hover:opacity-100"
                                                 title={acc.name}

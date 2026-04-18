@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import api from "../api/axios";
+import { getStorageUrl } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -205,7 +206,7 @@ export default function StudentsPage() {
                                         <div className="flex items-center gap-2">
                                             {student.photo_path ? (
                                                 <img
-                                                    src={`${import.meta.env.VITE_API_BASE_URL.replace('/api', '')}/storage/${student.photo_path}`}
+                                                    src={getStorageUrl(student.photo_path)}
                                                     alt="Photo"
                                                     className="h-8 w-8 rounded-full object-cover border border-slate-200"
                                                 />
