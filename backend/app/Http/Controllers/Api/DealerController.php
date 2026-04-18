@@ -24,7 +24,9 @@ class DealerController extends Controller
         $user = $request->user();
 
         if ($user->role === 'admin') {
-            $query = User::where('role', 'dealer')->whereNull('parent_id')->where('is_active', true);
+            $query = User::where('role', 'dealer')->whereNull('parent_id')->where(function($q) {
+                $q->where('is_active', true)->orWhereNull('is_active');
+            });
 
             if ($request->has('status')) {
                 if ($request->status === 'pending') {
@@ -417,6 +419,7 @@ class DealerController extends Controller
         $dealers = User::where('role', 'dealer')
             ->whereNull('parent_id')
             ->where('is_active', false)
+            ->whereNotNull('is_active')
             ->orderBy('updated_at', 'desc')
             ->get();
 
