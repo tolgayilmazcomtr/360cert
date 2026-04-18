@@ -440,25 +440,24 @@ class DealerController extends Controller
         }
 
         $result = $dealers->map(function ($dealer) {
-            // Include sub-dealers in the same query
             $dealerIds = [$dealer->id];
-            $subIds = User::where('parent_id', $dealer->id)->pluck('id')->toArray();
+            $subIds = \App\Models\User::where('parent_id', $dealer->id)->pluck('id')->toArray();
             $allIds = array_merge($dealerIds, $subIds);
 
-            // Certificates are linked via students (student.user_id = dealer.id)
+            // Certificates linked via students
             $studentIds = \App\Models\Student::whereIn('user_id', $allIds)->pluck('id')->toArray();
-            $certCount = Certificate::whereIn('student_id', $studentIds)->count();
+            $certCount = empty($studentIds) ? 0 : \App\Models\Certificate::whereIn('student_id', $studentIds)->count();
 
-            $totalSpend = Transaction::whereIn('user_id', $allIds)
+            $totalSpend = \App\Models\Transaction::whereIn('user_id', $allIds)
                 ->where('type', 'expense')
                 ->where('status', 'approved')
                 ->sum('amount');
 
             // Sub-dealer breakdown
-            $subStats = User::where('parent_id', $dealer->id)->get()->map(function ($sub) {
+            $subStats = \App\Models\User::where('parent_id', $dealer->id)->get()->map(function ($sub) {
                 $subStudentIds = \App\Models\Student::where('user_id', $sub->id)->pluck('id')->toArray();
-                $certCount = Certificate::whereIn('student_id', $subStudentIds)->count();
-                $totalSpend = Transaction::where('user_id', $sub->id)
+                $subCertCount = empty($subStudentIds) ? 0 : \App\Models\Certificate::whereIn('student_id', $subStudentIds)->count();
+                $subTotalSpend = \App\Models\Transaction::where('user_id', $sub->id)
                     ->where('type', 'expense')
                     ->where('status', 'approved')
                     ->sum('amount');
@@ -467,8 +466,8 @@ class DealerController extends Controller
                     'name' => $sub->name,
                     'company_name' => $sub->company_name,
                     'balance' => $sub->balance,
-                    'cert_count' => $certCount,
-                    'total_spend' => (float) $totalSpend,
+                    'cert_count' => $subCertCount,
+                    'total_spend' => (float) $subTotalSpend,
                 ];
             });
 
@@ -477,7 +476,7 @@ class DealerController extends Controller
                 'name' => $dealer->name,
                 'company_name' => $dealer->company_name,
                 'balance' => $dealer->balance,
-                'is_main_dealer' => $dealer->is_main_dealer,
+                'is_main_dealer' => (bool) $dealer->is_main_dealer,
                 'cert_count' => $certCount,
                 'total_spend' => (float) $totalSpend,
                 'sub_dealers' => $subStats,
@@ -522,7 +521,7 @@ class DealerController extends Controller
                 'user_id' => $dealer->id,
                 'amount' => $request->amount,
                 'type' => 'deposit',
-                'method' => 'manual',
+                'method' => 'wire_transfer',
                 'status' => 'approved',
                 'description' => $request->note ?: 'Manuel bakiye yükleme',
             ]);
