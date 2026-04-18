@@ -91,9 +91,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/dealers', [\App\Http\Controllers\Api\DealerController::class, 'store']);
     Route::put('/dealers/{id}', [\App\Http\Controllers\Api\DealerController::class, 'update']);
     Route::put('/dealers/{id}/status', [\App\Http\Controllers\Api\DealerController::class, 'updateStatus']);
+    Route::put('/dealers/{id}/main-dealer-status', [\App\Http\Controllers\Api\DealerController::class, 'updateMainDealerStatus']);
     Route::get('/dealers/{id}/templates', [\App\Http\Controllers\Api\DealerController::class, 'getTemplates']);
     Route::post('/dealers/{id}/templates', [\App\Http\Controllers\Api\DealerController::class, 'assignTemplate']);
     Route::delete('/dealers/{id}/templates/{templateId}', [\App\Http\Controllers\Api\DealerController::class, 'revokeTemplate']);
+    Route::get('/dealers/{id}/program-prices', [\App\Http\Controllers\Api\DealerController::class, 'getProgramPrices']);
+    Route::post('/dealers/{id}/program-prices', [\App\Http\Controllers\Api\DealerController::class, 'setProgramPrice']);
+    Route::delete('/dealers/{id}/program-prices/{programId}', [\App\Http\Controllers\Api\DealerController::class, 'deleteProgramPrice']);
     
     // Dealer Admin Review Requests
     Route::get('/dealers/update-requests/pending-count', [\App\Http\Controllers\Api\DealerController::class, 'getPendingUpdateRequestsCount']);

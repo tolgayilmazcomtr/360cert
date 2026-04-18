@@ -117,6 +117,21 @@ export default function DealersPage() {
         }
     };
 
+    const handleMainDealerToggle = async (dealer) => {
+        const newVal = !dealer.is_main_dealer;
+        const msg = newVal
+            ? `"${dealer.name}" kullanıcısını Ana Bayi yapmak istiyor musunuz?`
+            : `"${dealer.name}" kullanıcısının Ana Bayi statüsünü kaldırmak istiyor musunuz?`;
+        if (!window.confirm(msg)) return;
+        try {
+            await api.put(`/dealers/${dealer.id}/main-dealer-status`, { is_main_dealer: newVal });
+            fetchDealers();
+        } catch (error) {
+            console.error("Ana bayi güncelleme hatası", error);
+            alert("İşlem başarısız.");
+        }
+    };
+
     const handleOpenQuotaModal = (dealer) => {
         setSelectedDealer(dealer);
         setNewQuota(dealer.student_quota);
@@ -314,6 +329,14 @@ export default function DealersPage() {
                                             <TableCell className="text-right space-x-2">
                                                 <Button size="sm" variant="secondary" onClick={() => handleOpenTemplateModal(dealer.id)}>
                                                     Şablonlar
+                                                </Button>
+                                                <Button
+                                                    size="sm"
+                                                    variant={dealer.is_main_dealer ? "default" : "outline"}
+                                                    className={dealer.is_main_dealer ? "bg-purple-600 hover:bg-purple-700 text-white" : "text-purple-600 border-purple-300 hover:bg-purple-50"}
+                                                    onClick={() => handleMainDealerToggle(dealer)}
+                                                >
+                                                    {dealer.is_main_dealer ? "Ana Bayi ✓" : "Ana Bayi Yap"}
                                                 </Button>
                                                 <Button variant="outline" size="sm" onClick={() => handleOpenQuotaModal(dealer)}>
                                                     <Edit size={14} className="mr-1" /> Kota

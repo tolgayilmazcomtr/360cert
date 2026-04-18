@@ -82,7 +82,13 @@ export default function Sidebar() {
         { name: "Profilim", icon: Settings, path: "/dashboard/profile" },
     ];
 
-    const menu = user?.role === 'admin' ? adminMenu : dealerMenu;
+    const mainDealerExtra = user?.is_main_dealer ? [
+        { name: "Alt Bayilerim", icon: Building, path: "/dashboard/sub-dealers" },
+        { name: "Alt Bayi Fiyatları", icon: CreditCard, path: "/dashboard/sub-dealer-pricing" },
+    ] : [];
+
+    const baseMenu = user?.role === 'admin' ? adminMenu : dealerMenu;
+    const menu = user?.role === 'dealer' ? [...baseMenu, ...mainDealerExtra] : baseMenu;
 
     const [unreadCount, setUnreadCount] = useState(0);
     const [pendingUpdatesCount, setPendingUpdatesCount] = useState(0);

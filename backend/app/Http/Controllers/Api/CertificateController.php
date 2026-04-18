@@ -170,9 +170,20 @@ class CertificateController extends Controller
         $program = TrainingProgram::findOrFail($request->training_program_id);
         $template = CertificateTemplate::findOrFail($request->certificate_template_id);
         
+        // Determine effective price: sub-dealer uses parent's custom price if set
+        $effectivePrice = $program->default_price;
+        if ($user->role !== 'admin' && $user->parent_id) {
+            $customPrice = \App\Models\DealerProgramPrice::where('dealer_id', $user->parent_id)
+                ->where('training_program_id', $program->id)
+                ->value('price');
+            if ($customPrice !== null) {
+                $effectivePrice = $customPrice;
+            }
+        }
+
         // Balance Check for Dealers
         if ($user->role !== 'admin') {
-            if ($user->balance < $program->default_price) {
+            if ($user->balance < $effectivePrice) {
                 return response()->json(['message' => 'Yetersiz bakiye. Lütfen bakiye yükleyiniz.'], 402);
             }
         }
@@ -217,14 +228,14 @@ class CertificateController extends Controller
 
             // Deduct Balance
             if ($user->role !== 'admin') {
-                $user->decrement('balance', $program->default_price);
-                
+                $user->decrement('balance', $effectivePrice);
+
                 $programNameStr = is_array($program->name) ? ($program->name['tr'] ?? current($program->name) ?? '') : $program->name;
-                
+
                 // Log Transaction (Expense)
                 \App\Models\Transaction::create([
                     'user_id' => $user->id,
-                    'amount' => $program->default_price,
+                    'amount' => $effectivePrice,
                     'type' => 'expense',
                     'method' => 'system',
                     'status' => 'approved',
@@ -257,7 +268,7 @@ class CertificateController extends Controller
                 'issue_date' => $request->issue_date,
                 'qr_code_hash' => $hash,
                 'status' => $user->role === 'admin' ? 'approved' : 'pending',
-                'cost' => $program->default_price,
+                'cost' => $effectivePrice,
                 'transcript_path' => $transcriptPath,
             ]);
 

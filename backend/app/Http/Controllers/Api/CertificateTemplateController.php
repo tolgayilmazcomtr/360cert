@@ -17,6 +17,14 @@ class CertificateTemplateController extends Controller
             return response()->json(CertificateTemplate::with('certificateType')->orderBy('created_at', 'desc')->get());
         }
 
+        // Sub-dealer: show parent dealer's templates
+        if ($user->parent_id) {
+            $parent = \App\Models\User::find($user->parent_id);
+            if ($parent) {
+                return response()->json($parent->templates()->with('certificateType')->orderBy('created_at', 'desc')->get());
+            }
+        }
+
         return response()->json($user->templates()->with('certificateType')->orderBy('created_at', 'desc')->get());
     }
 

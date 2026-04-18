@@ -35,6 +35,8 @@ class User extends Authenticatable
         'city',
         'photo_path',
         'logo_path',
+        'is_main_dealer',
+        'parent_id',
     ];
 
     public function profileUpdateRequests()
@@ -69,5 +71,20 @@ class User extends Authenticatable
         return $this->belongsToMany(CertificateTemplate::class, 'certificate_template_user')
                     ->withPivot('assigned_at')
                     ->withTimestamps();
+    }
+
+    public function parent()
+    {
+        return $this->belongsTo(User::class, 'parent_id');
+    }
+
+    public function subDealers()
+    {
+        return $this->hasMany(User::class, 'parent_id');
+    }
+
+    public function programPrices()
+    {
+        return $this->hasMany(DealerProgramPrice::class, 'dealer_id');
     }
 }

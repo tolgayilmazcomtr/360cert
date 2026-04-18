@@ -5,36 +5,51 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\ProfileUpdateRequest;
+use App\Models\DealerProgramPrice;
+use App\Models\TrainingProgram;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 
 class DealerController extends Controller
 {
-    // List all dealers (for Admin)
+    // List dealers
+    // Admin: all top-level dealers (no parent)
+    // Main dealer: their own sub-dealers
     public function index(Request $request)
     {
-        // Manual Admin Check
-        if ($request->user()->role !== 'admin') {
-            return response()->json(['message' => 'Unauthorized'], 403);
-        }
+        $user = $request->user();
 
-        $query = User::where('role', 'dealer');
+        if ($user->role === 'admin') {
+            $query = User::where('role', 'dealer')->whereNull('parent_id');
 
-        if ($request->has('status')) {
-            if ($request->status === 'pending') {
-                $query->where('is_approved', false);
-            } else if ($request->status === 'approved') {
-                $query->where('is_approved', true);
+            if ($request->has('status')) {
+                if ($request->status === 'pending') {
+                    $query->where('is_approved', false);
+                } else if ($request->status === 'approved') {
+                    $query->where('is_approved', true);
+                }
             }
+
+            return response()->json($query->orderBy('created_at', 'desc')->paginate(20));
         }
 
-        return response()->json($query->orderBy('created_at', 'desc')->paginate(20));
+        // Main dealer: list their sub-dealers
+        if ($user->role === 'dealer' && $user->is_main_dealer) {
+            return response()->json(
+                User::where('role', 'dealer')->where('parent_id', $user->id)
+                    ->orderBy('created_at', 'desc')->paginate(20)
+            );
+        }
+
+        return response()->json(['message' => 'Unauthorized'], 403);
     }
 
     public function store(Request $request)
     {
-        if ($request->user()->role !== 'admin') {
+        $user = $request->user();
+
+        if ($user->role !== 'admin' && !($user->role === 'dealer' && $user->is_main_dealer)) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
@@ -62,6 +77,8 @@ class DealerController extends Controller
             'tax_number' => $request->tax_number,
             'tax_office' => $request->tax_office,
             'city' => $request->city,
+            // Sub-dealer: parent is the main dealer creating them
+            'parent_id' => ($user->role === 'dealer' && $user->is_main_dealer) ? $user->id : null,
         ]);
 
         if ($request->hasFile('photo')) {
@@ -79,11 +96,18 @@ class DealerController extends Controller
 
     public function update(Request $request, $id)
     {
-        if ($request->user()->role !== 'admin') {
+        $user = $request->user();
+
+        if ($user->role !== 'admin' && !($user->role === 'dealer' && $user->is_main_dealer)) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
-        $dealer = User::where('role', 'dealer')->findOrFail($id);
+        $query = User::where('role', 'dealer');
+        // Main dealer can only edit their own sub-dealers
+        if ($user->role === 'dealer') {
+            $query->where('parent_id', $user->id);
+        }
+        $dealer = $query->findOrFail($id);
 
         $request->validate([
             'name' => 'required|string|max:255',
@@ -111,16 +135,12 @@ class DealerController extends Controller
         }
 
         if ($request->hasFile('photo')) {
-            if ($dealer->photo_path) {
-                Storage::disk('public')->delete($dealer->photo_path);
-            }
+            if ($dealer->photo_path) Storage::disk('public')->delete($dealer->photo_path);
             $dealer->photo_path = $request->file('photo')->store('dealers/photos', 'public');
         }
 
         if ($request->hasFile('logo')) {
-            if ($dealer->logo_path) {
-                Storage::disk('public')->delete($dealer->logo_path);
-            }
+            if ($dealer->logo_path) Storage::disk('public')->delete($dealer->logo_path);
             $dealer->logo_path = $request->file('logo')->store('dealers/logos', 'public');
         }
 
@@ -129,7 +149,7 @@ class DealerController extends Controller
         return response()->json($dealer);
     }
 
-    // Approve/Reject Dealer
+    // Approve/Reject Dealer (admin only)
     public function updateStatus(Request $request, $id)
     {
         if ($request->user()->role !== 'admin') {
@@ -144,18 +164,33 @@ class DealerController extends Controller
         ]);
 
         $dealer->is_approved = $request->is_approved;
-        
+
         if ($request->has('student_quota')) {
             $dealer->student_quota = $request->student_quota;
         }
 
         $dealer->save();
 
-        // Send notification email here (Queue)
+        return response()->json($dealer);
+    }
+
+    // Toggle is_main_dealer flag (admin only)
+    public function updateMainDealerStatus(Request $request, $id)
+    {
+        if ($request->user()->role !== 'admin') {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $dealer = User::where('role', 'dealer')->whereNull('parent_id')->findOrFail($id);
+
+        $request->validate(['is_main_dealer' => 'required|boolean']);
+
+        $dealer->is_main_dealer = $request->is_main_dealer;
+        $dealer->save();
 
         return response()->json($dealer);
     }
-    
+
     // Update Quota
     public function updateQuota(Request $request, $id)
     {
@@ -163,31 +198,28 @@ class DealerController extends Controller
             return response()->json(['message' => 'Unauthorized'], 403);
         }
         $dealer = User::where('role', 'dealer')->findOrFail($id);
-        
-        $request->validate([
-            'quota' => 'required|integer|min:0'
-        ]);
+
+        $request->validate(['quota' => 'required|integer|min:0']);
 
         $dealer->student_quota = $request->quota;
         $dealer->save();
 
         return response()->json($dealer);
     }
+
     public function assignTemplate(Request $request, $id)
     {
-        // Admin check
         if ($request->user()->role !== 'admin') {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
         try {
             $dealer = User::where('role', 'dealer')->findOrFail($id);
-            
+
             $request->validate([
                 'template_id' => 'required|exists:certificate_templates,id',
             ]);
 
-            // Explicitly pass assigned_at to avoid any DB default value issues
             $dealer->templates()->syncWithoutDetaching([
                 $request->template_id => ['assigned_at' => now()]
             ]);
@@ -211,6 +243,64 @@ class DealerController extends Controller
     {
         $dealer = User::where('role', 'dealer')->findOrFail($id);
         return response()->json($dealer->templates);
+    }
+
+    // --- Program Prices (Main Dealer) ---
+
+    // Get custom prices set by a main dealer for their sub-dealers
+    public function getProgramPrices(Request $request, $id)
+    {
+        $user = $request->user();
+
+        // Admin can view any dealer's prices; main dealer can only view their own
+        if ($user->role !== 'admin' && $user->id != $id) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $dealer = User::where('role', 'dealer')->where('is_main_dealer', true)->findOrFail($id);
+
+        $prices = $dealer->programPrices()->with('trainingProgram')->get();
+        return response()->json($prices);
+    }
+
+    // Set/update a custom price
+    public function setProgramPrice(Request $request, $id)
+    {
+        $user = $request->user();
+
+        if ($user->role !== 'admin' && $user->id != $id) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $dealer = User::where('role', 'dealer')->where('is_main_dealer', true)->findOrFail($id);
+
+        $request->validate([
+            'training_program_id' => 'required|exists:training_programs,id',
+            'price' => 'required|numeric|min:0',
+        ]);
+
+        $price = DealerProgramPrice::updateOrCreate(
+            ['dealer_id' => $dealer->id, 'training_program_id' => $request->training_program_id],
+            ['price' => $request->price]
+        );
+
+        return response()->json($price->load('trainingProgram'));
+    }
+
+    // Delete a custom price (fall back to default)
+    public function deleteProgramPrice(Request $request, $id, $programId)
+    {
+        $user = $request->user();
+
+        if ($user->role !== 'admin' && $user->id != $id) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        DealerProgramPrice::where('dealer_id', $id)
+            ->where('training_program_id', $programId)
+            ->delete();
+
+        return response()->json(['message' => 'Özel fiyat kaldırıldı.']);
     }
 
     // Update Requests Management
@@ -241,7 +331,7 @@ class DealerController extends Controller
         }
 
         $updateRequest = ProfileUpdateRequest::with('user')->findOrFail($id);
-        
+
         if ($updateRequest->status !== 'pending') {
             return response()->json(['message' => 'Bu talep daha önce işlenmiş.'], 400);
         }
@@ -249,12 +339,11 @@ class DealerController extends Controller
         $dealer = $updateRequest->user;
         $requestedData = $updateRequest->requested_data;
 
-        // Apply changes
         if (isset($requestedData['company_name'])) $dealer->company_name = $requestedData['company_name'];
         if (isset($requestedData['tax_number'])) $dealer->tax_number = $requestedData['tax_number'];
         if (isset($requestedData['tax_office'])) $dealer->tax_office = $requestedData['tax_office'];
         if (isset($requestedData['city'])) $dealer->city = $requestedData['city'];
-        
+
         $dealer->save();
 
         $updateRequest->status = 'approved';
@@ -270,7 +359,7 @@ class DealerController extends Controller
         }
 
         $updateRequest = ProfileUpdateRequest::findOrFail($id);
-        
+
         if ($updateRequest->status !== 'pending') {
             return response()->json(['message' => 'Bu talep daha önce işlenmiş.'], 400);
         }
