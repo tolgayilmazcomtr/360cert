@@ -445,7 +445,10 @@ class DealerController extends Controller
             $subIds = User::where('parent_id', $dealer->id)->pluck('id')->toArray();
             $allIds = array_merge($dealerIds, $subIds);
 
-            $certCount = Certificate::whereIn('user_id', $allIds)->count();
+            // Certificates are linked via students (student.user_id = dealer.id)
+            $studentIds = \App\Models\Student::whereIn('user_id', $allIds)->pluck('id')->toArray();
+            $certCount = Certificate::whereIn('student_id', $studentIds)->count();
+
             $totalSpend = Transaction::whereIn('user_id', $allIds)
                 ->where('type', 'expense')
                 ->where('status', 'approved')
@@ -453,7 +456,8 @@ class DealerController extends Controller
 
             // Sub-dealer breakdown
             $subStats = User::where('parent_id', $dealer->id)->get()->map(function ($sub) {
-                $certCount = Certificate::where('user_id', $sub->id)->count();
+                $subStudentIds = \App\Models\Student::where('user_id', $sub->id)->pluck('id')->toArray();
+                $certCount = Certificate::whereIn('student_id', $subStudentIds)->count();
                 $totalSpend = Transaction::where('user_id', $sub->id)
                     ->where('type', 'expense')
                     ->where('status', 'approved')
