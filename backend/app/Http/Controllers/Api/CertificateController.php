@@ -170,14 +170,24 @@ class CertificateController extends Controller
         $program = TrainingProgram::findOrFail($request->training_program_id);
         $template = CertificateTemplate::findOrFail($request->certificate_template_id);
         
-        // Determine effective price: sub-dealer uses parent's custom price if set
+        // Determine effective price:
+        // 1. Dealer's own custom price (set by admin)
+        // 2. Parent main dealer's custom price (for sub-dealers)
+        // 3. Training program default price
         $effectivePrice = $program->default_price;
-        if ($user->role !== 'admin' && $user->parent_id) {
-            $customPrice = \App\Models\DealerProgramPrice::where('dealer_id', $user->parent_id)
+        if ($user->role !== 'admin') {
+            $ownPrice = \App\Models\DealerProgramPrice::where('dealer_id', $user->id)
                 ->where('training_program_id', $program->id)
                 ->value('price');
-            if ($customPrice !== null) {
-                $effectivePrice = $customPrice;
+            if ($ownPrice !== null) {
+                $effectivePrice = $ownPrice;
+            } elseif ($user->parent_id) {
+                $parentPrice = \App\Models\DealerProgramPrice::where('dealer_id', $user->parent_id)
+                    ->where('training_program_id', $program->id)
+                    ->value('price');
+                if ($parentPrice !== null) {
+                    $effectivePrice = $parentPrice;
+                }
             }
         }
 

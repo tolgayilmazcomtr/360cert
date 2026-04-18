@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Check, X, Edit, RotateCcw, Plus, Image as ImageIcon, CheckCircle, XCircle } from "lucide-react";
+import { Check, X, Edit, RotateCcw, Plus, Image as ImageIcon, CheckCircle, XCircle, DollarSign, Trash2 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -26,6 +26,69 @@ export default function DealersPage() {
         fetchDealers();
         fetchUpdateRequests();
     }, []);
+
+    // Pricing modal state
+    const [isPricingModalOpen, setIsPricingModalOpen] = useState(false);
+    const [pricingDealer, setPricingDealer] = useState(null);
+    const [programs, setPrograms] = useState([]);
+    const [dealerPrices, setDealerPrices] = useState({});
+    const [priceEditValues, setPriceEditValues] = useState({});
+    const [priceSaving, setPriceSaving] = useState({});
+    const [pricingLoading, setPricingLoading] = useState(false);
+
+    const getProgramName = (p) => {
+        if (!p) return "";
+        return typeof p.name === "object" ? (p.name.tr ?? Object.values(p.name)[0] ?? "") : p.name;
+    };
+
+    const handleOpenPricingModal = async (dealer) => {
+        setPricingDealer(dealer);
+        setPriceEditValues({});
+        setIsPricingModalOpen(true);
+        setPricingLoading(true);
+        try {
+            const [progRes, priceRes] = await Promise.all([
+                api.get("/training-programs"),
+                api.get(`/dealers/${dealer.id}/program-prices`),
+            ]);
+            setPrograms(progRes.data);
+            const map = {};
+            priceRes.data.forEach(p => { map[p.training_program_id] = parseFloat(p.price); });
+            setDealerPrices(map);
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setPricingLoading(false);
+        }
+    };
+
+    const handleSavePrice = async (programId) => {
+        const val = priceEditValues[programId];
+        if (val === undefined || val === "") return;
+        setPriceSaving(s => ({ ...s, [programId]: true }));
+        try {
+            await api.post(`/dealers/${pricingDealer.id}/program-prices`, {
+                training_program_id: programId,
+                price: parseFloat(val),
+            });
+            setDealerPrices(p => ({ ...p, [programId]: parseFloat(val) }));
+            setPriceEditValues(v => { const nv = { ...v }; delete nv[programId]; return nv; });
+        } catch (e) {
+            alert(e.response?.data?.message || "Kayıt başarısız.");
+        } finally {
+            setPriceSaving(s => ({ ...s, [programId]: false }));
+        }
+    };
+
+    const handleDeletePrice = async (programId) => {
+        if (!window.confirm("Bu özel fiyatı kaldırmak istiyor musunuz?")) return;
+        try {
+            await api.delete(`/dealers/${pricingDealer.id}/program-prices/${programId}`);
+            setDealerPrices(p => { const np = { ...p }; delete np[programId]; return np; });
+        } catch (e) {
+            alert(e.response?.data?.message || "Silme başarısız.");
+        }
+    };
 
     const [templates, setTemplates] = useState([]);
     const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
@@ -330,6 +393,9 @@ export default function DealersPage() {
                                                 <Button size="sm" variant="secondary" onClick={() => handleOpenTemplateModal(dealer.id)}>
                                                     Şablonlar
                                                 </Button>
+                                                <Button size="sm" variant="outline" className="text-emerald-600 border-emerald-300 hover:bg-emerald-50" onClick={() => handleOpenPricingModal(dealer)}>
+                                                    <DollarSign size={13} className="mr-1" /> Fiyatlar
+                                                </Button>
                                                 <Button
                                                     size="sm"
                                                     variant={dealer.is_main_dealer ? "default" : "outline"}
@@ -576,6 +642,87 @@ export default function DealersPage() {
                             <Button type="submit">{editingDealerId ? 'Değişiklikleri Kaydet' : 'Bayi Oluştur'}</Button>
                         </DialogFooter>
                     </form>
+                </DialogContent>
+            </Dialog>
+            {/* Pricing Modal */}
+            <Dialog open={isPricingModalOpen} onOpenChange={setIsPricingModalOpen}>
+                <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
+                    <DialogHeader>
+                        <DialogTitle>
+                            <span className="flex items-center gap-2">
+                                <DollarSign size={16} className="text-emerald-600" />
+                                {pricingDealer?.company_name || pricingDealer?.name} — Özel Fiyatlar
+                            </span>
+                        </DialogTitle>
+                        <DialogDescription>
+                            Fiyat girilmemiş eğitimlerde sistem varsayılan fiyatı kullanılır.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    {pricingLoading ? (
+                        <p className="py-6 text-center text-sm text-muted-foreground">Yükleniyor...</p>
+                    ) : (
+                        <div className="overflow-x-auto rounded-md border mt-2">
+                            <table className="text-sm w-full">
+                                <thead>
+                                    <tr className="border-b bg-slate-50">
+                                        <th className="px-3 py-2 text-left text-xs font-semibold text-slate-500">Eğitim Programı</th>
+                                        <th className="px-3 py-2 text-left text-xs font-semibold text-slate-500">Varsayılan</th>
+                                        <th className="px-3 py-2 text-left text-xs font-semibold text-slate-500">Özel Fiyat</th>
+                                        <th className="px-3 py-2 w-8"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {programs.map(program => {
+                                        const hasCustom = dealerPrices[program.id] !== undefined;
+                                        const customPrice = dealerPrices[program.id];
+                                        const editing = priceEditValues[program.id] !== undefined;
+                                        return (
+                                            <tr key={program.id} className="border-b hover:bg-slate-50">
+                                                <td className="px-3 py-2 font-medium">{getProgramName(program)}</td>
+                                                <td className="px-3 py-2 text-muted-foreground">{program.default_price} TL</td>
+                                                <td className="px-3 py-2">
+                                                    {hasCustom && !editing ? (
+                                                        <div className="flex items-center gap-2">
+                                                            <Badge className="bg-emerald-600">{customPrice} TL</Badge>
+                                                            <button className="text-xs text-emerald-600 underline" onClick={() => setPriceEditValues(v => ({ ...v, [program.id]: String(customPrice) }))}>
+                                                                Değiştir
+                                                            </button>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="flex items-center gap-2">
+                                                            <Input
+                                                                type="number" min="0" step="0.01"
+                                                                placeholder={hasCustom ? String(customPrice) : "Fiyat girin"}
+                                                                value={priceEditValues[program.id] ?? ""}
+                                                                onChange={e => setPriceEditValues(v => ({ ...v, [program.id]: e.target.value }))}
+                                                                className="h-7 w-28 text-xs"
+                                                            />
+                                                            <Button size="sm" className="h-7 text-xs" disabled={priceSaving[program.id]} onClick={() => handleSavePrice(program.id)}>
+                                                                {priceSaving[program.id] ? "..." : "Kaydet"}
+                                                            </Button>
+                                                            {editing && (
+                                                                <button className="text-xs text-muted-foreground underline" onClick={() => setPriceEditValues(v => { const nv = { ...v }; delete nv[program.id]; return nv; })}>
+                                                                    İptal
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                </td>
+                                                <td className="px-2 py-2 text-right">
+                                                    {hasCustom && (
+                                                        <button className="text-red-400 hover:text-red-600" onClick={() => handleDeletePrice(program.id)}>
+                                                            <Trash2 size={13} />
+                                                        </button>
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
                 </DialogContent>
             </Dialog>
         </div>

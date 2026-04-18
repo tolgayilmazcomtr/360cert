@@ -296,23 +296,22 @@ class DealerController extends Controller
 
     // --- Program Prices (Main Dealer) ---
 
-    // Get custom prices set by a main dealer for their sub-dealers
+    // Get custom prices for a dealer (admin: any dealer; main dealer: own)
     public function getProgramPrices(Request $request, $id)
     {
         $user = $request->user();
 
-        // Admin can view any dealer's prices; main dealer can only view their own
         if ($user->role !== 'admin' && $user->id != $id) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
-        $dealer = User::where('role', 'dealer')->where('is_main_dealer', true)->findOrFail($id);
+        $dealer = User::where('role', 'dealer')->findOrFail($id);
 
         $prices = $dealer->programPrices()->with('trainingProgram')->get();
         return response()->json($prices);
     }
 
-    // Set/update a custom price
+    // Set/update a custom price (admin: any dealer; main dealer: own)
     public function setProgramPrice(Request $request, $id)
     {
         $user = $request->user();
@@ -321,7 +320,7 @@ class DealerController extends Controller
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
-        $dealer = User::where('role', 'dealer')->where('is_main_dealer', true)->findOrFail($id);
+        $dealer = User::where('role', 'dealer')->findOrFail($id);
 
         $request->validate([
             'training_program_id' => 'required|exists:training_programs,id',
