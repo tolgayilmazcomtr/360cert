@@ -7,10 +7,11 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Check, X, Edit, RotateCcw, Plus, Image as ImageIcon, CheckCircle, XCircle, DollarSign, Trash2 } from "lucide-react";
+import { Edit, Plus, Image as ImageIcon, CheckCircle, XCircle, DollarSign, Trash2, MoreHorizontal, Star, Layout } from "lucide-react";
 import { getStorageUrl } from "@/lib/utils";
 import { useAuth } from "../context/AuthContext";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 export default function DealersPage() {
     const [dealers, setDealers] = useState([]);
@@ -36,6 +37,73 @@ export default function DealersPage() {
     const [priceEditValues, setPriceEditValues] = useState({});
     const [priceSaving, setPriceSaving] = useState({});
     const [pricingLoading, setPricingLoading] = useState(false);
+
+    // Bulk pricing state
+    const [bulkType, setBulkType] = useState("percent");
+    const [bulkDirection, setBulkDirection] = useState("+");
+    const [bulkValue, setBulkValue] = useState("");
+    const [bulkScope, setBulkScope] = useState("all");
+    const [bulkApplying, setBulkApplying] = useState(false);
+
+    const computeNewPrice = (basePrice, type, direction, value) => {
+        const v = parseFloat(value);
+        if (isNaN(v) || v < 0) return null;
+        let result;
+        if (type === "percent") {
+            result = direction === "+" ? basePrice * (1 + v / 100) : basePrice * (1 - v / 100);
+        } else {
+            result = direction === "+" ? basePrice + v : basePrice - v;
+        }
+        return Math.max(0, Math.round(result * 100) / 100);
+    };
+
+    const handleBulkApply = async () => {
+        const v = parseFloat(bulkValue);
+        if (isNaN(v) || v < 0) { alert("Geçerli bir değer girin."); return; }
+
+        const targetPrograms = programs.filter(p => {
+            if (bulkScope === "custom_only") return dealerPrices[p.id] !== undefined;
+            return true;
+        });
+
+        if (targetPrograms.length === 0) { alert("Güncellenecek program bulunamadı."); return; }
+
+        const preview = targetPrograms.map(p => {
+            const base = dealerPrices[p.id] !== undefined ? dealerPrices[p.id] : parseFloat(p.default_price);
+            return { program: p, newPrice: computeNewPrice(base, bulkType, bulkDirection, v) };
+        });
+
+        const label = bulkType === "percent"
+            ? `%${v} ${bulkDirection === "+" ? "artış" : "indirim"}`
+            : `${v} TL ${bulkDirection === "+" ? "artış" : "indirim"}`;
+        const scopeLabel = bulkScope === "all" ? "tüm eğitimler" : "mevcut özel fiyatlı eğitimler";
+
+        if (!window.confirm(`${scopeLabel} için ${label} uygulanacak. Onaylıyor musunuz?`)) return;
+
+        setBulkApplying(true);
+        try {
+            await Promise.all(preview.map(({ program, newPrice }) =>
+                api.post(`/dealers/${pricingDealer.id}/program-prices`, {
+                    training_program_id: program.id,
+                    price: newPrice,
+                })
+            ));
+            const newPrices = { ...dealerPrices };
+            preview.forEach(({ program, newPrice }) => { newPrices[program.id] = newPrice; });
+            setDealerPrices(newPrices);
+            setBulkValue("");
+        } catch (e) {
+            alert("Toplu güncelleme sırasında hata oluştu.");
+        } finally {
+            setBulkApplying(false);
+        }
+    };
+
+    const bulkPreviewCount = () => {
+        const v = parseFloat(bulkValue);
+        if (isNaN(v) || v <= 0) return null;
+        return programs.filter(p => bulkScope === "all" || dealerPrices[p.id] !== undefined).length;
+    };
 
     const getProgramName = (p) => {
         if (!p) return "";
@@ -390,36 +458,43 @@ export default function DealersPage() {
                                                     <Badge variant="warning" className="bg-amber-500 text-white">Beklemede</Badge>
                                                 )}
                                             </TableCell>
-                                            <TableCell className="text-right space-x-2">
-                                                <Button size="sm" variant="secondary" onClick={() => handleOpenTemplateModal(dealer.id)}>
-                                                    Şablonlar
-                                                </Button>
-                                                <Button size="sm" variant="outline" className="text-emerald-600 border-emerald-300 hover:bg-emerald-50" onClick={() => handleOpenPricingModal(dealer)}>
-                                                    <DollarSign size={13} className="mr-1" /> Fiyatlar
-                                                </Button>
-                                                <Button
-                                                    size="sm"
-                                                    variant={dealer.is_main_dealer ? "default" : "outline"}
-                                                    className={dealer.is_main_dealer ? "bg-purple-600 hover:bg-purple-700 text-white" : "text-purple-600 border-purple-300 hover:bg-purple-50"}
-                                                    onClick={() => handleMainDealerToggle(dealer)}
-                                                >
-                                                    {dealer.is_main_dealer ? "Ana Bayi ✓" : "Ana Bayi Yap"}
-                                                </Button>
-                                                <Button variant="outline" size="sm" onClick={() => handleOpenQuotaModal(dealer)}>
-                                                    <Edit size={14} className="mr-1" /> Kota
-                                                </Button>
-                                                <Button variant="outline" size="sm" onClick={() => handleOpenEditModal(dealer)} className="text-blue-600 hover:text-blue-700">
-                                                    <Edit size={14} />
-                                                </Button>
-                                                {!dealer.is_approved ? (
-                                                    <Button size="sm" className="bg-green-600 hover:bg-green-700" onClick={() => handleStatusUpdate(dealer.id, true)}>
-                                                        <Check size={14} className="mr-1" /> Onayla
-                                                    </Button>
-                                                ) : (
-                                                    <Button size="sm" variant="destructive" onClick={() => handleStatusUpdate(dealer.id, false)}>
-                                                        <X size={14} className="mr-1" /> Reddet
-                                                    </Button>
-                                                )}
+                                            <TableCell className="text-right">
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <Button variant="ghost" size="icon">
+                                                            <MoreHorizontal size={16} />
+                                                        </Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="end" className="w-52">
+                                                        <DropdownMenuItem onClick={() => handleOpenEditModal(dealer)}>
+                                                            <Edit size={14} className="mr-2" /> Düzenle
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem onClick={() => handleOpenPricingModal(dealer)}>
+                                                            <DollarSign size={14} className="mr-2 text-emerald-600" /> Fiyatlar
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem onClick={() => handleOpenTemplateModal(dealer.id)}>
+                                                            <Layout size={14} className="mr-2 text-blue-600" /> Şablonlar
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem onClick={() => handleOpenQuotaModal(dealer)}>
+                                                            <Edit size={14} className="mr-2 text-slate-500" /> Kota Düzenle
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuSeparator />
+                                                        <DropdownMenuItem onClick={() => handleMainDealerToggle(dealer)}>
+                                                            <Star size={14} className={`mr-2 ${dealer.is_main_dealer ? "text-purple-600 fill-purple-600" : "text-slate-400"}`} />
+                                                            {dealer.is_main_dealer ? "Ana Bayi Statüsünü Kaldır" : "Ana Bayi Yap"}
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuSeparator />
+                                                        {!dealer.is_approved ? (
+                                                            <DropdownMenuItem className="text-emerald-600 focus:text-emerald-700 focus:bg-emerald-50" onClick={() => handleStatusUpdate(dealer.id, true)}>
+                                                                <CheckCircle size={14} className="mr-2" /> Onayla
+                                                            </DropdownMenuItem>
+                                                        ) : (
+                                                            <DropdownMenuItem className="text-red-600 focus:text-red-700 focus:bg-red-50" onClick={() => handleStatusUpdate(dealer.id, false)}>
+                                                                <XCircle size={14} className="mr-2" /> Onayı Kaldır
+                                                            </DropdownMenuItem>
+                                                        )}
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
                                             </TableCell>
                                         </TableRow>
                                     ))
@@ -663,6 +738,52 @@ export default function DealersPage() {
                     {pricingLoading ? (
                         <p className="py-6 text-center text-sm text-muted-foreground">Yükleniyor...</p>
                     ) : (
+                        <>
+                        {/* Bulk Update Card */}
+                        <div className="rounded-md border bg-slate-50 p-4 space-y-3 mt-2">
+                            <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide">Toplu Fiyat Güncelleme</p>
+                            <div className="flex flex-wrap items-end gap-3">
+                                <div className="space-y-1">
+                                    <Label className="text-xs">Kapsam</Label>
+                                    <div className="flex rounded-md border overflow-hidden text-sm">
+                                        <button className={`px-3 py-1.5 ${bulkScope === "all" ? "bg-slate-800 text-white" : "bg-white text-slate-600 hover:bg-slate-50"}`} onClick={() => setBulkScope("all")}>Tümü</button>
+                                        <button className={`px-3 py-1.5 border-l ${bulkScope === "custom_only" ? "bg-slate-800 text-white" : "bg-white text-slate-600 hover:bg-slate-50"}`} onClick={() => setBulkScope("custom_only")}>Özel Fiyatlılar</button>
+                                    </div>
+                                </div>
+                                <div className="space-y-1">
+                                    <Label className="text-xs">Tür</Label>
+                                    <div className="flex rounded-md border overflow-hidden text-sm">
+                                        <button className={`px-3 py-1.5 ${bulkType === "percent" ? "bg-slate-800 text-white" : "bg-white text-slate-600 hover:bg-slate-50"}`} onClick={() => setBulkType("percent")}>Yüzde (%)</button>
+                                        <button className={`px-3 py-1.5 border-l ${bulkType === "amount" ? "bg-slate-800 text-white" : "bg-white text-slate-600 hover:bg-slate-50"}`} onClick={() => setBulkType("amount")}>Tutar (TL)</button>
+                                    </div>
+                                </div>
+                                <div className="space-y-1">
+                                    <Label className="text-xs">Yön</Label>
+                                    <div className="flex rounded-md border overflow-hidden text-sm">
+                                        <button className={`px-3 py-1.5 font-bold ${bulkDirection === "+" ? "bg-green-600 text-white" : "bg-white text-slate-600 hover:bg-green-50"}`} onClick={() => setBulkDirection("+")}>+ Artır</button>
+                                        <button className={`px-3 py-1.5 font-bold border-l ${bulkDirection === "-" ? "bg-red-600 text-white" : "bg-white text-slate-600 hover:bg-red-50"}`} onClick={() => setBulkDirection("-")}>− İndir</button>
+                                    </div>
+                                </div>
+                                <div className="space-y-1">
+                                    <Label className="text-xs">Değer {bulkType === "percent" ? "(%)" : "(TL)"}</Label>
+                                    <Input type="number" min="0" step="0.01" placeholder={bulkType === "percent" ? "Örn: 10" : "Örn: 50"} value={bulkValue} onChange={e => setBulkValue(e.target.value)} className="h-9 w-28 text-sm" />
+                                </div>
+                                <Button onClick={handleBulkApply} disabled={!bulkValue || bulkApplying} className={bulkDirection === "+" ? "bg-green-600 hover:bg-green-700" : "bg-red-600 hover:bg-red-700"}>
+                                    {bulkApplying ? "Uygulanıyor..." : bulkPreviewCount() ? `${bulkPreviewCount()} programa uygula` : "Uygula"}
+                                </Button>
+                            </div>
+                            {bulkValue && parseFloat(bulkValue) > 0 && (
+                                <p className="text-xs text-muted-foreground">
+                                    {bulkScope === "all" ? "Tüm eğitimler" : "Özel fiyatlı eğitimler"} için{" "}
+                                    <span className={`font-semibold ${bulkDirection === "+" ? "text-green-600" : "text-red-600"}`}>
+                                        {bulkDirection}{bulkValue}{bulkType === "percent" ? "%" : " TL"}
+                                    </span>{" "}
+                                    {bulkDirection === "+" ? "eklenecek" : "düşülecek"}.
+                                    {bulkScope === "all" && " Özel fiyatı olmayanlarda varsayılan fiyat baz alınır."}
+                                </p>
+                            )}
+                        </div>
+
                         <div className="overflow-x-auto rounded-md border mt-2">
                             <table className="text-sm w-full">
                                 <thead>
@@ -723,6 +844,7 @@ export default function DealersPage() {
                                 </tbody>
                             </table>
                         </div>
+                        </>
                     )}
                 </DialogContent>
             </Dialog>
