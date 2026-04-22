@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Edit, Plus, Image as ImageIcon, CheckCircle, XCircle, DollarSign, Trash2, MoreHorizontal, Star, Layout, RotateCcw } from "lucide-react";
+import { Edit, Plus, Image as ImageIcon, CheckCircle, XCircle, DollarSign, Trash2, MoreHorizontal, Star, Layout, RotateCcw, MinusCircle } from "lucide-react";
 import { getStorageUrl } from "@/lib/utils";
 import { useAuth } from "../context/AuthContext";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -28,6 +28,37 @@ export default function DealersPage() {
 
     const [inactiveDealers, setInactiveDealers] = useState([]);
     const [loadingInactive, setLoadingInactive] = useState(false);
+
+    // Deduct balance modal
+    const [isDeductModalOpen, setIsDeductModalOpen] = useState(false);
+    const [deductDealer, setDeductDealer] = useState(null);
+    const [deductAmount, setDeductAmount] = useState("");
+    const [deductNote, setDeductNote] = useState("");
+    const [deducting, setDeducting] = useState(false);
+
+    const handleOpenDeductModal = (dealer) => {
+        setDeductDealer(dealer);
+        setDeductAmount("");
+        setDeductNote("");
+        setIsDeductModalOpen(true);
+    };
+
+    const handleDeduct = async (e) => {
+        e.preventDefault();
+        const amount = parseFloat(deductAmount);
+        if (!amount || amount <= 0) { alert("Geçerli bir tutar girin."); return; }
+        if (!deductNote.trim()) { alert("Açıklama zorunludur."); return; }
+        setDeducting(true);
+        try {
+            await api.post(`/dealers/${deductDealer.id}/deduct-balance`, { amount, note: deductNote });
+            setIsDeductModalOpen(false);
+            fetchDealers(currentPage);
+        } catch (error) {
+            alert(error.response?.data?.message || "İşlem başarısız.");
+        } finally {
+            setDeducting(false);
+        }
+    };
 
     useEffect(() => {
         fetchDealers(currentPage);
@@ -537,6 +568,9 @@ export default function DealersPage() {
                                                         <DropdownMenuItem onClick={() => handleOpenQuotaModal(dealer)}>
                                                             <Edit size={14} className="mr-2 text-slate-500" /> Kota Düzenle
                                                         </DropdownMenuItem>
+                                                        <DropdownMenuItem className="text-red-600 focus:text-red-700 focus:bg-red-50" onClick={() => handleOpenDeductModal(dealer)}>
+                                                            <MinusCircle size={14} className="mr-2" /> Bakiye Düşür
+                                                        </DropdownMenuItem>
                                                         <DropdownMenuSeparator />
                                                         <DropdownMenuItem onClick={() => handleMainDealerToggle(dealer)}>
                                                             <Star size={14} className={`mr-2 ${dealer.is_main_dealer ? "text-purple-600 fill-purple-600" : "text-slate-400"}`} />
@@ -783,6 +817,63 @@ export default function DealersPage() {
                         </div>
                         <DialogFooter>
                             <Button type="submit">Güncelle</Button>
+                        </DialogFooter>
+                    </form>
+                </DialogContent>
+            </Dialog>
+
+            {/* Deduct Balance Modal */}
+            <Dialog open={isDeductModalOpen} onOpenChange={setIsDeductModalOpen}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2 text-red-600">
+                            <MinusCircle size={18} /> Bakiye Düşür
+                        </DialogTitle>
+                        <DialogDescription>
+                            <span className="font-semibold text-slate-700">{deductDealer?.company_name || deductDealer?.name}</span> bayisinin bakiyesinden kesinti yapın.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <form onSubmit={handleDeduct} className="space-y-4 py-2">
+                        <div className="bg-slate-50 rounded-md p-3 border flex items-center justify-between text-sm">
+                            <span className="text-muted-foreground">Mevcut Bakiye</span>
+                            <span className={`font-bold ${parseFloat(deductDealer?.balance || 0) < 0 ? 'text-red-600' : 'text-emerald-600'}`}>
+                                {Number(deductDealer?.balance || 0).toFixed(2)} TL
+                            </span>
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Düşülecek Tutar (TL) *</Label>
+                            <Input
+                                type="number" min="0.01" step="0.01" placeholder="0.00"
+                                value={deductAmount}
+                                onChange={e => setDeductAmount(e.target.value)}
+                                className="text-lg font-bold"
+                                autoFocus
+                                required
+                            />
+                            {deductAmount && parseFloat(deductAmount) > 0 && (
+                                <p className="text-xs text-muted-foreground">
+                                    Yeni bakiye:{" "}
+                                    <span className={`font-semibold ${(parseFloat(deductDealer?.balance || 0) - parseFloat(deductAmount)) < 0 ? 'text-red-600' : 'text-emerald-600'}`}>
+                                        {(parseFloat(deductDealer?.balance || 0) - parseFloat(deductAmount)).toFixed(2)} TL
+                                    </span>
+                                </p>
+                            )}
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Açıklama *</Label>
+                            <Input
+                                placeholder="Örn: Yanlış bakiye düzeltmesi, iade..."
+                                value={deductNote}
+                                onChange={e => setDeductNote(e.target.value)}
+                                required
+                            />
+                        </div>
+                        <DialogFooter>
+                            <Button type="button" variant="outline" onClick={() => setIsDeductModalOpen(false)}>İptal</Button>
+                            <Button type="submit" disabled={deducting || !deductAmount || !deductNote.trim()} className="bg-red-600 hover:bg-red-700 min-w-[120px]">
+                                {deducting ? <span className="animate-spin mr-2">⏳</span> : <MinusCircle size={15} className="mr-2" />}
+                                Bakiyeden Düş
+                            </Button>
                         </DialogFooter>
                     </form>
                 </DialogContent>

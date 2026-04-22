@@ -458,6 +458,44 @@ class DealerController extends Controller
         return response()->json(['message' => 'Bayi kalıcı olarak silindi.']);
     }
 
+    /** Manually deduct balance from a dealer */
+    public function deductBalance(Request $request, $id)
+    {
+        if ($request->user()->role !== 'admin') {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $request->validate([
+            'amount' => 'required|numeric|min:0.01',
+            'note'   => 'required|string|max:255',
+        ]);
+
+        $dealer = User::where('role', 'dealer')->findOrFail($id);
+
+        DB::beginTransaction();
+        try {
+            $dealer->decrement('balance', $request->amount);
+
+            Transaction::create([
+                'user_id'     => $dealer->id,
+                'amount'      => $request->amount,
+                'type'        => 'expense',
+                'method'      => 'system',
+                'status'      => 'approved',
+                'description' => $request->note,
+            ]);
+
+            DB::commit();
+            return response()->json([
+                'message'     => 'Bakiye düşüldü.',
+                'new_balance' => $dealer->fresh()->balance,
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'İşlem başarısız.'], 500);
+        }
+    }
+
     public function transactions(Request $request, $id)
     {
         $user = $request->user();

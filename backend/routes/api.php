@@ -105,6 +105,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/dealers/{id}/program-prices', [\App\Http\Controllers\Api\DealerController::class, 'setProgramPrice']);
     Route::delete('/dealers/{id}/program-prices/{programId}', [\App\Http\Controllers\Api\DealerController::class, 'deleteProgramPrice']);
     Route::post('/dealers/{id}/add-balance', [\App\Http\Controllers\Api\DealerController::class, 'addBalance']);
+    Route::post('/dealers/{id}/deduct-balance', [\App\Http\Controllers\Api\DealerController::class, 'deductBalance']);
     Route::get('/dealers/{id}/transactions', [\App\Http\Controllers\Api\DealerController::class, 'transactions']);
 
     // Dealer Admin Review Requests
