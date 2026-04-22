@@ -15,6 +15,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 
 export default function DealersPage() {
     const [dealers, setDealers] = useState([]);
+    const [pagination, setPagination] = useState({ current_page: 1, last_page: 1, total: 0 });
+    const [currentPage, setCurrentPage] = useState(1);
     const [updateRequests, setUpdateRequests] = useState([]);
     const [loading, setLoading] = useState(true);
     const [loadingRequests, setLoadingRequests] = useState(true);
@@ -28,10 +30,10 @@ export default function DealersPage() {
     const [loadingInactive, setLoadingInactive] = useState(false);
 
     useEffect(() => {
-        fetchDealers();
+        fetchDealers(currentPage);
         fetchUpdateRequests();
         fetchInactiveDealers();
-    }, []);
+    }, [currentPage]);
 
     const fetchInactiveDealers = async () => {
         setLoadingInactive(true);
@@ -49,7 +51,7 @@ export default function DealersPage() {
         if (!window.confirm(`"${dealer.company_name || dealer.name}" bayisini geri getirmek istiyor musunuz?`)) return;
         try {
             await api.post(`/dealers/${dealer.id}/restore`);
-            fetchDealers();
+            fetchDealers(currentPage);
             fetchInactiveDealers();
         } catch (e) {
             alert(e.response?.data?.message || "İşlem başarısız.");
@@ -252,10 +254,16 @@ export default function DealersPage() {
         }
     };
 
-    const fetchDealers = async () => {
+    const fetchDealers = async (page = 1) => {
+        setLoading(true);
         try {
-            const response = await api.get("/dealers");
+            const response = await api.get("/dealers", { params: { page } });
             setDealers(response.data.data);
+            setPagination({
+                current_page: response.data.current_page,
+                last_page: response.data.last_page,
+                total: response.data.total,
+            });
         } catch (error) {
             console.error("Bayiler yüklenemedi", error);
         } finally {
@@ -279,7 +287,7 @@ export default function DealersPage() {
 
         try {
             await api.put(`/dealers/${id}/status`, { is_approved: status });
-            fetchDealers();
+            fetchDealers(currentPage);
         } catch (error) {
             console.error("Durum güncelleme hatası", error);
             alert("İşlem başarısız.");
@@ -294,7 +302,7 @@ export default function DealersPage() {
         if (!window.confirm(msg)) return;
         try {
             await api.put(`/dealers/${dealer.id}/main-dealer-status`, { is_main_dealer: newVal });
-            fetchDealers();
+            fetchDealers(currentPage);
         } catch (error) {
             console.error("Ana bayi güncelleme hatası", error);
             alert("İşlem başarısız.");
@@ -315,7 +323,7 @@ export default function DealersPage() {
                 student_quota: newQuota
             });
             setIsQuotaModalOpen(false);
-            fetchDealers();
+            fetchDealers(currentPage);
             alert("Kota güncellendi.");
         } catch (error) {
             console.error("Kota güncelleme hatası", error);
@@ -383,7 +391,7 @@ export default function DealersPage() {
                 await api.post("/dealers", data, { headers: { 'Content-Type': 'multipart/form-data' } });
             }
             setIsDealerModalOpen(false);
-            fetchDealers();
+            fetchDealers(currentPage);
             alert(`Bayi başarıyla ${editingDealerId ? 'güncellendi' : 'oluşturuldu'}.`);
         } catch (error) {
             console.error("Bayi kayıt hatası", error);
@@ -397,7 +405,7 @@ export default function DealersPage() {
         try {
             await api.post(`/dealers/update-requests/${id}/approve`);
             fetchUpdateRequests();
-            fetchDealers();
+            fetchDealers(currentPage);
         } catch (error) {
             alert("İşlem başarısız.");
         }
@@ -553,6 +561,20 @@ export default function DealersPage() {
                             </TableBody>
                         </Table>
                     </div>
+                    {pagination.last_page > 1 && (
+                        <div className="flex items-center justify-between px-4 py-3 border-t bg-white dark:bg-slate-900 text-sm text-muted-foreground">
+                            <span>{pagination.total} bayiden {((currentPage - 1) * 20) + 1}–{Math.min(currentPage * 20, pagination.total)} gösteriliyor</span>
+                            <div className="flex items-center gap-1">
+                                <Button variant="outline" size="sm" disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)}>‹ Önceki</Button>
+                                {Array.from({ length: pagination.last_page }, (_, i) => i + 1).map(p => (
+                                    <Button key={p} size="sm" variant={p === currentPage ? "default" : "outline"} onClick={() => setCurrentPage(p)} className="w-9">
+                                        {p}
+                                    </Button>
+                                ))}
+                                <Button variant="outline" size="sm" disabled={currentPage === pagination.last_page} onClick={() => setCurrentPage(p => p + 1)}>Sonraki ›</Button>
+                            </div>
+                        </div>
+                    )}
                 </TabsContent>
 
                 <TabsContent value="requests">
