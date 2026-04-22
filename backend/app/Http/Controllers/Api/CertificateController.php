@@ -191,13 +191,9 @@ class CertificateController extends Controller
             }
         }
 
-        // Balance Check for Dealers (sub-dealers skip balance check — billed to parent)
+        // No balance gate — all dealers can submit certificates regardless of balance.
+        // Balance may go negative; admin collects payment later.
         $isSubDealer = $user->role === 'dealer' && !is_null($user->parent_id);
-        if ($user->role !== 'admin' && !$isSubDealer) {
-            if ($user->balance < $effectivePrice) {
-                return response()->json(['message' => 'Yetersiz bakiye. Lütfen bakiye yükleyiniz.'], 402);
-            }
-        }
 
         DB::beginTransaction();
         try {
@@ -239,7 +235,8 @@ class CertificateController extends Controller
 
             $programNameStr = is_array($program->name) ? ($program->name['tr'] ?? current($program->name) ?? '') : $program->name;
 
-            // Deduct Balance (sub-dealers don't decrement — they have no balance to deduct)
+            // Deduct balance for all dealers (balance can go negative).
+            // Sub-dealers have no balance account; only transaction log is kept.
             if ($user->role !== 'admin' && !$isSubDealer) {
                 $user->decrement('balance', $effectivePrice);
             }

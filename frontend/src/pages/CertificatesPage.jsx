@@ -484,6 +484,11 @@ export default function CertificatesPage() {
                                                             ↳ {cert.student.user.parent.company_name || cert.student.user.parent.name}
                                                         </span>
                                                     )}
+                                                    {parseFloat(cert.student.user.balance) < 0 && (
+                                                        <span className="text-[10px] font-semibold text-red-500 bg-red-50 border border-red-200 rounded px-1 py-0.5 w-fit">
+                                                            ⚠ Eksi bakiye
+                                                        </span>
+                                                    )}
                                                 </div>
                                             ) : <span className="text-slate-400">-</span>}
                                         </TableCell>
@@ -663,7 +668,22 @@ export default function CertificatesPage() {
                                             </div>
                                         )}
                                         {inspectionCert.student?.user && (
-                                            <div className="text-xs text-slate-400 mt-2 pt-2 border-t">Bayi: {inspectionCert.student.user.name} ({inspectionCert.student.user.company_name})</div>
+                                            <div className="mt-2 pt-2 border-t space-y-1">
+                                                <div className="text-xs text-slate-400">
+                                                    Bayi: {inspectionCert.student.user.company_name || inspectionCert.student.user.name}
+                                                    {inspectionCert.student.user.parent && (
+                                                        <span className="text-slate-300"> ↳ {inspectionCert.student.user.parent.company_name || inspectionCert.student.user.parent.name}</span>
+                                                    )}
+                                                </div>
+                                                {parseFloat(inspectionCert.student.user.balance) < 0 && (
+                                                    <div className="flex items-center gap-1.5 bg-red-50 border border-red-200 rounded px-2 py-1">
+                                                        <span className="text-red-500 font-bold text-sm">⚠</span>
+                                                        <span className="text-xs text-red-600 font-medium">
+                                                            Eksi bakiye ile gönderildi — Bakiye: {Number(inspectionCert.student.user.balance).toFixed(2)} TL
+                                                        </span>
+                                                    </div>
+                                                )}
+                                            </div>
                                         )}
                                     </CardContent>
                                 </Card>
