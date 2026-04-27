@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { useState, useEffect } from "react";
 import { languageService } from "@/services/languageService";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Trash2, Upload, Loader2, Image as ImageIcon } from "lucide-react";
+import { Plus, Trash2, Loader2, Image as ImageIcon } from "lucide-react";
 import api from "../api/axios";
 
 export default function SettingsPage() {
@@ -38,6 +38,12 @@ export default function SettingsPage() {
     const [isSavingSettings, setIsSavingSettings] = useState(false);
     const [isLoadingSettings, setIsLoadingSettings] = useState(true);
 
+    // Transcript logo state
+    const [transcriptLogoTopPreview, setTranscriptLogoTopPreview] = useState(null);
+    const [transcriptLogoTopFile, setTranscriptLogoTopFile] = useState(null);
+    const [transcriptLogoBottomPreview, setTranscriptLogoBottomPreview] = useState(null);
+    const [transcriptLogoBottomFile, setTranscriptLogoBottomFile] = useState(null);
+
     useEffect(() => {
         fetchLanguages();
         fetchSettings();
@@ -49,9 +55,9 @@ export default function SettingsPage() {
             const response = await api.get('/settings');
             if (response.data) {
                 setSettings(prev => ({ ...prev, ...response.data }));
-                if (response.data.site_logo) {
-                    setLogoPreview(response.data.site_logo);
-                }
+                if (response.data.site_logo) setLogoPreview(response.data.site_logo);
+                if (response.data.transcript_logo_top) setTranscriptLogoTopPreview(response.data.transcript_logo_top);
+                if (response.data.transcript_logo_bottom) setTranscriptLogoBottomPreview(response.data.transcript_logo_bottom);
             }
         } catch (error) {
             console.error("Ayarlar yüklenirken hata oluştu:", error);
@@ -69,9 +75,9 @@ export default function SettingsPage() {
                     formData.append(key, settings[key]);
                 }
             });
-            if (newLogoFile) {
-                formData.append('logo', newLogoFile);
-            }
+            if (newLogoFile) formData.append('logo', newLogoFile);
+            if (transcriptLogoTopFile) formData.append('transcript_logo_top', transcriptLogoTopFile);
+            if (transcriptLogoBottomFile) formData.append('transcript_logo_bottom', transcriptLogoBottomFile);
 
             await api.post('/settings', formData, {
                 headers: {
@@ -81,6 +87,8 @@ export default function SettingsPage() {
 
             toast({ title: "Başarılı", description: "Sistem ayarları güncellendi." });
             setNewLogoFile(null);
+            setTranscriptLogoTopFile(null);
+            setTranscriptLogoBottomFile(null);
             fetchSettings(); // Refresh to get the actual logo URL
         } catch (error) {
             toast({
@@ -403,6 +411,119 @@ export default function SettingsPage() {
                         </p>
                     </CardContent>
                 </Card>
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Transkript Logo Ayarları</CardTitle>
+                        <CardDescription>PDF transkript çıktısında sol üst ve sağ alt köşede görünecek logolar.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                        {isLoadingSettings ? (
+                            <p className="text-sm text-gray-500">Ayarlar yükleniyor...</p>
+                        ) : (
+                            <div className="space-y-6">
+                                {/* Sol üst logo */}
+                                <div className="space-y-3">
+                                    <Label className="font-semibold">Sol Üst Köşe Logosu</Label>
+                                    <div className="flex items-start gap-4">
+                                        <div className="w-20 h-20 bg-slate-100 rounded-lg border flex items-center justify-center overflow-hidden shrink-0">
+                                            {transcriptLogoTopPreview ? (
+                                                <img src={transcriptLogoTopPreview} alt="Sol üst logo" className="w-full h-full object-contain p-1" />
+                                            ) : (
+                                                <ImageIcon className="text-slate-400" size={24} />
+                                            )}
+                                        </div>
+                                        <div className="flex-1 space-y-2">
+                                            <Input
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={(e) => {
+                                                    const file = e.target.files[0];
+                                                    if (file) {
+                                                        setTranscriptLogoTopFile(file);
+                                                        setTranscriptLogoTopPreview(URL.createObjectURL(file));
+                                                    }
+                                                }}
+                                            />
+                                            <div className="grid grid-cols-2 gap-2">
+                                                <div className="space-y-1">
+                                                    <Label className="text-xs">Genişlik (px)</Label>
+                                                    <Input
+                                                        type="number"
+                                                        min="20" max="300"
+                                                        value={settings.transcript_logo_top_width || 80}
+                                                        onChange={(e) => setSettings({ ...settings, transcript_logo_top_width: e.target.value })}
+                                                    />
+                                                </div>
+                                                <div className="space-y-1">
+                                                    <Label className="text-xs">Yükseklik (px)</Label>
+                                                    <Input
+                                                        type="number"
+                                                        min="20" max="300"
+                                                        value={settings.transcript_logo_top_height || 80}
+                                                        onChange={(e) => setSettings({ ...settings, transcript_logo_top_height: e.target.value })}
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Sağ alt logo */}
+                                <div className="space-y-3">
+                                    <Label className="font-semibold">Sağ Alt Köşe Logosu</Label>
+                                    <div className="flex items-start gap-4">
+                                        <div className="w-20 h-20 bg-slate-100 rounded-lg border flex items-center justify-center overflow-hidden shrink-0">
+                                            {transcriptLogoBottomPreview ? (
+                                                <img src={transcriptLogoBottomPreview} alt="Sağ alt logo" className="w-full h-full object-contain p-1" />
+                                            ) : (
+                                                <ImageIcon className="text-slate-400" size={24} />
+                                            )}
+                                        </div>
+                                        <div className="flex-1 space-y-2">
+                                            <Input
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={(e) => {
+                                                    const file = e.target.files[0];
+                                                    if (file) {
+                                                        setTranscriptLogoBottomFile(file);
+                                                        setTranscriptLogoBottomPreview(URL.createObjectURL(file));
+                                                    }
+                                                }}
+                                            />
+                                            <div className="grid grid-cols-2 gap-2">
+                                                <div className="space-y-1">
+                                                    <Label className="text-xs">Genişlik (px)</Label>
+                                                    <Input
+                                                        type="number"
+                                                        min="20" max="300"
+                                                        value={settings.transcript_logo_bottom_width || 80}
+                                                        onChange={(e) => setSettings({ ...settings, transcript_logo_bottom_width: e.target.value })}
+                                                    />
+                                                </div>
+                                                <div className="space-y-1">
+                                                    <Label className="text-xs">Yükseklik (px)</Label>
+                                                    <Input
+                                                        type="number"
+                                                        min="20" max="300"
+                                                        value={settings.transcript_logo_bottom_height || 80}
+                                                        onChange={(e) => setSettings({ ...settings, transcript_logo_bottom_height: e.target.value })}
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <Button variant="outline" onClick={handleSaveSettings} disabled={isSavingSettings}>
+                                    {isSavingSettings ? <Loader2 className="animate-spin mr-2" size={16} /> : null}
+                                    Ayarları Kaydet
+                                </Button>
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
+
                 <Card>
                     <CardHeader>
                         <CardTitle>Havale / EFT Banka Bilgileri</CardTitle>

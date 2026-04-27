@@ -3,36 +3,39 @@ import api from "../api/axios";
 import { useAuth } from "../context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Download, Upload, FileSpreadsheet, CheckCircle, XCircle, AlertCircle, Trash2, RefreshCw } from "lucide-react";
+import { Download, FileSpreadsheet, CheckCircle, XCircle, AlertCircle, Trash2, RefreshCw } from "lucide-react";
 
 // ─── CSV helpers ────────────────────────────────────────────────────────────
 const CSV_COLUMNS = [
-    { key: "first_name",     label: "ad",                  required: true  },
-    { key: "last_name",      label: "soyad",               required: true  },
-    { key: "tc_number",      label: "tc_no",               required: true  },
-    { key: "birth_date",     label: "dogum_tarihi",        required: true,  hint: "GG.AA.YYYY" },
-    { key: "duration_hours", label: "egitim_suresi_saat",  required: false },
-    { key: "start_date",     label: "baslangic_tarihi",    required: false, hint: "GG.AA.YYYY" },
-    { key: "end_date",       label: "bitis_tarihi",        required: false, hint: "GG.AA.YYYY" },
-    { key: "issue_date",     label: "verilis_tarihi",      required: false, hint: "GG.AA.YYYY" },
+    { key: "first_name",              label: "ad",                  required: true  },
+    { key: "last_name",               label: "soyad",               required: true  },
+    { key: "tc_number",               label: "tc_no",               required: true  },
+    { key: "birth_date",              label: "dogum_tarihi",        required: true,  hint: "GG.AA.YYYY" },
+    { key: "training_program_id",     label: "egitim_programi_id",  required: true  },
+    { key: "certificate_template_id", label: "sablon_id",           required: true  },
+    { key: "certificate_language",    label: "dil",                 required: false },
+    { key: "duration_hours",          label: "egitim_suresi_saat",  required: false },
+    { key: "start_date",              label: "baslangic_tarihi",    required: false, hint: "GG.AA.YYYY" },
+    { key: "end_date",                label: "bitis_tarihi",        required: false, hint: "GG.AA.YYYY" },
+    { key: "issue_date",              label: "verilis_tarihi",      required: false, hint: "GG.AA.YYYY" },
 ];
 
 const TABLE_HEADERS = [
-    { key: "first_name",     label: "Ad",               width: "w-24"  },
-    { key: "last_name",      label: "Soyad",            width: "w-28"  },
-    { key: "tc_number",      label: "TC / Pasaport No", width: "w-36"  },
-    { key: "birth_date",     label: "Doğum Tarihi",     width: "w-32", type: "date" },
-    { key: "duration_hours", label: "Süre (Saat)",      width: "w-24", type: "number" },
-    { key: "start_date",     label: "Başlangıç",        width: "w-32", type: "date" },
-    { key: "end_date",       label: "Bitiş",            width: "w-32", type: "date" },
-    { key: "issue_date",     label: "Veriliş",          width: "w-32", type: "date" },
+    { key: "first_name",              label: "Ad",               width: "w-24"  },
+    { key: "last_name",               label: "Soyad",            width: "w-24"  },
+    { key: "tc_number",               label: "TC / Pasaport",    width: "w-32"  },
+    { key: "birth_date",              label: "Doğum",            width: "w-28", type: "date" },
+    { key: "training_program_id",     label: "Program ID",       width: "w-24", type: "number" },
+    { key: "certificate_template_id", label: "Şablon ID",        width: "w-24", type: "number" },
+    { key: "certificate_language",    label: "Dil",              width: "w-16"  },
+    { key: "duration_hours",          label: "Süre (s)",         width: "w-20", type: "number" },
+    { key: "start_date",              label: "Başlangıç",        width: "w-28", type: "date" },
+    { key: "end_date",                label: "Bitiş",            width: "w-28", type: "date" },
+    { key: "issue_date",              label: "Veriliş",          width: "w-28", type: "date" },
 ];
 
-/** GG.AA.YYYY → YYYY-MM-DD  (already ISO passthrough) */
 const toISO = (val) => {
     if (!val) return "";
     val = val.trim();
@@ -42,14 +45,12 @@ const toISO = (val) => {
     return val;
 };
 
-/** Parse raw CSV (comma or semicolon separated, UTF-8 BOM stripped) */
 const parseCSV = (text) => {
-    text = text.replace(/^\uFEFF/, "");
+    text = text.replace(/^﻿/, "");
     const lines = text.split(/\r?\n/).filter(l => l.trim());
     if (lines.length < 2) return { rows: [], errors: ["Dosya boş veya başlık satırı eksik."] };
 
     const sep = lines[0].includes(";") ? ";" : ",";
-    // Strip hint "(GG.AA.YYYY)" suffixes so "dogum_tarihi (GG.AA.YYYY)" matches "dogum_tarihi"
     const headers = lines[0].split(sep).map(h => h.trim().toLowerCase().replace(/"/g, "").replace(/\s*\(.*?\)/, "").trim());
 
     const colMap = {};
@@ -68,10 +69,10 @@ const parseCSV = (text) => {
         CSV_COLUMNS.forEach(c => {
             row[c.key] = colMap[c.key] !== undefined ? (cols[colMap[c.key]] || "") : "";
         });
-        // Convert date fields
         ["birth_date", "start_date", "end_date", "issue_date"].forEach(k => {
             if (row[k]) row[k] = toISO(row[k]);
         });
+        if (!row.certificate_language) row.certificate_language = "tr";
         rows.push(row);
     }
     return { rows, errors: [] };
@@ -79,58 +80,69 @@ const parseCSV = (text) => {
 
 // ─── Component ───────────────────────────────────────────────────────────────
 export default function BulkUploadPage() {
-    const { user } = useAuth();
+    useAuth();
     const fileRef = useRef();
 
     const [templates, setTemplates] = useState([]);
     const [programs, setPrograms]   = useState([]);
-    const [languages, setLanguages] = useState([]);
 
-    const [templateId, setTemplateId]   = useState("");
-    const [programId, setProgramId]     = useState("");
-    const [language, setLanguage]       = useState("tr");
-    const [defaultIssueDate, setDefaultIssueDate] = useState(new Date().toISOString().split("T")[0]);
-
-    const [rows, setRows]       = useState([]);
+    const [rows, setRows]           = useState([]);
     const [parseErrors, setParseErrors] = useState([]);
-    const [step, setStep]       = useState(1); // 1=ayarlar+yükle  2=önizleme  3=sonuç
-    const [creating, setCreating] = useState(false);
-    const [progress, setProgress] = useState({ done: 0, total: 0 });
-    const [results, setResults]  = useState([]);
+    const [step, setStep]           = useState(1);
+    const [creating, setCreating]   = useState(false);
+    const [progress, setProgress]   = useState({ done: 0, total: 0 });
+    const [results, setResults]     = useState([]);
 
     useEffect(() => {
         Promise.all([
             api.get("/certificate-templates"),
             api.get("/training-programs"),
-            api.get("/languages").catch(() => ({ data: [] })),
-        ]).then(([t, p, l]) => {
+        ]).then(([t, p]) => {
             setTemplates(t.data);
             setPrograms(p.data);
-            const langs = l.data.filter?.(x => x.is_active) ?? [];
-            setLanguages(langs.length ? langs : [{ code: "tr", name: "Türkçe" }]);
         });
     }, []);
 
-    // ── download template ──────────────────────────────────────────────────
+    const getProgramName = (p) => {
+        if (!p) return "";
+        return typeof p.name === "object" ? (p.name.tr ?? Object.values(p.name)[0] ?? "") : p.name;
+    };
+
+    // ── download main CSV template ────────────────────────────────────────
     const downloadTemplate = () => {
-        const BOM = "\uFEFF";
+        const BOM = "﻿";
         const headers = CSV_COLUMNS.map(c => c.label + (c.hint ? ` (${c.hint})` : "")).join(";");
         const example = [
-            "Ahmet",
-            "Yilmaz",
-            "11111111111",
-            "15.06.1990",
-            "16",
-            "01.03.2025",
-            "15.03.2025",
-            "15.03.2025",
+            "Ahmet", "Yilmaz", "11111111111", "15.06.1990",
+            "1", "1", "tr", "16",
+            "01.03.2025", "15.03.2025", "15.03.2025",
         ].join(";");
         const content = BOM + headers + "\n" + example;
+        triggerDownload(content, "sertifika_toplu_yukleme_sablonu.csv");
+    };
+
+    // ── download programs reference ───────────────────────────────────────
+    const downloadPrograms = () => {
+        const BOM = "﻿";
+        const header = "id;egitim_adi";
+        const rows = programs.map(p => `${p.id};${getProgramName(p)}`).join("\n");
+        triggerDownload(BOM + header + "\n" + rows, "egitim_programlari.csv");
+    };
+
+    // ── download templates reference ──────────────────────────────────────
+    const downloadTemplates = () => {
+        const BOM = "﻿";
+        const header = "id;sablon_adi;sertifika_turu";
+        const rows = templates.map(t => `${t.id};${t.name};${t.certificate_type?.name ?? ""}`).join("\n");
+        triggerDownload(BOM + header + "\n" + rows, "sablonlar.csv");
+    };
+
+    const triggerDownload = (content, filename) => {
         const blob = new Blob([content], { type: "text/csv;charset=utf-8;" });
         const url  = URL.createObjectURL(blob);
         const a    = document.createElement("a");
         a.href     = url;
-        a.download = "sertifika_toplu_yukleme_sablonu.csv";
+        a.download = filename;
         a.click();
         URL.revokeObjectURL(url);
     };
@@ -144,12 +156,7 @@ export default function BulkUploadPage() {
             const { rows: parsed, errors } = parseCSV(ev.target.result);
             setParseErrors(errors);
             if (!errors.length) {
-                // Fill empty issue_date from defaultIssueDate
-                const filled = parsed.map(r => ({
-                    ...r,
-                    issue_date: r.issue_date || defaultIssueDate,
-                }));
-                setRows(filled);
+                setRows(parsed);
                 setStep(2);
             }
         };
@@ -157,7 +164,6 @@ export default function BulkUploadPage() {
         e.target.value = "";
     };
 
-    // ── inline edit ────────────────────────────────────────────────────────
     const updateCell = (id, key, value) => {
         setRows(prev => prev.map(r => r._id === id ? { ...r, [key]: value, _status: "pending", _error: "" } : r));
     };
@@ -166,26 +172,31 @@ export default function BulkUploadPage() {
 
     // ── bulk create ────────────────────────────────────────────────────────
     const handleCreate = async () => {
-        if (!templateId || !programId) { alert("Lütfen şablon ve eğitim programı seçin."); return; }
         setCreating(true);
         setProgress({ done: 0, total: rows.length });
         const res = [];
+        const today = new Date().toISOString().split("T")[0];
 
         for (let i = 0; i < rows.length; i++) {
             const row = rows[i];
+            if (!row.training_program_id || !row.certificate_template_id) {
+                res.push({ ...row, _status: "error", _error: "egitim_programi_id ve sablon_id zorunludur." });
+                setProgress({ done: i + 1, total: rows.length });
+                continue;
+            }
             try {
                 const fd = new FormData();
-                fd.append("first_name", row.first_name);
-                fd.append("last_name",  row.last_name);
-                fd.append("tc_number",  row.tc_number);
-                fd.append("birth_date", row.birth_date);
-                fd.append("training_program_id",      programId);
-                fd.append("certificate_template_id",  templateId);
-                fd.append("certificate_language",     language);
-                fd.append("duration_hours", row.duration_hours || "1");
-                fd.append("start_date",  row.start_date  || defaultIssueDate);
-                fd.append("end_date",    row.end_date    || defaultIssueDate);
-                fd.append("issue_date",  row.issue_date  || defaultIssueDate);
+                fd.append("first_name",              row.first_name);
+                fd.append("last_name",               row.last_name);
+                fd.append("tc_number",               row.tc_number);
+                fd.append("birth_date",              row.birth_date);
+                fd.append("training_program_id",     row.training_program_id);
+                fd.append("certificate_template_id", row.certificate_template_id);
+                fd.append("certificate_language",    row.certificate_language || "tr");
+                fd.append("duration_hours",          row.duration_hours || "1");
+                fd.append("start_date",              row.start_date  || today);
+                fd.append("end_date",                row.end_date    || today);
+                fd.append("issue_date",              row.issue_date  || today);
 
                 await api.post("/certificates", fd);
                 res.push({ ...row, _status: "success", _error: "" });
@@ -207,11 +218,6 @@ export default function BulkUploadPage() {
     const successCount = results.filter(r => r._status === "success").length;
     const errorCount   = results.filter(r => r._status === "error").length;
 
-    const getProgramName = (p) => {
-        if (!p) return "";
-        return typeof p.name === "object" ? (p.name.tr ?? Object.values(p.name)[0] ?? "") : p.name;
-    };
-
     const reset = () => { setStep(1); setRows([]); setResults([]); setParseErrors([]); };
 
     return (
@@ -228,57 +234,33 @@ export default function BulkUploadPage() {
                 )}
             </div>
 
-            {/* ── Step 1: Ayarlar + Yükleme ── */}
+            {/* ── Step 1: Referans İndirme + Yükleme ── */}
             {step === 1 && (
                 <div className="grid gap-6 lg:grid-cols-2">
-                    {/* Sol: ayarlar */}
                     <div className="space-y-4">
+                        {/* Referans listeleri */}
                         <Card>
                             <CardHeader>
-                                <CardTitle className="text-base">1. Sertifika Ayarları</CardTitle>
-                                <CardDescription>Tüm satırlara uygulanacak ortak ayarlar.</CardDescription>
+                                <CardTitle className="text-base">1. Referans Listelerini İndirin</CardTitle>
+                                <CardDescription>
+                                    CSV'ye ekleyeceğiniz <strong>egitim_programi_id</strong> ve <strong>sablon_id</strong> değerlerini bu listelerden bulun.
+                                </CardDescription>
                             </CardHeader>
-                            <CardContent className="space-y-4">
-                                <div className="space-y-1">
-                                    <Label>Sertifika Şablonu <span className="text-red-500">*</span></Label>
-                                    <Select value={templateId} onValueChange={setTemplateId}>
-                                        <SelectTrigger><SelectValue placeholder="Şablon Seçin" /></SelectTrigger>
-                                        <SelectContent>
-                                            {templates.map(t => <SelectItem key={t.id} value={String(t.id)}>{t.name}</SelectItem>)}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div className="space-y-1">
-                                    <Label>Eğitim Programı <span className="text-red-500">*</span></Label>
-                                    <Select value={programId} onValueChange={setProgramId}>
-                                        <SelectTrigger><SelectValue placeholder="Program Seçin" /></SelectTrigger>
-                                        <SelectContent>
-                                            {programs.map(p => <SelectItem key={p.id} value={String(p.id)}>{getProgramName(p)}</SelectItem>)}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-1">
-                                        <Label>Sertifika Dili</Label>
-                                        <Select value={language} onValueChange={setLanguage}>
-                                            <SelectTrigger><SelectValue /></SelectTrigger>
-                                            <SelectContent>
-                                                {languages.map(l => <SelectItem key={l.code} value={l.code}>{l.name}</SelectItem>)}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                    <div className="space-y-1">
-                                        <Label>Varsayılan Veriliş Tarihi</Label>
-                                        <Input type="date" value={defaultIssueDate} onChange={e => setDefaultIssueDate(e.target.value)} />
-                                    </div>
-                                </div>
+                            <CardContent className="space-y-3">
+                                <Button variant="outline" className="w-full gap-2" onClick={downloadPrograms}>
+                                    <Download size={16} /> Eğitim Programları Listesi (.csv)
+                                </Button>
+                                <Button variant="outline" className="w-full gap-2" onClick={downloadTemplates}>
+                                    <Download size={16} /> Şablonlar Listesi (.csv)
+                                </Button>
                             </CardContent>
                         </Card>
 
+                        {/* CSV şablonu */}
                         <Card>
                             <CardHeader>
                                 <CardTitle className="text-base">2. CSV Şablonunu İndirin</CardTitle>
-                                <CardDescription>Verilerinizi bu formata göre hazırlayın. Türkçe karakter için Excel'de UTF-8 ile açın.</CardDescription>
+                                <CardDescription>Verilerinizi bu formata göre hazırlayın. Her satır ayrı eğitim/şablon içerebilir.</CardDescription>
                             </CardHeader>
                             <CardContent>
                                 <Button variant="outline" className="w-full gap-2" onClick={downloadTemplate}>
@@ -287,7 +269,7 @@ export default function BulkUploadPage() {
                                 <div className="mt-3 space-y-1 text-xs text-muted-foreground">
                                     {CSV_COLUMNS.map(c => (
                                         <div key={c.key} className="flex gap-2">
-                                            <span className="font-mono text-slate-500 w-40 shrink-0">{c.label}{c.hint ? ` (${c.hint})` : ""}</span>
+                                            <span className="font-mono text-slate-500 w-44 shrink-0">{c.label}{c.hint ? ` (${c.hint})` : ""}</span>
                                             <span>{c.required ? <span className="text-red-500 font-medium">Zorunlu</span> : "Opsiyonel"}</span>
                                         </div>
                                     ))}
@@ -333,7 +315,7 @@ export default function BulkUploadPage() {
                         </div>
                         <Button
                             onClick={handleCreate}
-                            disabled={creating || !templateId || !programId || rows.length === 0}
+                            disabled={creating || rows.length === 0}
                             className="bg-green-600 hover:bg-green-700"
                         >
                             {creating

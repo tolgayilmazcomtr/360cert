@@ -702,9 +702,31 @@ class CertificateController extends Controller
             return response()->json(['message' => 'Bu sertifikaya ait transkript verisi bulunamadı.'], 404);
         }
 
+        // Load transcript logo settings from DB
+        $settingsMap = \App\Models\SystemSetting::whereIn('key', [
+            'transcript_logo_top', 'transcript_logo_top_width', 'transcript_logo_top_height',
+            'transcript_logo_bottom', 'transcript_logo_bottom_width', 'transcript_logo_bottom_height',
+        ])->pluck('value', 'key');
+
+        $makeBase64 = function(?string $path): ?string {
+            if (!$path) return null;
+            if (!\Illuminate\Support\Facades\Storage::disk('public')->exists($path)) return null;
+            $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+            $mime = $ext === 'svg' ? 'image/svg+xml' : 'image/' . $ext;
+            return 'data:' . $mime . ';base64,' . base64_encode(
+                \Illuminate\Support\Facades\Storage::disk('public')->get($path)
+            );
+        };
+
         $data = [
-            'certificate' => $certificate,
-            'transcriptData' => $certificate->transcript_data,
+            'certificate'      => $certificate,
+            'transcriptData'   => $certificate->transcript_data,
+            'logoTop'          => $makeBase64($settingsMap['transcript_logo_top'] ?? null),
+            'logoTopWidth'     => $settingsMap['transcript_logo_top_width']    ?? 80,
+            'logoTopHeight'    => $settingsMap['transcript_logo_top_height']   ?? 80,
+            'logoBottom'       => $makeBase64($settingsMap['transcript_logo_bottom'] ?? null),
+            'logoBottomWidth'  => $settingsMap['transcript_logo_bottom_width'] ?? 80,
+            'logoBottomHeight' => $settingsMap['transcript_logo_bottom_height'] ?? 80,
         ];
 
         // Increase memory limit for PDF generation

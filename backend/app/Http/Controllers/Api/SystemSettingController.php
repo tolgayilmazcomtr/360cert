@@ -38,7 +38,7 @@ class SystemSettingController extends Controller
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
-        $settingsData = $request->except(['logo', '_method', 'site_logo']);
+        $settingsData = $request->except(['logo', '_method', 'site_logo', 'transcript_logo_top', 'transcript_logo_bottom']);
 
         foreach ($settingsData as $key => $value) {
             SystemSetting::updateOrCreate(
@@ -62,6 +62,18 @@ class SystemSettingController extends Controller
                     'type' => 'image'
                 ]
             );
+        }
+
+        // Handle transcript logo uploads
+        foreach (['transcript_logo_top', 'transcript_logo_bottom'] as $inputKey) {
+            if ($request->hasFile($inputKey)) {
+                $request->validate([$inputKey => 'image|mimes:jpeg,png,jpg,svg|max:2048']);
+                $path = $request->file($inputKey)->store('settings', 'public');
+                SystemSetting::updateOrCreate(
+                    ['key' => $inputKey],
+                    ['value' => $path, 'type' => 'image']
+                );
+            }
         }
 
         return response()->json(['message' => 'Ayarlar başarıyla güncellendi.']);

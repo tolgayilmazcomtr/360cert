@@ -96,9 +96,31 @@
             margin-top: 50px;
             padding-top: 5px;
         }
+        .logo-top-left {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+        }
+        .logo-bottom-right {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+        }
     </style>
 </head>
 <body>
+
+    @if(!empty($logoTop))
+    <div class="logo-top-left">
+        <img src="{{ $logoTop }}" style="width: {{ $logoTopWidth }}px; height: {{ $logoTopHeight }}px; object-fit: contain;" />
+    </div>
+    @endif
+
+    @if(!empty($logoBottom))
+    <div class="logo-bottom-right">
+        <img src="{{ $logoBottom }}" style="width: {{ $logoBottomWidth }}px; height: {{ $logoBottomHeight }}px; object-fit: contain;" />
+    </div>
+    @endif
 
     <div class="header">
         <h1>IAC</h1>
