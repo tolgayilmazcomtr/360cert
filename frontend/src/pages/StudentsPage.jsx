@@ -6,12 +6,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, Pencil, Trash2, Search, User, FileText } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, User, FileText, ChevronLeft, ChevronRight } from "lucide-react";
 
 export default function StudentsPage() {
     const [students, setStudents] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pagination, setPagination] = useState({ last_page: 1, total: 0 });
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingStudent, setEditingStudent] = useState(null);
 
@@ -27,13 +29,24 @@ export default function StudentsPage() {
     });
 
     useEffect(() => {
-        fetchStudents();
+        fetchStudents(1);
     }, []);
 
-    const fetchStudents = async () => {
+    // Arama değişince ilk sayfaya dön
+    useEffect(() => {
+        const timer = setTimeout(() => fetchStudents(1), 400);
+        return () => clearTimeout(timer);
+    }, [searchTerm]);
+
+    const fetchStudents = async (page = 1) => {
+        setLoading(true);
         try {
-            const response = await api.get("/students");
+            const params = { page };
+            if (searchTerm) params.search = searchTerm;
+            const response = await api.get("/students", { params });
             setStudents(response.data.data);
+            setPagination({ last_page: response.data.last_page, total: response.data.total });
+            setCurrentPage(page);
         } catch (error) {
             console.error("Öğrenciler yüklenemedi", error);
         } finally {
@@ -98,7 +111,7 @@ export default function StudentsPage() {
                 });
             }
             setIsModalOpen(false);
-            fetchStudents();
+            fetchStudents(currentPage);
             resetForm();
         } catch (error) {
             console.error("Kayıt hatası", error);
@@ -110,7 +123,7 @@ export default function StudentsPage() {
         if (window.confirm("Bu öğrenciyi silmek istiyor musunuz?")) {
             try {
                 await api.delete(`/students/${id}`);
-                fetchStudents();
+                fetchStudents(currentPage);
             } catch (error) {
                 console.error("Silme hatası", error);
             }
@@ -129,18 +142,13 @@ export default function StudentsPage() {
                 headers: { "Content-Type": "multipart/form-data" }
             });
             alert(response.data.message);
-            fetchStudents();
+            fetchStudents(1);
         } catch (error) {
             console.error("Import hatası", error);
             alert("Yükleme başarısız.");
         }
     };
 
-    const filteredStudents = students.filter(s =>
-        s.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        s.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        s.tc_number.includes(searchTerm)
-    );
 
     return (
         <div className="space-y-6">
@@ -174,6 +182,9 @@ export default function StudentsPage() {
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                 />
+                {searchTerm && (
+                    <button onClick={() => setSearchTerm("")} className="text-slate-400 hover:text-slate-600 text-xs px-2">✕</button>
+                )}
             </div>
 
             <div className="rounded-md border bg-white dark:bg-slate-900 shadow-sm">
@@ -192,14 +203,14 @@ export default function StudentsPage() {
                             <TableRow>
                                 <TableCell colSpan={5} className="text-center py-8">Yükleniyor...</TableCell>
                             </TableRow>
-                        ) : filteredStudents.length === 0 ? (
+                        ) : students.length === 0 ? (
                             <TableRow>
                                 <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
                                     Öğrenci bulunamadı.
                                 </TableCell>
                             </TableRow>
                         ) : (
-                            filteredStudents.map((student) => (
+                            students.map((student) => (
                                 <TableRow key={student.id}>
                                     <TableCell className="font-medium">{student.tc_number}</TableCell>
                                     <TableCell>
@@ -239,6 +250,50 @@ export default function StudentsPage() {
                     </TableBody>
                 </Table>
             </div>
+
+            {/* Sayfalama */}
+            {pagination.last_page > 1 && (
+                <div className="flex items-center justify-between text-sm text-muted-foreground">
+                    <span>Toplam {pagination.total} öğrenci</span>
+                    <div className="flex items-center gap-1">
+                        <Button
+                            variant="outline" size="icon" className="h-8 w-8"
+                            disabled={currentPage === 1}
+                            onClick={() => fetchStudents(currentPage - 1)}
+                        >
+                            <ChevronLeft size={14} />
+                        </Button>
+                        {Array.from({ length: pagination.last_page }, (_, i) => i + 1)
+                            .filter(p => p === 1 || p === pagination.last_page || Math.abs(p - currentPage) <= 2)
+                            .reduce((acc, p, idx, arr) => {
+                                if (idx > 0 && p - arr[idx - 1] > 1) acc.push("…");
+                                acc.push(p);
+                                return acc;
+                            }, [])
+                            .map((p, i) =>
+                                p === "…" ? (
+                                    <span key={`ellipsis-${i}`} className="px-1">…</span>
+                                ) : (
+                                    <Button
+                                        key={p}
+                                        variant={p === currentPage ? "default" : "outline"}
+                                        size="icon" className="h-8 w-8"
+                                        onClick={() => fetchStudents(p)}
+                                    >
+                                        {p}
+                                    </Button>
+                                )
+                            )}
+                        <Button
+                            variant="outline" size="icon" className="h-8 w-8"
+                            disabled={currentPage === pagination.last_page}
+                            onClick={() => fetchStudents(currentPage + 1)}
+                        >
+                            <ChevronRight size={14} />
+                        </Button>
+                    </div>
+                </div>
+            )}
 
             <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
                 <DialogContent className="sm:max-w-[425px]">

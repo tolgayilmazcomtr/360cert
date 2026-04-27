@@ -19,6 +19,14 @@ class StudentController extends Controller
             $query->where('user_id', $user->id);
         }
 
+        if ($search = $request->query('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('first_name', 'like', "%{$search}%")
+                  ->orWhere('last_name', 'like', "%{$search}%")
+                  ->orWhere('tc_number', 'like', "%{$search}%");
+            });
+        }
+
         return response()->json($query->paginate(20));
     }
 
