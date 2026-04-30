@@ -1,4 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { useEffect } from "react";
+import api from "./api/axios";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import Login from "./pages/Login";
 import DashboardLayout from "./components/DashboardLayout";
@@ -37,6 +39,25 @@ import PaymentRequestsPage from "./pages/PaymentRequestsPage";
 import SubDealersPage from "./pages/SubDealersPage";
 import SubDealerPricingPage from "./pages/SubDealerPricingPage";
 import DealerReportsPage from "./pages/DealerReportsPage";
+
+function FaviconLoader() {
+  useEffect(() => {
+    api.get("/public/settings").then(res => {
+      const logo = res.data?.site_logo;
+      if (logo) {
+        let link = document.querySelector("link[rel~='icon']");
+        if (!link) {
+          link = document.createElement("link");
+          link.rel = "icon";
+          document.head.appendChild(link);
+        }
+        link.href = logo;
+        link.type = logo.endsWith(".svg") ? "image/svg+xml" : "image/png";
+      }
+    }).catch(() => {});
+  }, []);
+  return null;
+}
 
 const ProtectedRoute = ({ children }) => {
   const { user, isLoading } = useAuth();
@@ -114,6 +135,7 @@ function AppRoutes() {
 function App() {
   return (
     <Router>
+      <FaviconLoader />
       <AuthProvider>
         <AppRoutes />
       </AuthProvider>
