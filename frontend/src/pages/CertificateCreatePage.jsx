@@ -45,16 +45,31 @@ export default function CertificateCreatePage() {
 
     const fetchData = async () => {
         try {
-            const [tplRes, prgRes, langRes] = await Promise.all([
+            const [tplRes, prgRes] = await Promise.all([
                 api.get("/certificate-templates"),
                 api.get("/training-programs"),
-                languageService.getAll()
             ]);
-            setTemplates(tplRes.data);
-            setPrograms(prgRes.data);
-            setActiveLanguages(langRes.filter(l => l.is_active));
+            setTemplates(tplRes.data ?? []);
+            setPrograms(prgRes.data ?? []);
         } catch (error) {
             console.error("Veri yükleme hatası", error);
+        }
+
+        // Dil listesi ayrı çekilir; başarısız olursa varsayılan "tr" kullanılır
+        try {
+            const langRes = await languageService.getAll();
+            const active = Array.isArray(langRes) ? langRes.filter(l => l.is_active) : [];
+            const langs = active.length > 0 ? active : [{ code: "tr", name: "Türkçe" }];
+            setActiveLanguages(langs);
+            // Seçili dil mevcut listede yoksa ilk dile sıfırla
+            setFormData(prev => ({
+                ...prev,
+                certificate_language: langs.some(l => l.code === prev.certificate_language)
+                    ? prev.certificate_language
+                    : langs[0].code,
+            }));
+        } catch {
+            setActiveLanguages([{ code: "tr", name: "Türkçe" }]);
         }
     };
 
