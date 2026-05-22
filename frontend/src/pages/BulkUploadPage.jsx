@@ -318,9 +318,9 @@ export default function BulkUploadPage() {
                             disabled={creating || rows.length === 0}
                             className="bg-green-600 hover:bg-green-700"
                         >
-                            {creating
+                            <span>{creating
                                 ? `Oluşturuluyor... (${progress.done}/${progress.total})`
-                                : `${rows.length} Sertifika Oluştur`}
+                                : `${rows.length} Sertifika Oluştur`}</span>
                         </Button>
                     </div>
 

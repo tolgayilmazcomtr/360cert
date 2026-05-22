@@ -396,11 +396,11 @@ export default function CertificateCreatePage() {
                         disabled={!selectedTemplate}
                         className="gap-2"
                     >
-                        Devam Et <ArrowRight size={16} />
+                        <span>Devam Et</span> <ArrowRight size={16} />
                     </Button>
                 ) : (
                     <Button size="lg" onClick={handleSubmit} disabled={loading} className="gap-2 bg-green-600 hover:bg-green-700 text-white min-w-[200px]">
-                        {loading ? "Sertifika Oluşturuluyor..." : "Onayla ve Oluştur"}
+                        <span>{loading ? "Sertifika Oluşturuluyor..." : "Onayla ve Oluştur"}</span>
                     </Button>
                 )}
             </div>
