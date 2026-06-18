@@ -198,10 +198,11 @@
                         return nl2br($text);
                     };
 
-                    $content = $replaceVars($trContent, 'tr');
                     if ($translatedContent) {
                         $transColor = isset($element['color_' . $certLang]) ? $element['color_' . $certLang] : ($element['color'] ?? '#000000');
-                        $content .= '<br><br><span style="color: ' . $transColor . ';">' . $replaceVars($translatedContent, $certLang) . '</span>';
+                        $content = '<span style="color: ' . $transColor . ';">' . $replaceVars($translatedContent, $certLang) . '</span>';
+                    } else {
+                        $content = $replaceVars($trContent, 'tr');
                     }
                     
                     break;
